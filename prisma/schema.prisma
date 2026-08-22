@@ -108,7 +108,8 @@ model Product {
   relatedTo   Product[] @relation("RelatedProducts")
   relatedFrom Product[] @relation("RelatedProducts")
 
-  orders Order[]
+  orders      Order[]
+  socialPosts SocialPost[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -253,4 +254,36 @@ model SiteSettings {
 
   defaultMetaTitle       String @default("Mundodelana · crochet y amigurumis hechos a mano en España")
   defaultMetaDescription String @default("Amigurumis, decoración y piezas de bebé tejidas a mano por encargo, con algodón 100 % de alta calidad. Envíos a toda España desde Galicia.")
+}
+
+// ---------- Preparación de publicaciones en redes ----------
+
+enum SocialPlatform {
+  INSTAGRAM
+  TIKTOK
+}
+
+model SocialPost {
+  id String @id @default(cuid())
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+
+  // Media específica de esta publicación: puede diferir de las fotos de la ficha.
+  mediaUrl  String?
+  mediaType String? // "image" | "video"
+
+  instagramText String?
+  tiktokText    String?
+
+  // Recordatorio interno: no publica nada automáticamente.
+  scheduledFor DateTime?
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([scheduledFor])
 }
