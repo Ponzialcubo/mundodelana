@@ -40,6 +40,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
+# Media uploaded from the backoffice lives here, mounted as a named volume in
+# production. Creating it owned by nextjs is what lets the app write to it:
+# Docker keeps the ownership of an empty mountpoint when it creates the volume.
+RUN mkdir -p /app/uploads && chown nextjs:nodejs /app/uploads
+
 USER nextjs
 
 EXPOSE 3000

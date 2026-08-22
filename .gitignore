@@ -43,3 +43,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+/public/uploads
+
+# Volcados de base de datos: nunca al repositorio
+/backups

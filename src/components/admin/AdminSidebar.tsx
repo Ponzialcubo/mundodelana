@@ -9,6 +9,7 @@ const GESTION = [
   { href: "/admin/productos", label: "Productos" },
   { href: "/admin/categorias", label: "Categorías" },
   { href: "/admin/newsletter", label: "Newsletter" },
+  { href: "/admin/redes", label: "Redes sociales" },
 ];
 
 const SITIO = [
