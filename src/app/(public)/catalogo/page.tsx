@@ -1,9 +1,30 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/public/ProductCard";
 import { CatalogSearch, CatalogChip } from "@/components/public/CatalogFilters";
 import { Footer } from "@/components/public/Footer";
 import type { Prisma } from "@/generated/prisma";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; cat?: string }>;
+}): Promise<Metadata> {
+  const { cat = "Todo" } = await searchParams;
+  const title = cat === "Todo" ? "Tienda de crochet y amigurumis" : `${cat} · Tienda`;
+  const description =
+    cat === "Todo"
+      ? "Todas las piezas de crochet, amigurumis y decoración tejidas a mano por Mundodelana. Lo vendido se puede volver a tejer por encargo."
+      : `Piezas de ${cat} tejidas a mano en algodón por Mundodelana. Envíos a toda España desde Galicia.`;
+  // Canonical always points to the clean catalog (filters/search are not indexable variants).
+  return {
+    title,
+    description,
+    alternates: { canonical: "/catalogo" },
+    openGraph: { title, description, url: "/catalogo" },
+  };
+}
 
 export default async function CatalogoPage({
   searchParams,

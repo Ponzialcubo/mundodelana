@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +7,49 @@ import { LikeButton } from "@/components/public/LikeButton";
 import { ProductCard } from "@/components/public/ProductCard";
 import { Footer } from "@/components/public/Footer";
 import { STATUS_DOT, STATUS_LABEL, STATUS_CTA, formatPrice } from "@/lib/product-status";
+import { productMetaFallback } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await prisma.product.findUnique({
+    where: { slug },
+    select: {
+      name: true,
+      shortDescription: true,
+      description: true,
+      metaTitle: true,
+      metaDescription: true,
+      mainImage: true,
+      publicationStatus: true,
+    },
+  });
+
+  if (!product) return { title: "Pieza no encontrada" };
+
+  const fallback = productMetaFallback(product);
+  const title = product.metaTitle?.trim() || fallback.metaTitle;
+  const description = product.metaDescription?.trim() || fallback.metaDescription;
+  const canonical = `/producto/${slug}`;
+  const noindex = product.publicationStatus !== "PUBLICADO";
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    robots: noindex ? { index: false, follow: false } : undefined,
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "website",
+      images: product.mainImage ? [{ url: product.mainImage }] : undefined,
+    },
+  };
+}
 
 export default async function ProductoPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

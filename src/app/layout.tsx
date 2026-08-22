@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Lora, Work_Sans } from "next/font/google";
+import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 const lora = Lora({
@@ -16,9 +17,18 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Mundodelana · crochet y amigurumis hechos a mano en España",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Mundodelana · crochet y amigurumis hechos a mano en España",
+    template: "%s · Mundodelana",
+  },
   description:
     "Amigurumis, decoración y piezas de bebé tejidas a mano por encargo, con algodón 100 % de alta calidad. Envíos a toda España desde Galicia.",
+  openGraph: {
+    type: "website",
+    locale: "es_ES",
+    siteName: "Mundodelana",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
