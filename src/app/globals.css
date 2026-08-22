@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Web pública — paleta cálida artesanal */
+  --color-cream: #EDE4DA;
+  --color-surface: #F7F1EA;
+  --color-ink: #4A3F3B;
+  --color-ink-soft: #8A7A72;
+  --color-pink: #E8B4B8;
+  --color-pink-deep: #9A6E6E;
+  --color-sage: #9CAF88;
+  --color-sage-deep: #6F8A64;
+  --color-amber: #D9A566;
+  --color-slate: #8FA3B0;
+  --color-muted: #B4A79F;
+  --color-sold-bg: #EFE7DE;
+
+  /* Backoffice — paleta neutra */
+  --color-admin-bg: #F7F6F4;
+  --color-admin-canvas: #E7E5E2;
+  --color-admin-ink: #1F1B1A;
+  --color-admin-ink-soft: #6E6663;
+  --color-admin-muted: #8B837F;
+  --color-admin-faint: #9A928E;
+  --color-admin-surface-soft: #FAFAF9;
+  --color-admin-accent-soft: #F1E4E5;
+  --color-admin-link: #B2777C;
+  --color-admin-danger: #A8544F;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-cream: var(--color-cream);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-pink: var(--color-pink);
+  --color-pink-deep: var(--color-pink-deep);
+  --color-sage: var(--color-sage);
+  --color-sage-deep: var(--color-sage-deep);
+  --color-amber: var(--color-amber);
+  --color-slate: var(--color-slate);
+  --color-muted: var(--color-muted);
+  --color-sold-bg: var(--color-sold-bg);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-admin-bg: var(--color-admin-bg);
+  --color-admin-canvas: var(--color-admin-canvas);
+  --color-admin-ink: var(--color-admin-ink);
+  --color-admin-ink-soft: var(--color-admin-ink-soft);
+  --color-admin-muted: var(--color-admin-muted);
+  --color-admin-faint: var(--color-admin-faint);
+  --color-admin-surface-soft: var(--color-admin-surface-soft);
+  --color-admin-accent-soft: var(--color-admin-accent-soft);
+  --color-admin-link: var(--color-admin-link);
+  --color-admin-danger: var(--color-admin-danger);
+
+  --font-serif: var(--font-lora);
+  --font-sans: var(--font-work-sans);
+  --font-mono: ui-monospace, Menlo, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-work-sans), system-ui, sans-serif;
 }

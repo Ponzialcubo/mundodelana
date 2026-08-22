@@ -1,0 +1,256 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Admin ----------
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String   @default("Elvira")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ---------- Cuenta de clienta ----------
+
+model Customer {
+  id            String  @id @default(cuid())
+  name          String
+  email         String  @unique
+  phone         String?
+  passwordHash  String
+  newsletterOptIn Boolean @default(true)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------- Catálogo ----------
+
+enum PublicationStatus {
+  PUBLICADO
+  BORRADOR
+  ARCHIVADO
+}
+
+enum PieceStatus {
+  DISPONIBLE
+  TRABAJANDO_EN_ELLO
+  RESERVADO
+  VENDIDO
+  VENDIDO_POR_ENCARGO
+}
+
+enum PriceType {
+  STOCK
+  PERSONALIZADO
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  coverImage  String?
+  order       Int      @default(0)
+
+  metaTitle       String?
+  metaDescription String?
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  shortDescription  String?
+  description       String?
+  materials         String? // texto multilínea, un material por línea
+
+  mainImage String?
+  images    ProductImage[]
+
+  metaTitle       String?
+  metaDescription String?
+
+  publicationStatus PublicationStatus @default(BORRADOR)
+  pieceStatus       PieceStatus       @default(DISPONIBLE)
+  featured          Boolean           @default(false)
+
+  priceType PriceType @default(STOCK)
+  price     Decimal   @db.Decimal(10, 2)
+
+  likes Int @default(0)
+  views Int @default(0)
+
+  instagramUrl String?
+  tiktokUrl    String?
+
+  categories Category[]
+
+  relatedTo   Product[] @relation("RelatedProducts")
+  relatedFrom Product[] @relation("RelatedProducts")
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([publicationStatus])
+  @@index([pieceStatus])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String?
+  order     Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+
+  @@index([productId])
+}
+
+// ---------- Pedidos / encargos ----------
+
+enum OrderType {
+  PERSONALIZADO
+  RESERVA_STOCK
+}
+
+enum OrderState {
+  NUEVO
+  COTIZADO
+  CONFIRMADO
+  ENVIADO
+  ENTREGADO
+}
+
+model Order {
+  id  String @id @default(cuid())
+  ref String @unique // ENC-2026-084 / RES-2026-041
+
+  clientName  String
+  clientPhone String
+  clientEmail String?
+
+  requestText String
+  targetDate  DateTime?
+
+  type  OrderType  @default(PERSONALIZADO)
+  state OrderState @default(NUEVO)
+
+  referenceImages OrderImage[]
+  internalNotes   String?
+
+  budgetLines BudgetLine[]
+
+  product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([state])
+  @@index([type])
+}
+
+model OrderImage {
+  id      String @id @default(cuid())
+  url     String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+
+  @@index([orderId])
+}
+
+model BudgetLine {
+  id      String  @id @default(cuid())
+  concept String
+  price   Decimal @db.Decimal(10, 2)
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+
+  @@index([orderId])
+}
+
+// ---------- Contenido del sitio ----------
+
+enum SubscriberState {
+  ACTIVO
+  BAJA
+}
+
+model Subscriber {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  state        SubscriberState @default(ACTIVO)
+  subscribedAt DateTime        @default(now())
+}
+
+model Testimonial {
+  id      String  @id @default(cuid())
+  text    String
+  author  String
+  origin  String? // ej. "Madrid · Pendientes Donut personalizados"
+  visible Boolean @default(true)
+  order   Int     @default(0)
+
+  createdAt DateTime @default(now())
+}
+
+model Faq {
+  id       String  @id @default(cuid())
+  question String
+  answer   String
+  order    Int     @default(0)
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  contact   String // email o teléfono
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model SiteSettings {
+  id Int @id @default(1)
+
+  phone       String @default("+34 600 00 00 00")
+  publicEmail String @default("hola@mundodelana.es")
+
+  hoursWeekday String @default("10:00 – 19:00")
+  hoursSaturday String @default("10:00 – 14:00")
+  hoursSunday  String @default("Cerrado")
+
+  instagramUrl String @default("instagram.com/mundodelana")
+  tiktokUrl    String @default("tiktok.com/@mundodelana")
+
+  aboutPhoto    String?
+  aboutHeadline String @default("Soy Elvira y tejo desde mi taller en Galicia")
+  aboutText     String @default("Empecé haciendo amigurumis para mi hijo y, paso a paso, aquello acabó convirtiéndose en mi propio taller. Cinco años después sigo en la misma silla, con mejor luz y bastante más lana.")
+
+  defaultMetaTitle       String @default("Mundodelana · crochet y amigurumis hechos a mano en España")
+  defaultMetaDescription String @default("Amigurumis, decoración y piezas de bebé tejidas a mano por encargo, con algodón 100 % de alta calidad. Envíos a toda España desde Galicia.")
+}
