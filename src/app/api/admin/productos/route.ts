@@ -32,6 +32,10 @@ export async function POST(req: Request) {
       price: body.price,
       instagramUrl: body.instagramUrl || null,
       tiktokUrl: body.tiktokUrl || null,
+      mainImage: body.mainImage || null,
+      images: body.images?.length
+        ? { create: body.images.map((url: string, order: number) => ({ url, order })) }
+        : undefined,
       categories: body.categoryIds?.length ? { connect: body.categoryIds.map((id: string) => ({ id })) } : undefined,
       relatedTo: body.relatedIds?.length ? { connect: body.relatedIds.map((id: string) => ({ id })) } : undefined,
     },

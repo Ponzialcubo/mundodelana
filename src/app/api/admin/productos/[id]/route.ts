@@ -26,6 +26,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       price: body.price,
       instagramUrl: body.instagramUrl || null,
       tiktokUrl: body.tiktokUrl || null,
+      mainImage: body.mainImage || null,
+      images: body.images
+        ? {
+            deleteMany: {},
+            create: body.images.map((url: string, order: number) => ({ url, order })),
+          }
+        : undefined,
       categories: body.categoryIds ? { set: body.categoryIds.map((cid: string) => ({ id: cid })) } : undefined,
       relatedTo: body.relatedIds ? { set: body.relatedIds.map((rid: string) => ({ id: rid })) } : undefined,
     },

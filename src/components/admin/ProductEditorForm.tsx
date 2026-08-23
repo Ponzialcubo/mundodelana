@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 
@@ -25,6 +25,8 @@ export type ProductFormData = {
   tiktokUrl: string;
   categoryIds: string[];
   relatedIds: string[];
+  mainImage: string;
+  images: string[];
 };
 
 const EMPTY: ProductFormData = {
@@ -44,7 +46,18 @@ const EMPTY: ProductFormData = {
   tiktokUrl: "",
   categoryIds: [],
   relatedIds: [],
+  mainImage: "",
+  images: [],
 };
+
+async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/admin/redes/upload", { method: "POST", body: formData });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? "No se ha podido subir la imagen");
+  return json.url as string;
+}
 
 export function ProductEditorForm({
   initial,
@@ -62,6 +75,10 @@ export function ProductEditorForm({
   const [sideOpen, setSideOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [uploadingMain, setUploadingMain] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const mainInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   function set<K extends keyof ProductFormData>(key: K, value: ProductFormData[K]) {
     setData((d) => ({ ...d, [key]: value }));
@@ -77,6 +94,41 @@ export function ProductEditorForm({
     const catLabel = categories.filter((c) => data.categoryIds.includes(c.id)).map((c) => c.name).join(", ") || "sin categoría";
     return `${pubLabel} · ${data.priceType === "STOCK" ? "stock" : "personalizado"} · ${catLabel}`;
   }, [data.publicationStatus, data.priceType, data.categoryIds, categories]);
+
+  async function onMainImagePick(file: File) {
+    setUploadingMain(true);
+    setError("");
+    try {
+      const url = await uploadImage(file);
+      set("mainImage", url);
+    } catch {
+      setError("No se ha podido subir la foto de portada.");
+    } finally {
+      setUploadingMain(false);
+      if (mainInputRef.current) mainInputRef.current.value = "";
+    }
+  }
+
+  async function onGalleryImagesPick(files: FileList) {
+    setUploadingGallery(true);
+    setError("");
+    try {
+      const urls = await Promise.all(Array.from(files).map(uploadImage));
+      set("images", [...data.images, ...urls]);
+    } catch {
+      setError("No se ha podido subir alguna de las fotos.");
+    } finally {
+      setUploadingGallery(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = "";
+    }
+  }
+
+  function removeGalleryImage(url: string) {
+    set(
+      "images",
+      data.images.filter((i) => i !== url)
+    );
+  }
 
   async function save(publicationStatus?: ProductFormData["publicationStatus"]) {
     setLoading(true);
@@ -187,18 +239,65 @@ export function ProductEditorForm({
 
           <div className="flex flex-col gap-4 rounded-xl border border-admin-ink/10 bg-white p-6">
             <span className="font-serif text-base font-medium">Fotos</span>
-            <div
-              className="h-40 rounded-lg"
-              style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 9px,#F7F6F4 9px 18px)" }}
+
+            <input
+              ref={mainInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onMainImagePick(file);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => mainInputRef.current?.click()}
+              disabled={uploadingMain}
+              className="h-40 rounded-lg bg-cover bg-center disabled:opacity-60"
+              style={
+                data.mainImage
+                  ? { backgroundImage: `url(${data.mainImage})` }
+                  : { background: "repeating-linear-gradient(45deg,#EDEBE8 0 9px,#F7F6F4 9px 18px)" }
+              }
+            >
+              {!data.mainImage && (
+                <span className="text-sm text-admin-ink-soft">{uploadingMain ? "Subiendo…" : "+ Foto de portada"}</span>
+              )}
+            </button>
+
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.length) onGalleryImagesPick(e.target.files);
+              }}
             />
             <div className="grid grid-cols-3 gap-3">
-              <div className="h-20 rounded-lg" style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 9px,#F7F6F4 9px 18px)" }} />
-              <div className="h-20 rounded-lg" style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 9px,#F7F6F4 9px 18px)" }} />
-              <button className="flex h-20 items-center justify-center rounded-lg border border-dashed border-admin-ink/25 text-sm text-admin-ink-soft">
-                + Añadir
+              {data.images.map((url) => (
+                <div key={url} className="group relative h-20 rounded-lg bg-cover bg-center" style={{ backgroundImage: `url(${url})` }}>
+                  <button
+                    type="button"
+                    onClick={() => removeGalleryImage(url)}
+                    className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs text-white opacity-0 group-hover:opacity-100"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+                disabled={uploadingGallery}
+                className="flex h-20 items-center justify-center rounded-lg border border-dashed border-admin-ink/25 text-sm text-admin-ink-soft disabled:opacity-60"
+              >
+                {uploadingGallery ? "Subiendo…" : "+ Añadir"}
               </button>
             </div>
-            <span className="text-xs text-admin-faint">Arrastra para reordenar. La primera es la que se ve en el catálogo.</span>
+            <span className="text-xs text-admin-faint">La foto de portada es la que se ve en el catálogo.</span>
           </div>
 
           <div className="flex flex-col gap-4 rounded-xl border border-admin-ink/10 bg-white p-6">

@@ -8,7 +8,11 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
   const [product, categories, relatedOptions] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
-      include: { categories: true, relatedTo: { select: { id: true } } },
+      include: {
+        categories: true,
+        relatedTo: { select: { id: true } },
+        images: { orderBy: { order: "asc" } },
+      },
     }),
     prisma.category.findMany({ orderBy: { order: "asc" } }),
     prisma.product.findMany({ where: { id: { not: id } }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
@@ -34,6 +38,8 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
     tiktokUrl: product.tiktokUrl ?? "",
     categoryIds: product.categories.map((c) => c.id),
     relatedIds: product.relatedTo.map((r) => r.id),
+    mainImage: product.mainImage ?? "",
+    images: product.images.map((i) => i.url),
   };
 
   return <ProductEditorForm initial={initial} categories={categories} relatedOptions={relatedOptions} />;
