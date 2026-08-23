@@ -14,6 +14,7 @@ export default async function EditarCategoriaPage({ params }: { params: Promise<
         name: category.name,
         slug: category.slug,
         description: category.description ?? "",
+        coverImage: category.coverImage ?? "",
         metaTitle: category.metaTitle ?? "",
         metaDescription: category.metaDescription ?? "",
         order: category.order,

@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
+import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
 
 type Category = { id: string; name: string };
 type RelatedOption = { id: string; name: string };
@@ -88,6 +89,21 @@ export function ProductEditorForm({
     set("name", name);
     if (!slugTouched) set("slug", slugify(name));
   }
+
+  const aiContext = useMemo(
+    () => ({
+      name: data.name,
+      shortDescription: data.shortDescription,
+      description: data.description,
+      materials: data.materials,
+      categories: categories.filter((c) => data.categoryIds.includes(c.id)).map((c) => c.name),
+      price: data.price,
+      priceType: data.priceType,
+      metaTitle: data.metaTitle,
+      metaDescription: data.metaDescription,
+    }),
+    [data.name, data.shortDescription, data.description, data.materials, data.categoryIds, data.price, data.priceType, data.metaTitle, data.metaDescription, categories]
+  );
 
   const sideSummary = useMemo(() => {
     const pubLabel = { PUBLICADO: "Publicado", BORRADOR: "Borrador", ARCHIVADO: "Archivado" }[data.publicationStatus];
@@ -206,7 +222,10 @@ export function ProductEditorForm({
               </span>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-admin-ink/85">Descripción corta</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-medium text-admin-ink/85">Descripción corta</span>
+                <AiGenerateButton field="shortDescription" context={aiContext} onGenerated={(text) => set("shortDescription", text)} />
+              </div>
               <input
                 value={data.shortDescription}
                 onChange={(e) => set("shortDescription", e.target.value)}
@@ -215,7 +234,10 @@ export function ProductEditorForm({
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-admin-ink/85">Descripción</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-medium text-admin-ink/85">Descripción</span>
+                <AiGenerateButton field="description" context={aiContext} onGenerated={(text) => set("description", text)} />
+              </div>
               <textarea
                 value={data.description}
                 onChange={(e) => set("description", e.target.value)}
@@ -303,7 +325,10 @@ export function ProductEditorForm({
           <div className="flex flex-col gap-4 rounded-xl border border-admin-ink/10 bg-white p-6">
             <span className="font-serif text-base font-medium">SEO</span>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-admin-ink/85">Meta título</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-medium text-admin-ink/85">Meta título</span>
+                <AiGenerateButton field="productMetaTitle" context={aiContext} onGenerated={(text) => set("metaTitle", text)} />
+              </div>
               <input
                 value={data.metaTitle}
                 onChange={(e) => set("metaTitle", e.target.value)}
@@ -313,7 +338,10 @@ export function ProductEditorForm({
               <span className="text-xs text-admin-faint">Recomendado: hasta 60 caracteres.</span>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-admin-ink/85">Meta descripción</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-medium text-admin-ink/85">Meta descripción</span>
+                <AiGenerateButton field="productMetaDescription" context={aiContext} onGenerated={(text) => set("metaDescription", text)} />
+              </div>
               <textarea
                 value={data.metaDescription}
                 onChange={(e) => set("metaDescription", e.target.value)}

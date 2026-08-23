@@ -15,6 +15,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       name: body.name,
       slug: body.slug,
       description: body.description || null,
+      coverImage: body.coverImage || null,
       metaTitle: body.metaTitle || null,
       metaDescription: body.metaDescription || null,
       order: body.order,
