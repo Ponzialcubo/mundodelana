@@ -71,16 +71,16 @@ export function ProductGallery({
             poster={current.posterUrl ?? undefined}
             controls
             playsInline
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
           />
         ) : (
+          // object-contain: the piece must always be fully visible here, never cropped.
           <Image
             src={current.url}
             alt={productName}
             fill
             sizes="(min-width: 768px) 50vw, 100vw"
-            className="object-cover"
-            style={{ objectPosition: `${current.focalX * 100}% ${current.focalY * 100}%` }}
+            className="object-contain"
             priority
           />
         )}

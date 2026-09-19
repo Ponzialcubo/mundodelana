@@ -311,14 +311,14 @@ export function ProductEditorForm({
                   set("mainImageFocalX", x);
                   set("mainImageFocalY", y);
                 }}
-                className="h-40"
+                className="aspect-[4/5] max-h-80"
               />
             ) : (
               <button
                 type="button"
                 onClick={() => mainInputRef.current?.click()}
                 disabled={uploadingMain}
-                className="h-40 rounded-lg bg-cover bg-center disabled:opacity-60"
+                className="aspect-[4/5] max-h-80 rounded-lg bg-cover bg-center disabled:opacity-60"
                 style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 9px,#F7F6F4 9px 18px)" }}
               >
                 <span className="text-sm text-admin-ink-soft">{uploadingMain ? "Subiendo…" : "+ Foto de portada"}</span>

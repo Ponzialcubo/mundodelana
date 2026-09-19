@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { STATUS_BADGE, formatPrice } from "@/lib/product-status";
 import type { PieceStatus, PriceType } from "@/generated/prisma";
@@ -11,6 +12,9 @@ export type ProductCardData = {
   pieceStatus: PieceStatus;
   likes: number;
   categoryName?: string;
+  mainImage?: string | null;
+  mainImageFocalX?: number;
+  mainImageFocalY?: number;
 };
 
 export function ProductCard({ product, showCategory = false }: { product: ProductCardData; showCategory?: boolean }) {
@@ -22,7 +26,20 @@ export function ProductCard({ product, showCategory = false }: { product: Produc
       className="flex flex-col overflow-hidden rounded-xl border border-ink/8 bg-white"
     >
       <div className="relative">
-        <ImagePlaceholder label={`foto — ${product.name}`} className="h-[145px] md:h-[220px]" />
+        {product.mainImage ? (
+          <div className="relative aspect-[4/5]">
+            <Image
+              src={product.mainImage}
+              alt={product.name}
+              fill
+              sizes="(min-width: 768px) 25vw, 50vw"
+              className="object-cover"
+              style={{ objectPosition: `${(product.mainImageFocalX ?? 0.5) * 100}% ${(product.mainImageFocalY ?? 0.5) * 100}%` }}
+            />
+          </div>
+        ) : (
+          <ImagePlaceholder label={`foto — ${product.name}`} className="aspect-[4/5]" />
+        )}
         <span
           className="absolute left-3 top-3 rounded-full px-2.5 py-1 font-mono text-[10.5px] font-medium tracking-wide"
           style={{ background: badge.bg, color: badge.fg }}
