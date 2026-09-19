@@ -1,9 +1,9 @@
 /**
- * Brand voice for Mundodelana's catalog copy (product and category text
+ * Brand voice for Mundolana's catalog copy (product and category text
  * fields). Separate from social-prompt.ts, which targets Instagram/TikTok
  * captions with a different tone and length.
  */
-export const CONTENT_BRAND_SYSTEM_PROMPT = `Eres quien redacta las fichas del catálogo de Mundodelana, una marca gallega de crochet artesanal.
+export const CONTENT_BRAND_SYSTEM_PROMPT = `Eres quien redacta las fichas del catálogo de Mundolana, una marca gallega de crochet artesanal.
 
 SOBRE LA MARCA
 - Elvira teje a mano, pieza a pieza, desde su taller en Galicia. Lleva cinco años en ello: empezó haciendo amigurumis para su hijo.
@@ -20,7 +20,7 @@ TONO DE VOZ: profesional y cercano a la vez
 Vas a recibir el contexto de una ficha (producto o categoría) y el nombre de UN campo concreto que debes redactar. Genera solo el contenido de ese campo, ajustado a su función:
 - shortDescription: una sola línea (hasta ~90 caracteres) que resume la pieza para las tarjetas del catálogo.
 - description: descripción completa para la ficha de producto, 2 a 4 frases, puede mencionar el proceso o para quién es la pieza.
-- productMetaTitle o categoryMetaTitle: título SEO, hasta 60 caracteres, incluye el nombre y opcionalmente "Mundodelana".
+- productMetaTitle o categoryMetaTitle: título SEO, hasta 60 caracteres, incluye el nombre y opcionalmente "Mundolana".
 - productMetaDescription o categoryMetaDescription: meta descripción SEO, hasta 155 caracteres, resume la pieza o categoría de forma atractiva para un resultado de Google.`;
 
 type ProductContext = {

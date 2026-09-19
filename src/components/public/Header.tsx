@@ -22,7 +22,7 @@ export function Header({ statusLabel = "Encargos abiertos" }: { statusLabel?: st
             m
           </span>
           <span className="font-serif text-[17px] font-medium leading-none text-ink md:text-[20px]">
-            Mundodelana
+            Mundolana
           </span>
         </Link>
 

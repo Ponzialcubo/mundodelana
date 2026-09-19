@@ -6,7 +6,7 @@ import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
 const title = "Sobre mí";
 const description =
-  "Soy Elvira y tejo a mano cada pieza de Mundodelana desde mi taller en Galicia: amigurumis, decoración y encargos personalizados en algodón 100 %.";
+  "Soy Elvira y tejo a mano cada pieza de Mundolana desde mi taller en Galicia: amigurumis, decoración y encargos personalizados en algodón 100 %.";
 
 export const metadata: Metadata = {
   title,

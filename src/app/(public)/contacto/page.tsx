@@ -59,7 +59,7 @@ export default async function ContactoPage() {
           </div>
 
           <div className="flex flex-col gap-2 rounded-xl border border-ink/8 bg-white p-6">
-            <span className="font-serif text-lg font-medium">@mundodelana</span>
+            <span className="font-serif text-lg font-medium">@mundodelana16</span>
             <span className="text-sm text-ink/78">
               Subo el proceso de cada encargo en vídeo. Buen sitio para ver acabados de cerca antes de pedir.
             </span>

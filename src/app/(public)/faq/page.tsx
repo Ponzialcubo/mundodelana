@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 const title = "Preguntas frecuentes";
 const description =
-  "Plazos de entrega, materiales, envíos, formas de pago y devoluciones: todo lo que suelen preguntar antes de encargar una pieza a Mundodelana.";
+  "Plazos de entrega, materiales, envíos, formas de pago y devoluciones: todo lo que suelen preguntar antes de encargar una pieza a Mundolana.";
 
 export const metadata: Metadata = {
   title,

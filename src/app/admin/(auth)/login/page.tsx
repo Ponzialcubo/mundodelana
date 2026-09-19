@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-pink font-serif text-sm font-medium text-admin-ink">
             m
           </span>
-          <span className="font-serif text-lg font-medium text-admin-ink">Mundodelana · Panel</span>
+          <span className="font-serif text-lg font-medium text-admin-ink">Mundolana · Panel</span>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
               name="email"
               type="email"
               required
-              placeholder="elvira@mundodelana.es"
+              placeholder="elvira@mundolana.es"
               className="rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-3 text-sm text-admin-ink outline-none"
             />
           </label>

@@ -37,7 +37,7 @@ export async function generateMetadata({
   const noindex = product.publicationStatus !== "PUBLICADO";
 
   return {
-    // absolute: the product meta title is already the full title — skip the "%s · Mundodelana" template.
+    // absolute: the product meta title is already the full title — skip the "%s · Mundolana" template.
     title: { absolute: title },
     description,
     alternates: { canonical },

@@ -17,7 +17,7 @@ export async function OrganizationJsonLd() {
     url: SITE_URL,
     email: publicEmail,
     telephone: `+${phoneDigits(phone)}`,
-    sameAs: [absoluteSocialUrl(instagramUrl), absoluteSocialUrl(tiktokUrl)],
+    sameAs: [instagramUrl, tiktokUrl].filter(Boolean).map(absoluteSocialUrl),
   };
 
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />;

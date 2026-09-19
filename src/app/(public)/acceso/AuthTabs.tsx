@@ -57,7 +57,7 @@ export function AuthTabs() {
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6 px-5 py-14 md:px-0">
       <div className="flex flex-col gap-2 text-center">
-        <h1 className="font-serif text-[28px] font-normal">Tu cuenta de Mundodelana</h1>
+        <h1 className="font-serif text-[28px] font-normal">Tu cuenta de Mundolana</h1>
         <p className="text-[14px] font-light text-ink/75">
           Sirve para seguir tus encargos y guardar favoritos. No hace falta para pedir: también puedes escribirme
           sin más.

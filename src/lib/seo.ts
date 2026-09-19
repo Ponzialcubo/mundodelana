@@ -4,9 +4,9 @@ import { prisma } from "@/lib/prisma";
  * Public site URL. Comes from NEXTAUTH_URL (already set for auth cookies),
  * falls back to the production domain. Never a trailing slash.
  */
-export const SITE_URL = (process.env.NEXTAUTH_URL || "https://mundodelana.sergiolab.es").replace(/\/$/, "");
+export const SITE_URL = (process.env.NEXTAUTH_URL || "https://mundolana.es").replace(/\/$/, "");
 
-export const SITE_NAME = "Mundodelana";
+export const SITE_NAME = "Mundolana";
 
 /** Trim a string to `max` chars without cutting a word in half. */
 function clamp(text: string, max: number): string {
@@ -43,7 +43,7 @@ export async function getDefaultMeta() {
   cachedDefaults = {
     title:
       settings?.defaultMetaTitle ||
-      "Mundodelana · crochet y amigurumis hechos a mano en España",
+      "Mundolana · crochet y amigurumis hechos a mano en España",
     description:
       settings?.defaultMetaDescription ||
       "Amigurumis, decoración y piezas de bebé tejidas a mano por encargo, con algodón 100 % de alta calidad. Envíos a toda España desde Galicia.",
@@ -65,8 +65,8 @@ export async function getSiteSettings() {
   const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
   return {
     phone: settings?.phone || "+34 600 00 00 00",
-    publicEmail: settings?.publicEmail || "hola@mundodelana.es",
-    instagramUrl: settings?.instagramUrl || "instagram.com/mundodelana",
-    tiktokUrl: settings?.tiktokUrl || "tiktok.com/@mundodelana",
+    publicEmail: settings?.publicEmail || "infomundolana@gmail.com",
+    instagramUrl: settings?.instagramUrl || "instagram.com/mundodelana16",
+    tiktokUrl: settings?.tiktokUrl || "",
   };
 }

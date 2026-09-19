@@ -15,8 +15,8 @@ export async function generateMetadata({
   const title = cat === "Todo" ? "Tienda de crochet y amigurumis" : `${cat} · Tienda`;
   const description =
     cat === "Todo"
-      ? "Todas las piezas de crochet, amigurumis y decoración tejidas a mano por Mundodelana. Lo vendido se puede volver a tejer por encargo."
-      : `Piezas de ${cat} tejidas a mano en algodón por Mundodelana. Envíos a toda España desde Galicia.`;
+      ? "Todas las piezas de crochet, amigurumis y decoración tejidas a mano por Mundolana. Lo vendido se puede volver a tejer por encargo."
+      : `Piezas de ${cat} tejidas a mano en algodón por Mundolana. Envíos a toda España desde Galicia.`;
   // Canonical always points to the clean catalog (filters/search are not indexable variants).
   return {
     title,
@@ -108,6 +108,9 @@ export default async function CatalogoPage({
                   pieceStatus: p.pieceStatus,
                   likes: p.likes,
                   categoryName: p.categories[0]?.name,
+                  mainImage: p.mainImage,
+                  mainImageFocalX: p.mainImageFocalX,
+                  mainImageFocalY: p.mainImageFocalY,
                 }}
               />
             ))}

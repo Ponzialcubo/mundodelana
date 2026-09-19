@@ -1,10 +1,17 @@
 import Link from "next/link";
+import { getSiteSettings } from "@/lib/seo";
 
-export function Footer() {
+function absoluteSocialUrl(url: string) {
+  return url.startsWith("http") ? url : `https://${url}`;
+}
+
+export async function Footer() {
+  const { instagramUrl, tiktokUrl } = await getSiteSettings();
+
   return (
     <footer className="flex flex-col gap-8 bg-ink px-5 py-10 text-surface md:flex-row md:items-start md:justify-between md:px-14 md:py-11">
       <div className="flex flex-col gap-2.5">
-        <span className="font-serif text-xl font-medium">Mundodelana</span>
+        <span className="font-serif text-xl font-medium">Mundolana</span>
         <span className="text-[13.5px] font-light leading-relaxed text-surface/70">
           Taller en Galicia · Envíos a toda España
           <br />
@@ -24,11 +31,21 @@ export function Footer() {
           <Link href="/faq" className="text-surface/85">Preguntas frecuentes</Link>
           <Link href="/contacto" className="text-surface/85">Contacto</Link>
         </div>
-        <div className="flex flex-col">
-          <span className="mb-1.5 font-mono text-xs font-medium tracking-wider text-surface/50">SÍGUEME</span>
-          <a href="https://instagram.com/mundodelana" target="_blank" rel="noopener noreferrer" className="text-surface/85">Instagram</a>
-          <a href="https://tiktok.com/@mundodelana" target="_blank" rel="noopener noreferrer" className="text-surface/85">TikTok</a>
-        </div>
+        {(instagramUrl || tiktokUrl) && (
+          <div className="flex flex-col">
+            <span className="mb-1.5 font-mono text-xs font-medium tracking-wider text-surface/50">SÍGUEME</span>
+            {instagramUrl && (
+              <a href={absoluteSocialUrl(instagramUrl)} target="_blank" rel="noopener noreferrer" className="text-surface/85">
+                Instagram
+              </a>
+            )}
+            {tiktokUrl && (
+              <a href={absoluteSocialUrl(tiktokUrl)} target="_blank" rel="noopener noreferrer" className="text-surface/85">
+                TikTok
+              </a>
+            )}
+          </div>
+        )}
         <div className="flex flex-col">
           <span className="mb-1.5 font-mono text-xs font-medium tracking-wider text-surface/50">LEGAL</span>
           <Link href="/legal/aviso" className="text-surface/85">Aviso legal</Link>

@@ -14,6 +14,7 @@ const GESTION = [
 
 const SITIO = [
   { href: "/admin/ajustes", label: "Configuración" },
+  { href: "/admin/legal", label: "Legal" },
   { href: "/admin/perfil", label: "Perfil" },
 ];
 
@@ -38,7 +39,7 @@ export function AdminSidebar({ pendingCount, adminName }: { pendingCount: number
         <span className="flex h-7 w-7 items-center justify-center rounded-md bg-pink font-serif text-sm font-medium text-admin-ink">
           m
         </span>
-        <span className="font-serif text-base font-medium text-admin-ink">Mundodelana</span>
+        <span className="font-serif text-base font-medium text-admin-ink">Mundolana</span>
       </div>
 
       <nav className="flex flex-col gap-4">

@@ -25,11 +25,11 @@ model Admin {
 // ---------- Cuenta de clienta ----------
 
 model Customer {
-  id            String  @id @default(cuid())
-  name          String
-  email         String  @unique
-  phone         String?
-  passwordHash  String
+  id              String  @id @default(cuid())
+  name            String
+  email           String  @unique
+  phone           String?
+  passwordHash    String
   newsletterOptIn Boolean @default(true)
 
   orders Order[]
@@ -60,12 +60,14 @@ enum PriceType {
 }
 
 model Category {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
-  slug        String   @unique
+  slug        String  @unique
   description String?
   coverImage  String?
-  order       Int      @default(0)
+  coverFocalX Float   @default(0.5)
+  coverFocalY Float   @default(0.5)
+  order       Int     @default(0)
 
   metaTitle       String?
   metaDescription String?
@@ -77,15 +79,17 @@ model Category {
 }
 
 model Product {
-  id                String   @id @default(cuid())
-  name              String
-  slug              String   @unique
-  shortDescription  String?
-  description       String?
-  materials         String? // texto multilínea, un material por línea
+  id               String  @id @default(cuid())
+  name             String
+  slug             String  @unique
+  shortDescription String?
+  description      String?
+  materials        String? // texto multilínea, un material por línea
 
-  mainImage String?
-  images    ProductImage[]
+  mainImage       String?
+  mainImageFocalX Float          @default(0.5)
+  mainImageFocalY Float          @default(0.5)
+  images          ProductImage[]
 
   metaTitle       String?
   metaDescription String?
@@ -123,6 +127,8 @@ model ProductImage {
   url       String
   alt       String?
   order     Int     @default(0)
+  focalX    Float   @default(0.5)
+  focalY    Float   @default(0.5)
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
 
@@ -221,10 +227,19 @@ model Testimonial {
 }
 
 model Faq {
-  id       String  @id @default(cuid())
+  id       String @id @default(cuid())
   question String
   answer   String
-  order    Int     @default(0)
+  order    Int    @default(0)
+}
+
+model LegalPage {
+  id      String @id @default(cuid())
+  slug    String @unique // "aviso" | "privacidad" | "cookies"
+  title   String
+  content String // HTML simple generado por el editor del admin
+
+  updatedAt DateTime @updatedAt
 }
 
 model ContactMessage {
@@ -239,20 +254,20 @@ model SiteSettings {
   id Int @id @default(1)
 
   phone       String @default("+34 600 00 00 00")
-  publicEmail String @default("hola@mundodelana.es")
+  publicEmail String @default("infomundolana@gmail.com")
 
-  hoursWeekday String @default("10:00 – 19:00")
+  hoursWeekday  String @default("10:00 – 19:00")
   hoursSaturday String @default("10:00 – 14:00")
-  hoursSunday  String @default("Cerrado")
+  hoursSunday   String @default("Cerrado")
 
-  instagramUrl String @default("instagram.com/mundodelana")
-  tiktokUrl    String @default("tiktok.com/@mundodelana")
+  instagramUrl String @default("instagram.com/mundodelana16")
+  tiktokUrl    String @default("")
 
   aboutPhoto    String?
-  aboutHeadline String @default("Soy Elvira y tejo desde mi taller en Galicia")
-  aboutText     String @default("Empecé haciendo amigurumis para mi hijo y, paso a paso, aquello acabó convirtiéndose en mi propio taller. Cinco años después sigo en la misma silla, con mejor luz y bastante más lana.")
+  aboutHeadline String  @default("Soy Elvira y tejo desde mi taller en Galicia")
+  aboutText     String  @default("Empecé haciendo amigurumis para mi hijo y, paso a paso, aquello acabó convirtiéndose en mi propio taller. Cinco años después sigo en la misma silla, con mejor luz y bastante más lana.")
 
-  defaultMetaTitle       String @default("Mundodelana · crochet y amigurumis hechos a mano en España")
+  defaultMetaTitle       String @default("Mundolana · crochet y amigurumis hechos a mano en España")
   defaultMetaDescription String @default("Amigurumis, decoración y piezas de bebé tejidas a mano por encargo, con algodón 100 % de alta calidad. Envíos a toda España desde Galicia.")
 }
 
