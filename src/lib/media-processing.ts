@@ -44,9 +44,11 @@ export async function processImage(input: Buffer): Promise<{ buffer: Buffer; ext
 
 /**
  * Transcodes an uploaded video to a web-friendly H.264/AAC MP4 with a capped
- * bitrate and resolution, plus a JPEG poster frame grabbed at the 1s mark.
- * ffmpeg only works on real files, so this uses a scratch dir under the OS
- * temp folder (cleaned up in a finally) rather than the uploads volume.
+ * bitrate and resolution, plus a JPEG poster frame grabbed at the very first
+ * frame (some product clips are under a second long, so seeking further in
+ * would find nothing). ffmpeg only works on real files, so this uses a
+ * scratch dir under the OS temp folder (cleaned up in a finally) rather than
+ * the uploads volume.
  */
 export async function processVideo(
   input: Buffer,
@@ -79,7 +81,6 @@ export async function processVideo(
 
     await execFileAsync("ffmpeg", [
       "-y",
-      "-ss", "1",
       "-i", outputPath,
       "-frames:v", "1",
       "-update", "1",
