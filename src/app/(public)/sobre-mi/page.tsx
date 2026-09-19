@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
 const title = "Sobre mí";
@@ -118,7 +118,7 @@ export default async function SobreMiPage() {
         </div>
       </section>
 
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

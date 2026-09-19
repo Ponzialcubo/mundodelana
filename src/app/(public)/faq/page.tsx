@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { FaqAccordion } from "@/components/public/FaqAccordion";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +59,7 @@ export default async function FaqPage() {
         </div>
       </section>
 
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

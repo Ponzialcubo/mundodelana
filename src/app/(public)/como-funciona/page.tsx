@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
 const title = "Cómo funciona";
@@ -94,7 +94,7 @@ export default async function ComoFuncionaPage() {
         </div>
       </section>
 
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/public/ContactForm";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
 const title = "Contacto";
@@ -67,7 +67,7 @@ export default async function ContactoPage() {
         </div>
       </section>
 
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

@@ -4,7 +4,7 @@ import { getCustomerSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { NewsletterToggle } from "@/components/public/NewsletterToggle";
 import { LogoutButton } from "@/components/public/LogoutButton";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import type { OrderState } from "@/generated/prisma";
 
 const STATE_LABEL: Record<OrderState, string> = {
@@ -105,7 +105,7 @@ export default async function CuentaPage() {
           </aside>
         </div>
       </section>
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

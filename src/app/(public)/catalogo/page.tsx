@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/public/ProductCard";
 import { CatalogSearch, CatalogChip } from "@/components/public/CatalogFilters";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import type { Prisma } from "@/generated/prisma";
 
 export async function generateMetadata({
@@ -128,7 +128,7 @@ export default async function CatalogoPage({
         )}
       </section>
 
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

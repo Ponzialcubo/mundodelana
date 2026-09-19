@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCustomerSession } from "@/lib/session";
 import { AuthTabs } from "./AuthTabs";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 
 export default async function AccesoPage() {
   const customerId = await getCustomerSession();
@@ -10,7 +10,7 @@ export default async function AccesoPage() {
   return (
     <>
       <AuthTabs />
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

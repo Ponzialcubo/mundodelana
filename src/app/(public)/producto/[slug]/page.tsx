@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ProductGallery } from "@/components/public/ProductGallery";
 import { LikeButton } from "@/components/public/LikeButton";
 import { ProductCard } from "@/components/public/ProductCard";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { STATUS_DOT, STATUS_LABEL, STATUS_CTA, STATUS_SCHEMA_AVAILABILITY, formatPrice } from "@/lib/product-status";
 import { productMetaFallback, getSiteSettings, phoneDigits, SITE_URL } from "@/lib/seo";
 
@@ -217,7 +217,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
         </section>
       )}
 
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

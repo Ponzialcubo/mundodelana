@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { OrderForm } from "@/components/public/OrderForm";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
 const title = "Pedir a medida";
@@ -20,7 +20,7 @@ export default async function EncargoPage() {
   return (
     <>
       <OrderForm phone={phoneDigits(phone)} />
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

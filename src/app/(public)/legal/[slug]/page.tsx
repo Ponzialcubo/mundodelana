@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { prisma } from "@/lib/prisma";
 import { parseLegalContent } from "@/lib/legal-content";
 import { getSiteSettings } from "@/lib/seo";
@@ -96,7 +96,7 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
         </article>
       </section>
 
-      <Footer />
+      <FooterWithSettings />
     </>
   );
 }

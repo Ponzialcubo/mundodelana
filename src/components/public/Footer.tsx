@@ -1,13 +1,10 @@
 import Link from "next/link";
-import { getSiteSettings } from "@/lib/seo";
 
 function absoluteSocialUrl(url: string) {
   return url.startsWith("http") ? url : `https://${url}`;
 }
 
-export async function Footer() {
-  const { instagramUrl, tiktokUrl } = await getSiteSettings();
-
+export function Footer({ instagramUrl = "", tiktokUrl = "" }: { instagramUrl?: string; tiktokUrl?: string }) {
   return (
     <footer className="flex flex-col gap-8 bg-ink px-5 py-10 text-surface md:flex-row md:items-start md:justify-between md:px-14 md:py-11">
       <div className="flex flex-col gap-2.5">
