@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Lora, Work_Sans } from "next/font/google";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, SITE_NAME, getSiteSettings, phoneDigits } from "@/lib/seo";
 import "./globals.css";
 
 const lora = Lora({
@@ -31,10 +31,32 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+function absoluteSocialUrl(url: string) {
+  return url.startsWith("http") ? url : `https://${url}`;
+}
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { phone, publicEmail, instagramUrl, tiktokUrl } = await getSiteSettings();
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+    email: publicEmail,
+    telephone: `+${phoneDigits(phone)}`,
+    sameAs: [absoluteSocialUrl(instagramUrl), absoluteSocialUrl(tiktokUrl)],
+  };
+
   return (
     <html lang="es" className={`${lora.variable} ${workSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

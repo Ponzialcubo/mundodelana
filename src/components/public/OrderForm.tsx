@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-export function OrderForm() {
+export function OrderForm({ phone }: { phone: string }) {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -50,7 +50,7 @@ export function OrderForm() {
         <span className="font-mono text-xs text-ink-soft">Referencia: {ref}</span>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <a
-            href="https://wa.me/34600000000"
+            href={`https://wa.me/${phone}`}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-full bg-sage px-6 py-3.5 text-[14.5px] font-medium text-white"

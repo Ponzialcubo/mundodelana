@@ -1,5 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Footer } from "@/components/public/Footer";
+import { getSiteSettings, phoneDigits } from "@/lib/seo";
+
+const title = "Cómo funciona";
+const description =
+  "Pide una pieza a medida en 5 pasos: escribes por WhatsApp, cerramos colores, tamaño y precio, y solo pagas cuando confirmas el encargo.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: { canonical: "/como-funciona" },
+  openGraph: { title, description, url: "/como-funciona" },
+};
 
 const STEPS = [
   {
@@ -29,7 +42,9 @@ const STEPS = [
   },
 ];
 
-export default function ComoFuncionaPage() {
+export default async function ComoFuncionaPage() {
+  const { phone } = await getSiteSettings();
+
   return (
     <>
       <section className="flex flex-col items-center gap-4 px-5 py-12 text-center md:gap-4.5 md:px-14 md:py-16">
@@ -66,7 +81,7 @@ export default function ComoFuncionaPage() {
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <a
-            href="https://wa.me/34600000000"
+            href={`https://wa.me/${phoneDigits(phone)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-full bg-pink px-6 py-3.5 text-[14.5px] font-medium"

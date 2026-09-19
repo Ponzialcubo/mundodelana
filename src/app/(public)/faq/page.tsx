@@ -1,12 +1,28 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { FaqAccordion } from "@/components/public/FaqAccordion";
 import { Footer } from "@/components/public/Footer";
+import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
+const title = "Preguntas frecuentes";
+const description =
+  "Plazos de entrega, materiales, envíos, formas de pago y devoluciones: todo lo que suelen preguntar antes de encargar una pieza a Mundodelana.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: { canonical: "/faq" },
+  openGraph: { title, description, url: "/faq" },
+};
+
 export default async function FaqPage() {
-  const faqs = await prisma.faq.findMany({ orderBy: { order: "asc" } });
+  const [faqs, { phone }] = await Promise.all([
+    prisma.faq.findMany({ orderBy: { order: "asc" } }),
+    getSiteSettings(),
+  ]);
 
   return (
     <>
@@ -30,7 +46,7 @@ export default async function FaqPage() {
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <a
-            href="https://wa.me/34600000000"
+            href={`https://wa.me/${phoneDigits(phone)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-full bg-pink px-6 py-3.5 text-[14.5px] font-medium"

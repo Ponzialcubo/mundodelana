@@ -1,7 +1,22 @@
+import type { Metadata } from "next";
 import { ContactForm } from "@/components/public/ContactForm";
 import { Footer } from "@/components/public/Footer";
+import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
-export default function ContactoPage() {
+const title = "Contacto";
+const description =
+  "Escríbeme por WhatsApp o por formulario para pedir presupuesto sin compromiso. Contesto yo, no un bot, en menos de 24 h laborables.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: { canonical: "/contacto" },
+  openGraph: { title, description, url: "/contacto" },
+};
+
+export default async function ContactoPage() {
+  const { phone } = await getSiteSettings();
+
   return (
     <>
       <section className="grid grid-cols-1 gap-10 px-5 py-12 md:grid-cols-2 md:gap-14 md:px-14 md:py-16">
@@ -20,9 +35,9 @@ export default function ContactoPage() {
           <div className="flex flex-col gap-2 rounded-xl bg-sage p-6 text-white">
             <span className="font-mono text-[11px] uppercase tracking-wider text-white/80">La vía más rápida</span>
             <span className="font-serif text-xl font-medium">Hablar por WhatsApp</span>
-            <span className="text-sm text-white/85">+34 600 00 00 00 · contesto yo, no un bot</span>
+            <span className="text-sm text-white/85">{phone} · contesto yo, no un bot</span>
             <a
-              href="https://wa.me/34600000000"
+              href={`https://wa.me/${phoneDigits(phone)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 w-fit rounded-full bg-white px-5 py-2.5 text-sm font-medium text-sage"

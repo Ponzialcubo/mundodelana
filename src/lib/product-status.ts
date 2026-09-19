@@ -47,6 +47,15 @@ export const STATUS_CTA: Record<PieceStatus, { cta: string; note: string }> = {
   },
 };
 
+/** schema.org/ItemAvailability for Product JSON-LD. */
+export const STATUS_SCHEMA_AVAILABILITY: Record<PieceStatus, string> = {
+  DISPONIBLE: "https://schema.org/InStock",
+  TRABAJANDO_EN_ELLO: "https://schema.org/LimitedAvailability",
+  RESERVADO: "https://schema.org/MadeToOrder",
+  VENDIDO: "https://schema.org/OutOfStock",
+  VENDIDO_POR_ENCARGO: "https://schema.org/MadeToOrder",
+};
+
 export function formatPrice(price: number | string, priceType: "STOCK" | "PERSONALIZADO"): string {
   const n = typeof price === "string" ? parseFloat(price) : price;
   const formatted = `${n.toFixed(0)} €`;

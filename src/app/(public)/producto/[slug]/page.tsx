@@ -6,8 +6,8 @@ import { ProductGallery } from "@/components/public/ProductGallery";
 import { LikeButton } from "@/components/public/LikeButton";
 import { ProductCard } from "@/components/public/ProductCard";
 import { Footer } from "@/components/public/Footer";
-import { STATUS_DOT, STATUS_LABEL, STATUS_CTA, formatPrice } from "@/lib/product-status";
-import { productMetaFallback } from "@/lib/seo";
+import { STATUS_DOT, STATUS_LABEL, STATUS_CTA, STATUS_SCHEMA_AVAILABILITY, formatPrice } from "@/lib/product-status";
+import { productMetaFallback, getSiteSettings, phoneDigits, SITE_URL } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -55,26 +55,56 @@ export async function generateMetadata({
 export default async function ProductoPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      categories: true,
-      relatedTo: {
-        where: { publicationStatus: "PUBLICADO" },
-        include: { categories: true },
-        take: 4,
+  const [product, { phone }] = await Promise.all([
+    prisma.product.findUnique({
+      where: { slug },
+      include: {
+        categories: true,
+        images: { orderBy: { order: "asc" } },
+        relatedTo: {
+          where: { publicationStatus: "PUBLICADO" },
+          include: { categories: true },
+          take: 4,
+        },
       },
-    },
-  });
+    }),
+    getSiteSettings(),
+  ]);
 
   if (!product) notFound();
 
   const category = product.categories[0];
   const { cta, note } = STATUS_CTA[product.pieceStatus];
   const materials = (product.materials ?? "").split("\n").filter(Boolean);
+  const galleryImages = [
+    ...(product.mainImage
+      ? [{ url: product.mainImage, focalX: product.mainImageFocalX, focalY: product.mainImageFocalY }]
+      : []),
+    ...product.images.map((img) => ({ url: img.url, focalX: img.focalX, focalY: img.focalY })),
+  ];
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.shortDescription || product.description || undefined,
+    image: galleryImages.map((img) => img.url),
+    category: category?.name,
+    offers: {
+      "@type": "Offer",
+      url: `${SITE_URL}/producto/${slug}`,
+      priceCurrency: "EUR",
+      price: product.price.toString(),
+      availability: STATUS_SCHEMA_AVAILABILITY[product.pieceStatus],
+    },
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <div className="px-5 pt-4 text-[12.5px] text-ink/60 md:px-14 md:pt-5">
         <Link href="/">Inicio</Link>
         <span className="mx-2">/</span>
@@ -88,7 +118,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
       </div>
 
       <section className="grid grid-cols-1 gap-8 px-5 py-6 md:grid-cols-2 md:gap-12 md:px-14 md:py-8">
-        <ProductGallery productName={product.name} />
+        <ProductGallery productName={product.name} images={galleryImages} />
 
         <div className="flex flex-col">
           <div className="mb-3.5 flex items-center gap-3">
@@ -141,7 +171,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
               {cta}
             </button>
             <a
-              href="https://wa.me/34600000000"
+              href={`https://wa.me/${phoneDigits(phone)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full border border-ink/22 bg-white px-6 py-4 text-center text-[15.5px] font-medium text-ink"
@@ -177,6 +207,9 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
                   priceType: p.priceType,
                   pieceStatus: p.pieceStatus,
                   likes: p.likes,
+                  mainImage: p.mainImage,
+                  mainImageFocalX: p.mainImageFocalX,
+                  mainImageFocalY: p.mainImageFocalY,
                 }}
               />
             ))}

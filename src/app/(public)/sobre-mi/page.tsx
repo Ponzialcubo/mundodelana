@@ -1,8 +1,23 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { Footer } from "@/components/public/Footer";
+import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
-export default function SobreMiPage() {
+const title = "Sobre mí";
+const description =
+  "Soy Elvira y tejo a mano cada pieza de Mundodelana desde mi taller en Galicia: amigurumis, decoración y encargos personalizados en algodón 100 %.";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: { canonical: "/sobre-mi" },
+  openGraph: { title, description, url: "/sobre-mi" },
+};
+
+export default async function SobreMiPage() {
+  const { phone } = await getSiteSettings();
+
   return (
     <>
       <section className="grid grid-cols-1 gap-8 px-5 py-12 md:grid-cols-[1fr_520px] md:items-center md:gap-12 md:px-14 md:py-16">
@@ -20,7 +35,7 @@ export default function SobreMiPage() {
               Ver la tienda
             </Link>
             <a
-              href="https://wa.me/34600000000"
+              href={`https://wa.me/${phoneDigits(phone)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full border border-ink/22 bg-white px-6 py-3.5 text-center text-[14.5px] font-medium"
@@ -93,7 +108,7 @@ export default function SobreMiPage() {
             Ver la tienda
           </Link>
           <a
-            href="https://wa.me/34600000000"
+            href={`https://wa.me/${phoneDigits(phone)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-full border border-ink/22 bg-white px-6 py-3.5 text-[14.5px] font-medium"

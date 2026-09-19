@@ -50,3 +50,23 @@ export async function getDefaultMeta() {
   };
   return cachedDefaults;
 }
+
+/** Digits-only phone (no spaces, no leading +), ready for a wa.me link. */
+export function phoneDigits(phone: string): string {
+  return phone.replace(/[^\d]/g, "");
+}
+
+let cachedSettings: { phone: string; publicEmail: string; instagramUrl: string; tiktokUrl: string } | null = null;
+
+/** Site-wide contact info from SiteSettings, with a hardcoded safety net. */
+export async function getSiteSettings() {
+  if (cachedSettings) return cachedSettings;
+  const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+  cachedSettings = {
+    phone: settings?.phone || "+34 600 00 00 00",
+    publicEmail: settings?.publicEmail || "hola@mundodelana.es",
+    instagramUrl: settings?.instagramUrl || "instagram.com/mundodelana",
+    tiktokUrl: settings?.tiktokUrl || "tiktok.com/@mundodelana",
+  };
+  return cachedSettings;
+}
