@@ -39,7 +39,15 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
     categoryIds: product.categories.map((c) => c.id),
     relatedIds: product.relatedTo.map((r) => r.id),
     mainImage: product.mainImage ?? "",
-    images: product.images.map((i) => i.url),
+    mainImageFocalX: product.mainImageFocalX,
+    mainImageFocalY: product.mainImageFocalY,
+    images: product.images.map((i) => ({
+      url: i.url,
+      mediaType: i.mediaType,
+      posterUrl: i.posterUrl,
+      focalX: i.focalX,
+      focalY: i.focalY,
+    })),
   };
 
   return <ProductEditorForm initial={initial} categories={categories} relatedOptions={relatedOptions} />;

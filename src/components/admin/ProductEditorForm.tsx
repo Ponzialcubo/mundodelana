@@ -4,9 +4,17 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
+import { FocalPointPicker } from "@/components/admin/FocalPointPicker";
 
 type Category = { id: string; name: string };
 type RelatedOption = { id: string; name: string };
+export type ProductImageData = {
+  url: string;
+  mediaType: "IMAGE" | "VIDEO";
+  posterUrl?: string | null;
+  focalX: number;
+  focalY: number;
+};
 
 export type ProductFormData = {
   id?: string;
@@ -27,7 +35,9 @@ export type ProductFormData = {
   categoryIds: string[];
   relatedIds: string[];
   mainImage: string;
-  images: string[];
+  mainImageFocalX: number;
+  mainImageFocalY: number;
+  images: ProductImageData[];
 };
 
 const EMPTY: ProductFormData = {
@@ -48,16 +58,20 @@ const EMPTY: ProductFormData = {
   categoryIds: [],
   relatedIds: [],
   mainImage: "",
+  mainImageFocalX: 0.5,
+  mainImageFocalY: 0.5,
   images: [],
 };
 
-async function uploadImage(file: File): Promise<string> {
+type UploadResult = { url: string; mediaType: "image" | "video"; posterUrl?: string };
+
+async function uploadMedia(file: File): Promise<UploadResult> {
   const formData = new FormData();
   formData.append("file", file);
   const res = await fetch("/api/admin/redes/upload", { method: "POST", body: formData });
   const json = await res.json();
-  if (!res.ok) throw new Error(json.error ?? "No se ha podido subir la imagen");
-  return json.url as string;
+  if (!res.ok) throw new Error(json.error ?? "No se ha podido subir el archivo");
+  return json as UploadResult;
 }
 
 export function ProductEditorForm({
@@ -115,7 +129,7 @@ export function ProductEditorForm({
     setUploadingMain(true);
     setError("");
     try {
-      const url = await uploadImage(file);
+      const { url } = await uploadMedia(file);
       set("mainImage", url);
     } catch {
       setError("No se ha podido subir la foto de portada.");
@@ -125,24 +139,40 @@ export function ProductEditorForm({
     }
   }
 
-  async function onGalleryImagesPick(files: FileList) {
+  async function onGalleryFilesPick(files: FileList) {
     setUploadingGallery(true);
     setError("");
     try {
-      const urls = await Promise.all(Array.from(files).map(uploadImage));
-      set("images", [...data.images, ...urls]);
+      const uploaded = await Promise.all(Array.from(files).map(uploadMedia));
+      set("images", [
+        ...data.images,
+        ...uploaded.map((u) => ({
+          url: u.url,
+          mediaType: u.mediaType === "video" ? ("VIDEO" as const) : ("IMAGE" as const),
+          posterUrl: u.posterUrl,
+          focalX: 0.5,
+          focalY: 0.5,
+        })),
+      ]);
     } catch {
-      setError("No se ha podido subir alguna de las fotos.");
+      setError("No se ha podido subir alguno de los archivos.");
     } finally {
       setUploadingGallery(false);
       if (galleryInputRef.current) galleryInputRef.current.value = "";
     }
   }
 
-  function removeGalleryImage(url: string) {
+  function removeGalleryItem(url: string) {
     set(
       "images",
-      data.images.filter((i) => i !== url)
+      data.images.filter((i) => i.url !== url)
+    );
+  }
+
+  function setGalleryFocal(url: string, focalX: number, focalY: number) {
+    set(
+      "images",
+      data.images.map((i) => (i.url === url ? { ...i, focalX, focalY } : i))
     );
   }
 
@@ -207,7 +237,7 @@ export function ProductEditorForm({
             <label className="flex flex-col gap-1.5">
               <span className="text-[13px] font-medium text-admin-ink/85">Slug</span>
               <div className="flex items-center gap-1 rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5">
-                <span className="font-mono text-xs text-admin-faint">mundodelana.es/producto/</span>
+                <span className="font-mono text-xs text-admin-faint">mundolana.es/producto/</span>
                 <input
                   value={data.slug}
                   onChange={(e) => {
@@ -260,7 +290,7 @@ export function ProductEditorForm({
           </div>
 
           <div className="flex flex-col gap-4 rounded-xl border border-admin-ink/10 bg-white p-6">
-            <span className="font-serif text-base font-medium">Fotos</span>
+            <span className="font-serif text-base font-medium">Fotos y vídeos</span>
 
             <input
               ref={mainInputRef}
@@ -272,38 +302,68 @@ export function ProductEditorForm({
                 if (file) onMainImagePick(file);
               }}
             />
-            <button
-              type="button"
-              onClick={() => mainInputRef.current?.click()}
-              disabled={uploadingMain}
-              className="h-40 rounded-lg bg-cover bg-center disabled:opacity-60"
-              style={
-                data.mainImage
-                  ? { backgroundImage: `url(${data.mainImage})` }
-                  : { background: "repeating-linear-gradient(45deg,#EDEBE8 0 9px,#F7F6F4 9px 18px)" }
-              }
-            >
-              {!data.mainImage && (
+            {data.mainImage ? (
+              <FocalPointPicker
+                src={data.mainImage}
+                focalX={data.mainImageFocalX}
+                focalY={data.mainImageFocalY}
+                onChange={(x, y) => {
+                  set("mainImageFocalX", x);
+                  set("mainImageFocalY", y);
+                }}
+                className="h-40"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => mainInputRef.current?.click()}
+                disabled={uploadingMain}
+                className="h-40 rounded-lg bg-cover bg-center disabled:opacity-60"
+                style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 9px,#F7F6F4 9px 18px)" }}
+              >
                 <span className="text-sm text-admin-ink-soft">{uploadingMain ? "Subiendo…" : "+ Foto de portada"}</span>
-              )}
-            </button>
+              </button>
+            )}
+            {data.mainImage && (
+              <button
+                type="button"
+                onClick={() => mainInputRef.current?.click()}
+                disabled={uploadingMain}
+                className="self-start text-xs font-medium text-admin-ink/70 underline disabled:opacity-60"
+              >
+                {uploadingMain ? "Subiendo…" : "Cambiar foto de portada"}
+              </button>
+            )}
 
             <input
               ref={galleryInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               multiple
               className="hidden"
               onChange={(e) => {
-                if (e.target.files?.length) onGalleryImagesPick(e.target.files);
+                if (e.target.files?.length) onGalleryFilesPick(e.target.files);
               }}
             />
             <div className="grid grid-cols-3 gap-3">
-              {data.images.map((url) => (
-                <div key={url} className="group relative h-20 rounded-lg bg-cover bg-center" style={{ backgroundImage: `url(${url})` }}>
+              {data.images.map((item) => (
+                <div key={item.url} className="group relative">
+                  <FocalPointPicker
+                    src={item.mediaType === "VIDEO" ? item.posterUrl ?? item.url : item.url}
+                    focalX={item.focalX}
+                    focalY={item.focalY}
+                    onChange={(x, y) => setGalleryFocal(item.url, x, y)}
+                    className="h-20"
+                    hint={false}
+                  />
+                  {item.mediaType === "VIDEO" && (
+                    <span className="pointer-events-none absolute left-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-white">
+                      Vídeo
+                    </span>
+                  )}
                   <button
                     type="button"
-                    onClick={() => removeGalleryImage(url)}
+                    onClick={() => removeGalleryItem(item.url)}
                     className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 text-xs text-white opacity-0 group-hover:opacity-100"
                   >
                     ×
@@ -319,7 +379,9 @@ export function ProductEditorForm({
                 {uploadingGallery ? "Subiendo…" : "+ Añadir"}
               </button>
             </div>
-            <span className="text-xs text-admin-faint">La foto de portada es la que se ve en el catálogo.</span>
+            <span className="text-xs text-admin-faint">
+              La foto de portada es la que se ve en el catálogo. En la ficha, fotos y vídeos se agrupan solos en pestañas.
+            </span>
           </div>
 
           <div className="flex flex-col gap-4 rounded-xl border border-admin-ink/10 bg-white p-6">
@@ -503,7 +565,7 @@ export function ProductEditorForm({
               <input
                 value={data.tiktokUrl}
                 onChange={(e) => set("tiktokUrl", e.target.value)}
-                placeholder="tiktok.com/@mundodelana/video/…"
+                placeholder="tiktok.com/@mundolana/video/…"
                 className="rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5 text-sm outline-none"
               />
             </label>

@@ -21,6 +21,9 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# ffmpeg: used to transcode/compress videos uploaded from the backoffice.
+RUN apk add --no-cache ffmpeg
+
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 

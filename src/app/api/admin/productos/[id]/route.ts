@@ -27,10 +27,24 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       instagramUrl: body.instagramUrl || null,
       tiktokUrl: body.tiktokUrl || null,
       mainImage: body.mainImage || null,
+      mainImageFocalX: body.mainImageFocalX ?? 0.5,
+      mainImageFocalY: body.mainImageFocalY ?? 0.5,
       images: body.images
         ? {
             deleteMany: {},
-            create: body.images.map((url: string, order: number) => ({ url, order })),
+            create: body.images.map(
+              (
+                img: { url: string; mediaType?: "IMAGE" | "VIDEO"; posterUrl?: string; focalX: number; focalY: number },
+                order: number
+              ) => ({
+                url: img.url,
+                mediaType: img.mediaType ?? "IMAGE",
+                posterUrl: img.posterUrl || null,
+                focalX: img.focalX ?? 0.5,
+                focalY: img.focalY ?? 0.5,
+                order,
+              })
+            ),
           }
         : undefined,
       categories: body.categoryIds ? { set: body.categoryIds.map((cid: string) => ({ id: cid })) } : undefined,

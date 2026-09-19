@@ -76,19 +76,33 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
   const category = product.categories[0];
   const { cta, note } = STATUS_CTA[product.pieceStatus];
   const materials = (product.materials ?? "").split("\n").filter(Boolean);
-  const galleryImages = [
+  const galleryItems = [
     ...(product.mainImage
-      ? [{ url: product.mainImage, focalX: product.mainImageFocalX, focalY: product.mainImageFocalY }]
+      ? [
+          {
+            url: product.mainImage,
+            mediaType: "image" as const,
+            focalX: product.mainImageFocalX,
+            focalY: product.mainImageFocalY,
+          },
+        ]
       : []),
-    ...product.images.map((img) => ({ url: img.url, focalX: img.focalX, focalY: img.focalY })),
+    ...product.images.map((img) => ({
+      url: img.url,
+      mediaType: img.mediaType === "VIDEO" ? ("video" as const) : ("image" as const),
+      posterUrl: img.posterUrl,
+      focalX: img.focalX,
+      focalY: img.focalY,
+    })),
   ];
+  const galleryPhotoUrls = galleryItems.filter((i) => i.mediaType === "image").map((i) => i.url);
 
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.shortDescription || product.description || undefined,
-    image: galleryImages.map((img) => (img.url.startsWith("http") ? img.url : `${SITE_URL}${img.url}`)),
+    image: galleryPhotoUrls.map((url) => (url.startsWith("http") ? url : `${SITE_URL}${url}`)),
     category: category?.name,
     offers: {
       "@type": "Offer",
@@ -118,7 +132,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
       </div>
 
       <section className="grid grid-cols-1 gap-8 px-5 py-6 md:grid-cols-2 md:gap-12 md:px-14 md:py-8">
-        <ProductGallery productName={product.name} images={galleryImages} />
+        <ProductGallery productName={product.name} items={galleryItems} />
 
         <div className="flex flex-col">
           <div className="mb-3.5 flex items-center gap-3">
