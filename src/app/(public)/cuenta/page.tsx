@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCustomerSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { NewsletterToggle } from "@/components/public/NewsletterToggle";
+import { ProfileForm } from "@/components/public/ProfileForm";
 import { LogoutButton } from "@/components/public/LogoutButton";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import type { OrderState } from "@/generated/prisma";
@@ -69,7 +70,11 @@ export default async function CuentaPage() {
               </p>
             )}
             {customer.orders.map((o) => (
-              <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink/8 bg-white p-5">
+              <Link
+                key={o.id}
+                href={`/cuenta/pedidos/${o.id}`}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink/8 bg-white p-5"
+              >
                 <div className="flex flex-col gap-1">
                   <span className="font-serif text-base font-medium">{o.requestText.slice(0, 40)}{o.requestText.length > 40 ? "…" : ""}</span>
                   <span className="font-mono text-xs text-ink-soft">
@@ -83,11 +88,16 @@ export default async function CuentaPage() {
                   </span>
                   <span className="text-sm font-medium text-pink-deep">{STATE_ACTION[o.state]}</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
           <aside className="flex flex-col gap-4">
+            <ProfileForm
+              initialName={customer.name}
+              initialPhone={customer.phone ?? ""}
+              hasPassword={Boolean(customer.passwordHash)}
+            />
             <NewsletterToggle initialActive={customer.newsletterOptIn} />
             <div className="rounded-xl border border-ink/8 bg-white p-5 text-xs leading-relaxed text-ink/70">
               <p><strong>Nuevo</strong> · lo he recibido, te escribo pronto</p>

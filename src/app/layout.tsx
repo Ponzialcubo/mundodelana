@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Lora, Work_Sans } from "next/font/google";
 import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
@@ -15,6 +15,15 @@ const workSans = Work_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
 });
+
+// Explicit viewport: default width/scale, zoom allowed (accessibility) —
+// this alone doesn't fix mobile layout shift, it just stops the browser
+// from guessing. The real fix for "misaligned on zoom" is any element wider
+// than 100vw, which forces the whole viewport to scale down to fit it.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

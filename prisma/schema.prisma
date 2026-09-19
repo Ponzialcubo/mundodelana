@@ -29,13 +29,30 @@ model Customer {
   name            String
   email           String  @unique
   phone           String?
-  passwordHash    String
+  // Null for accounts created (or linked) via Google sign-in that never set
+  // a password of their own.
+  passwordHash    String?
+  googleId        String? @unique
   newsletterOptIn Boolean @default(true)
 
   orders Order[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  // SHA-256 hash of the token sent by email — the raw token is never stored,
+  // same principle as a password hash: a DB leak alone can't be used to
+  // reset anyone's account.
+  tokenHash  String    @unique
+  customerId String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId])
 }
 
 // ---------- Catálogo ----------
