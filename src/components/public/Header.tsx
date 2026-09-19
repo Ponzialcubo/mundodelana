@@ -11,7 +11,13 @@ const NAV_LINKS = [
   { href: "/contacto", label: "Contacto" },
 ];
 
-export function Header({ statusLabel = "Encargos abiertos" }: { statusLabel?: string }) {
+export function Header({
+  statusLabel = "Encargos abiertos",
+  loggedIn = false,
+}: {
+  statusLabel?: string;
+  loggedIn?: boolean;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -39,8 +45,8 @@ export function Header({ statusLabel = "Encargos abiertos" }: { statusLabel?: st
             <span className="h-1.5 w-1.5 rounded-full bg-sage" />
             {statusLabel}
           </span>
-          <Link href="/cuenta" className="border-b border-ink/30 pb-0.5 text-[13.5px] text-ink">
-            Mi cuenta
+          <Link href={loggedIn ? "/cuenta" : "/acceso"} className="border-b border-ink/30 pb-0.5 text-[13.5px] text-ink">
+            {loggedIn ? "Mi cuenta" : "Entrar"}
           </Link>
         </div>
 
@@ -57,6 +63,19 @@ export function Header({ statusLabel = "Encargos abiertos" }: { statusLabel?: st
 
       {menuOpen && (
         <div className="flex flex-col bg-white md:hidden">
+          <Link
+            href={loggedIn ? "/cuenta" : "/acceso"}
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center justify-between border-b border-ink/8 bg-cream px-5 py-4 text-[14.5px] font-medium text-ink"
+          >
+            <span className="flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-pink font-serif text-xs font-medium">
+                m
+              </span>
+              {loggedIn ? "Mi cuenta" : "Entrar o crear cuenta"}
+            </span>
+            <span className="text-ink/40">›</span>
+          </Link>
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}

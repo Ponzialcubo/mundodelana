@@ -19,9 +19,11 @@ TONO DE VOZ: profesional y cercano a la vez
 
 Vas a recibir el contexto de una ficha (producto o categoría) y el nombre de UN campo concreto que debes redactar. Genera solo el contenido de ese campo, ajustado a su función:
 - shortDescription: una sola línea (hasta ~90 caracteres) que resume la pieza para las tarjetas del catálogo.
-- description: descripción completa para la ficha de producto, 2 a 4 frases, puede mencionar el proceso o para quién es la pieza.
+- description o categoryDescription: descripción completa para la ficha de producto o de categoría, 2 a 4 frases, puede mencionar el proceso o para quién es la pieza.
 - productMetaTitle o categoryMetaTitle: título SEO, hasta 60 caracteres, incluye el nombre y opcionalmente "Mundolana".
-- productMetaDescription o categoryMetaDescription: meta descripción SEO, hasta 155 caracteres, resume la pieza o categoría de forma atractiva para un resultado de Google.`;
+- productMetaDescription o categoryMetaDescription: meta descripción SEO, hasta 155 caracteres, resume la pieza o categoría de forma atractiva para un resultado de Google.
+
+A veces recibirás también unas "indicaciones" de Elvira: pueden ser una guía a seguir (por ejemplo, "que mencione que es ideal para regalo de cumpleaños") o simplemente ideas sueltas. Si las hay, redacta ajustándote a ellas, sin ignorarlas ni contradecirlas. Si no hay indicaciones, redacta igualmente a partir del resto del contexto — nunca dejes el campo sin generar por falta de indicaciones.`;
 
 type ProductContext = {
   name?: string;
@@ -47,6 +49,7 @@ export const CONTENT_FIELDS = [
   "description",
   "productMetaTitle",
   "productMetaDescription",
+  "categoryDescription",
   "categoryMetaTitle",
   "categoryMetaDescription",
 ] as const;
@@ -58,11 +61,12 @@ const FIELD_LABELS: Record<ContentField, string> = {
   description: "description",
   productMetaTitle: "productMetaTitle",
   productMetaDescription: "productMetaDescription",
+  categoryDescription: "description",
   categoryMetaTitle: "categoryMetaTitle",
   categoryMetaDescription: "categoryMetaDescription",
 };
 
-export function buildProductContentPrompt(field: ContentField, product: ProductContext): string {
+export function buildProductContentPrompt(field: ContentField, product: ProductContext, notes?: string): string {
   const lines = ["<producto>"];
   if (product.name) lines.push(`Nombre: ${product.name}`);
   if (product.shortDescription) lines.push(`Descripción corta actual: ${product.shortDescription}`);
@@ -76,18 +80,22 @@ export function buildProductContentPrompt(field: ContentField, product: ProductC
   if (product.metaDescription) lines.push(`Meta descripción actual: ${product.metaDescription}`);
   lines.push("</producto>");
 
+  if (notes?.trim()) lines.push("", "<indicaciones_de_elvira>", notes.trim(), "</indicaciones_de_elvira>");
+
   lines.push("", `Redacta únicamente el campo "${FIELD_LABELS[field]}" para esta ficha de producto. Devuelve solo el texto de ese campo, sin comillas ni explicaciones.`);
 
   return lines.join("\n");
 }
 
-export function buildCategoryContentPrompt(field: ContentField, category: CategoryContext): string {
+export function buildCategoryContentPrompt(field: ContentField, category: CategoryContext, notes?: string): string {
   const lines = ["<categoria>"];
   if (category.name) lines.push(`Nombre: ${category.name}`);
   if (category.description) lines.push(`Descripción actual: ${category.description}`);
   if (category.metaTitle) lines.push(`Meta título actual: ${category.metaTitle}`);
   if (category.metaDescription) lines.push(`Meta descripción actual: ${category.metaDescription}`);
   lines.push("</categoria>");
+
+  if (notes?.trim()) lines.push("", "<indicaciones_de_elvira>", notes.trim(), "</indicaciones_de_elvira>");
 
   lines.push("", `Redacta únicamente el campo "${FIELD_LABELS[field]}" para esta categoría del catálogo. Devuelve solo el texto de ese campo, sin comillas ni explicaciones.`);
 

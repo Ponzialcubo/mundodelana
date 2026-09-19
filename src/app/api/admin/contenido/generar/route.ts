@@ -33,10 +33,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Campo no admitido." }, { status: 400 });
   }
 
-  const isCategoryField = field === "categoryMetaTitle" || field === "categoryMetaDescription";
+  const isCategoryField = field.startsWith("category");
+  const notes = typeof body.notes === "string" ? body.notes : undefined;
   const prompt = isCategoryField
-    ? buildCategoryContentPrompt(field, body.context ?? {})
-    : buildProductContentPrompt(field, body.context ?? {});
+    ? buildCategoryContentPrompt(field, body.context ?? {}, notes)
+    : buildProductContentPrompt(field, body.context ?? {}, notes);
 
   const client = new Anthropic();
 

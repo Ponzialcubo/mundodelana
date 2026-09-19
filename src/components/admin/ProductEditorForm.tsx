@@ -176,6 +176,30 @@ export function ProductEditorForm({
     );
   }
 
+  // Swaps a gallery photo with the current cover — nothing is lost, the
+  // previous cover just becomes part of the gallery instead.
+  function makeMainImage(item: ProductImageData) {
+    if (item.mediaType !== "IMAGE") return;
+    const rest = data.images.filter((i) => i.url !== item.url);
+    setData((d) => ({
+      ...d,
+      mainImage: item.url,
+      mainImageFocalX: item.focalX,
+      mainImageFocalY: item.focalY,
+      images: d.mainImage
+        ? [{ url: d.mainImage, mediaType: "IMAGE", focalX: d.mainImageFocalX, focalY: d.mainImageFocalY }, ...rest]
+        : rest,
+    }));
+  }
+
+  function moveGalleryItem(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= data.images.length) return;
+    const next = [...data.images];
+    [next[index], next[target]] = [next[target], next[index]];
+    set("images", next);
+  }
+
   async function save(publicationStatus?: ProductFormData["publicationStatus"]) {
     setLoading(true);
     setError("");
@@ -346,8 +370,8 @@ export function ProductEditorForm({
               }}
             />
             <div className="grid grid-cols-3 gap-3">
-              {data.images.map((item) => (
-                <div key={item.url} className="group relative">
+              {data.images.map((item, index) => (
+                <div key={item.url} className="group relative flex flex-col gap-1">
                   <FocalPointPicker
                     src={item.mediaType === "VIDEO" ? item.posterUrl ?? item.url : item.url}
                     focalX={item.focalX}
@@ -368,6 +392,37 @@ export function ProductEditorForm({
                   >
                     ×
                   </button>
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="flex gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => moveGalleryItem(index, -1)}
+                        disabled={index === 0}
+                        className="flex h-5 w-5 items-center justify-center rounded border border-admin-ink/14 text-[10px] disabled:opacity-30"
+                        title="Mover antes"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveGalleryItem(index, 1)}
+                        disabled={index === data.images.length - 1}
+                        className="flex h-5 w-5 items-center justify-center rounded border border-admin-ink/14 text-[10px] disabled:opacity-30"
+                        title="Mover después"
+                      >
+                        ›
+                      </button>
+                    </div>
+                    {item.mediaType === "IMAGE" && (
+                      <button
+                        type="button"
+                        onClick={() => makeMainImage(item)}
+                        className="text-[10px] font-medium text-admin-link underline"
+                      >
+                        Hacer portada
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
               <button
@@ -380,7 +435,8 @@ export function ProductEditorForm({
               </button>
             </div>
             <span className="text-xs text-admin-faint">
-              La foto de portada es la que se ve en el catálogo. En la ficha, fotos y vídeos se agrupan solos en pestañas.
+              La foto de portada es la que se ve en el catálogo — pulsa &ldquo;Hacer portada&rdquo; en cualquier foto de la
+              galería para cambiarla. El orden aquí es el orden en la ficha; fotos y vídeos se agrupan solos en pestañas.
             </span>
           </div>
 

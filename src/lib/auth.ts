@@ -8,7 +8,7 @@ import { createCustomerSession } from "@/lib/session";
 // below links/creates the Customer row and hands off to the app's own
 // md_customer_session cookie (see src/lib/session.ts), so the rest of the
 // app keeps treating email+password and Google sign-in identically.
-export const { handlers } = NextAuth({
+export const { handlers, signIn } = NextAuth({
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,

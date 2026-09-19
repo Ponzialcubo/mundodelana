@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
+import { FocalPointPicker } from "@/components/admin/FocalPointPicker";
 
 export type CategoryFormData = {
   id?: string;
@@ -11,6 +12,8 @@ export type CategoryFormData = {
   slug: string;
   description: string;
   coverImage: string;
+  coverFocalX: number;
+  coverFocalY: number;
   metaTitle: string;
   metaDescription: string;
   order: number;
@@ -22,6 +25,8 @@ const EMPTY: CategoryFormData = {
   slug: "",
   description: "",
   coverImage: "",
+  coverFocalX: 0.5,
+  coverFocalY: 0.5,
   metaTitle: "",
   metaDescription: "",
   order: 1,
@@ -119,7 +124,7 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
             <label className="flex flex-col gap-1.5">
               <span className="text-[13px] font-medium text-admin-ink/85">Slug</span>
               <div className="flex items-center gap-1 rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5">
-                <span className="font-mono text-xs text-admin-faint">mundodelana.es/categoria/</span>
+                <span className="font-mono text-xs text-admin-faint">mundolana.es/categoria/</span>
                 <input
                   value={data.slug}
                   onChange={(e) => {
@@ -132,7 +137,14 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
               <span className="text-xs text-admin-faint">Se genera a partir del nombre. Puedes editarlo.</span>
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-medium text-admin-ink/85">Descripción</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-medium text-admin-ink/85">Descripción</span>
+                <AiGenerateButton
+                  field="categoryDescription"
+                  context={{ name: data.name, description: data.description }}
+                  onGenerated={(text) => set("description", text)}
+                />
+              </div>
               <textarea
                 value={data.description}
                 onChange={(e) => set("description", e.target.value)}
@@ -157,7 +169,7 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
               <input
                 value={data.metaTitle}
                 onChange={(e) => set("metaTitle", e.target.value)}
-                placeholder="Amigurumis hechos a mano · Mundodelana"
+                placeholder="Amigurumis hechos a mano · Mundolana"
                 className="rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5 text-sm outline-none"
               />
             </label>
@@ -194,21 +206,28 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
                 if (file) onCoverImagePick(file);
               }}
             />
-            <button
-              type="button"
-              onClick={() => coverInputRef.current?.click()}
-              disabled={uploadingCover}
-              className="h-32 rounded-lg bg-cover bg-center disabled:opacity-60"
-              style={
-                data.coverImage
-                  ? { backgroundImage: `url(${data.coverImage})` }
-                  : { background: "repeating-linear-gradient(45deg,#EDEBE8 0 9px,#F7F6F4 9px 18px)" }
-              }
-            >
-              {!data.coverImage && (
+            {data.coverImage ? (
+              <FocalPointPicker
+                src={data.coverImage}
+                focalX={data.coverFocalX}
+                focalY={data.coverFocalY}
+                onChange={(x, y) => {
+                  set("coverFocalX", x);
+                  set("coverFocalY", y);
+                }}
+                className="h-32"
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => coverInputRef.current?.click()}
+                disabled={uploadingCover}
+                className="h-32 rounded-lg bg-cover bg-center disabled:opacity-60"
+                style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 9px,#F7F6F4 9px 18px)" }}
+              >
                 <span className="text-sm text-admin-ink-soft">{uploadingCover ? "Subiendo…" : "+ Foto de portada"}</span>
-              )}
-            </button>
+              </button>
+            )}
             <div className="flex gap-2">
               <button
                 type="button"
