@@ -88,7 +88,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
     "@type": "Product",
     name: product.name,
     description: product.shortDescription || product.description || undefined,
-    image: galleryImages.map((img) => img.url),
+    image: galleryImages.map((img) => (img.url.startsWith("http") ? img.url : `${SITE_URL}${img.url}`)),
     category: category?.name,
     offers: {
       "@type": "Offer",
