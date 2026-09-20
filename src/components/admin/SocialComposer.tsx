@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CONTENT_IDEAS } from "@/lib/social-ideas";
 import { PIECE_STATUS_LABEL } from "@/lib/admin-status";
+import { InstagramFeed } from "@/components/admin/InstagramFeed";
 import type { PieceStatus } from "@/generated/prisma";
 
 type Product = {
@@ -26,6 +27,10 @@ type SavedPost = {
   instagramText: string | null;
   tiktokText: string | null;
   mediaUrl: string | null;
+  mediaType: string | null;
+  instagramPermalink: string | null;
+  instagramPublishedAt: string | null;
+  instagramPublishError: string | null;
 };
 
 const inputClass =
@@ -160,13 +165,31 @@ export function SocialComposer({ products, posts }: { products: Product[]; posts
     router.refresh();
   }
 
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+
+  async function publishPost(id: string) {
+    setPublishingId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/redes/publicaciones/${id}/publicar`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "No se ha podido publicar.");
+      setNotice("Publicado en Instagram.");
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se ha podido publicar.");
+    } finally {
+      setPublishingId(null);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6 md:p-9">
       <div>
         <h1 className="font-serif text-2xl font-normal">Preparar publicación</h1>
         <p className="text-sm text-admin-ink-soft">
-          Genera el texto para Instagram y TikTok a partir de una pieza del catálogo. Nada se publica
-          automáticamente: copia o descarga el texto y súbelo tú.
+          Genera el texto para Instagram y TikTok a partir de una pieza del catálogo. Instagram se puede
+          publicar directamente desde aquí; para TikTok, copia o descarga el texto y súbelo tú.
         </p>
       </div>
 
@@ -180,6 +203,8 @@ export function SocialComposer({ products, posts }: { products: Product[]; posts
           {notice}
         </div>
       )}
+
+      <InstagramFeed />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
         <div className="flex flex-col gap-6">
@@ -371,7 +396,8 @@ export function SocialComposer({ products, posts }: { products: Product[]; posts
             <div className="flex flex-col gap-1">
               <span className="font-serif text-lg font-medium">4 · Fecha prevista</span>
               <span className="text-xs text-admin-faint">
-                Solo es un recordatorio interno. La web no publica nada en Instagram ni en TikTok.
+                Solo es un recordatorio interno para TikTok. Instagram se publica al pulsar "Publicar en
+                Instagram" en la lista de abajo, no según esta fecha.
               </span>
             </div>
 
@@ -429,9 +455,40 @@ export function SocialComposer({ products, posts }: { products: Product[]; posts
                         </span>
                       )}
                     </div>
+
+                    {post.instagramPublishedAt ? (
+                      <a
+                        href={post.instagramPermalink ?? undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-full px-2.5 py-1 text-[11px] font-medium"
+                        style={{ background: "#EAF0E4", color: "#5C7245" }}
+                      >
+                        Publicado en Instagram ✓
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => publishPost(post.id)}
+                        disabled={publishingId === post.id || !post.mediaUrl || !post.instagramText}
+                        title={
+                          !post.mediaUrl || !post.instagramText
+                            ? "Faltan foto/vídeo o texto de Instagram"
+                            : undefined
+                        }
+                        className="rounded-full border border-admin-ink/16 bg-white px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+                      >
+                        {publishingId === post.id ? "Publicando…" : "Publicar en Instagram"}
+                      </button>
+                    )}
+                    {post.instagramPublishError && (
+                      <span className="w-full text-[11px] text-admin-danger">
+                        {post.instagramPublishError}
+                      </span>
+                    )}
+
                     <button
                       onClick={() => removePost(post.id)}
-                      className="ml-auto text-xs text-admin-danger"
+                      className="text-xs text-admin-danger"
                     >
                       Eliminar
                     </button>

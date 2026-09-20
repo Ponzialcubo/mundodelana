@@ -334,8 +334,15 @@ model SocialPost {
   instagramText String?
   tiktokText    String?
 
-  // Recordatorio interno: no publica nada automáticamente.
+  // Recordatorio interno para TikTok: no se publica nada automáticamente ahí.
   scheduledFor DateTime?
+
+  // Estado de la publicación real en Instagram vía API. Null = todavía no
+  // se ha intentado publicar (sigue siendo solo un borrador/recordatorio).
+  instagramPostId        String?
+  instagramPermalink     String?
+  instagramPublishedAt   DateTime?
+  instagramPublishError  String?
 
   notes String?
 

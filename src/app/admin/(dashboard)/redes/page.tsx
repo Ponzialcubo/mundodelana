@@ -36,6 +36,10 @@ export default async function AdminRedesPage() {
         instagramText: post.instagramText,
         tiktokText: post.tiktokText,
         mediaUrl: post.mediaUrl,
+        mediaType: post.mediaType,
+        instagramPermalink: post.instagramPermalink,
+        instagramPublishedAt: post.instagramPublishedAt?.toISOString() ?? null,
+        instagramPublishError: post.instagramPublishError,
       }))}
     />
   );
