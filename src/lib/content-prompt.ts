@@ -31,6 +31,7 @@ type ProductContext = {
   description?: string | null;
   materials?: string | null;
   categories?: string[];
+  brands?: string[];
   price?: string | null;
   priceType?: string | null;
   metaTitle?: string | null;
@@ -73,6 +74,7 @@ export function buildProductContentPrompt(field: ContentField, product: ProductC
   if (product.description) lines.push(`Descripción actual: ${product.description}`);
   if (product.materials) lines.push(`Materiales:\n${product.materials}`);
   if (product.categories?.length) lines.push(`Categorías: ${product.categories.join(", ")}`);
+  if (product.brands?.length) lines.push(`Marca/franquicia: ${product.brands.join(", ")}`);
   if (product.price) {
     lines.push(`Precio: ${product.priceType === "PERSONALIZADO" ? `desde ${product.price} €` : `${product.price} €`}`);
   }

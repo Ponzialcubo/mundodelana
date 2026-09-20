@@ -5,16 +5,18 @@ import { ProductEditorForm, type ProductFormData } from "@/components/admin/Prod
 export default async function EditarProductoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [product, categories, relatedOptions] = await Promise.all([
+  const [product, categories, brands, relatedOptions] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       include: {
         categories: true,
+        brands: true,
         relatedTo: { select: { id: true } },
         images: { orderBy: { order: "asc" } },
       },
     }),
     prisma.category.findMany({ orderBy: { order: "asc" } }),
+    prisma.brand.findMany({ orderBy: { order: "asc" } }),
     prisma.product.findMany({ where: { id: { not: id } }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
 
@@ -37,6 +39,7 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
     instagramUrl: product.instagramUrl ?? "",
     tiktokUrl: product.tiktokUrl ?? "",
     categoryIds: product.categories.map((c) => c.id),
+    brandIds: product.brands.map((b) => b.id),
     relatedIds: product.relatedTo.map((r) => r.id),
     mainImage: product.mainImage ?? "",
     mainImageFocalX: product.mainImageFocalX,
@@ -50,5 +53,5 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
     })),
   };
 
-  return <ProductEditorForm initial={initial} categories={categories} relatedOptions={relatedOptions} />;
+  return <ProductEditorForm initial={initial} categories={categories} brands={brands} relatedOptions={relatedOptions} />;
 }

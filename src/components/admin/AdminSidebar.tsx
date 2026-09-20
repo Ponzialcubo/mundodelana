@@ -8,6 +8,7 @@ const GESTION = [
   { href: "/admin/pedidos", label: "Pedidos" },
   { href: "/admin/productos", label: "Productos" },
   { href: "/admin/categorias", label: "Categorías" },
+  { href: "/admin/marcas", label: "Marcas" },
   { href: "/admin/newsletter", label: "Newsletter" },
   { href: "/admin/redes", label: "Redes sociales" },
 ];

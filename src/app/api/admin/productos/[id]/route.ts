@@ -48,6 +48,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
           }
         : undefined,
       categories: body.categoryIds ? { set: body.categoryIds.map((cid: string) => ({ id: cid })) } : undefined,
+      brands: body.brandIds ? { set: body.brandIds.map((bid: string) => ({ id: bid })) } : undefined,
       relatedTo: body.relatedIds ? { set: body.relatedIds.map((rid: string) => ({ id: rid })) } : undefined,
     },
   });

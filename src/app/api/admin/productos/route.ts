@@ -53,6 +53,7 @@ export async function POST(req: Request) {
           }
         : undefined,
       categories: body.categoryIds?.length ? { connect: body.categoryIds.map((id: string) => ({ id })) } : undefined,
+      brands: body.brandIds?.length ? { connect: body.brandIds.map((id: string) => ({ id })) } : undefined,
       relatedTo: body.relatedIds?.length ? { connect: body.relatedIds.map((id: string) => ({ id })) } : undefined,
     },
   });

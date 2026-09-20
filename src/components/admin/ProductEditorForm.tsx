@@ -7,6 +7,7 @@ import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
 import { FocalPointPicker } from "@/components/admin/FocalPointPicker";
 
 type Category = { id: string; name: string };
+type Brand = { id: string; name: string };
 type RelatedOption = { id: string; name: string };
 export type ProductImageData = {
   url: string;
@@ -33,6 +34,7 @@ export type ProductFormData = {
   instagramUrl: string;
   tiktokUrl: string;
   categoryIds: string[];
+  brandIds: string[];
   relatedIds: string[];
   mainImage: string;
   mainImageFocalX: number;
@@ -56,6 +58,7 @@ const EMPTY: ProductFormData = {
   instagramUrl: "",
   tiktokUrl: "",
   categoryIds: [],
+  brandIds: [],
   relatedIds: [],
   mainImage: "",
   mainImageFocalX: 0.5,
@@ -77,10 +80,12 @@ async function uploadMedia(file: File): Promise<UploadResult> {
 export function ProductEditorForm({
   initial,
   categories,
+  brands,
   relatedOptions,
 }: {
   initial?: ProductFormData;
   categories: Category[];
+  brands: Brand[];
   relatedOptions: RelatedOption[];
 }) {
   const router = useRouter();
@@ -111,12 +116,13 @@ export function ProductEditorForm({
       description: data.description,
       materials: data.materials,
       categories: categories.filter((c) => data.categoryIds.includes(c.id)).map((c) => c.name),
+      brands: brands.filter((b) => data.brandIds.includes(b.id)).map((b) => b.name),
       price: data.price,
       priceType: data.priceType,
       metaTitle: data.metaTitle,
       metaDescription: data.metaDescription,
     }),
-    [data.name, data.shortDescription, data.description, data.materials, data.categoryIds, data.price, data.priceType, data.metaTitle, data.metaDescription, categories]
+    [data.name, data.shortDescription, data.description, data.materials, data.categoryIds, data.brandIds, data.price, data.priceType, data.metaTitle, data.metaDescription, categories, brands]
   );
 
   const sideSummary = useMemo(() => {
@@ -602,6 +608,37 @@ export function ProductEditorForm({
               {data.categoryIds.length
                 ? `Seleccionadas: ${categories.filter((c) => data.categoryIds.includes(c.id)).map((c) => c.name).join(", ")}`
                 : "Sin categoría: no aparecerá en los filtros del catálogo."}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-xl border border-admin-ink/10 bg-white p-6">
+            <span className="font-serif text-base font-medium">Marca</span>
+            <div className="flex flex-wrap gap-2">
+              {brands.map((b) => {
+                const on = data.brandIds.includes(b.id);
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() =>
+                      set("brandIds", on ? data.brandIds.filter((id) => id !== b.id) : [...data.brandIds, b.id])
+                    }
+                    className="rounded-full px-3 py-1.5 text-[13px]"
+                    style={on ? { background: "#1F1B1A", color: "#F7F6F4" } : { background: "#fff", border: "1px solid rgba(31,27,26,.14)" }}
+                  >
+                    {b.name}
+                  </button>
+                );
+              })}
+              {brands.length === 0 && (
+                <span className="text-xs text-admin-faint">
+                  Todavía no hay marcas creadas. Crea una en Marcas.
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-admin-faint">
+              {data.brandIds.length
+                ? `Seleccionadas: ${brands.filter((b) => data.brandIds.includes(b.id)).map((b) => b.name).join(", ")}`
+                : "Opcional: úsalo para franquicias/colecciones como Pokémon o Dragon Ball."}
             </span>
           </div>
 

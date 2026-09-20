@@ -100,6 +100,20 @@ model Category {
   updatedAt DateTime @updatedAt
 }
 
+// A franchise/collection tag (e.g. Pokémon, Dragon Ball) independent of
+// Category, so the same brand can span multiple categories over time.
+model Brand {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  order Int    @default(0)
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Product {
   id               String  @id @default(cuid())
   name             String
@@ -130,6 +144,7 @@ model Product {
   tiktokUrl    String?
 
   categories Category[]
+  brands     Brand[]
 
   relatedTo   Product[] @relation("RelatedProducts")
   relatedFrom Product[] @relation("RelatedProducts")
