@@ -18,9 +18,9 @@ export function Footer({ instagramUrl = "", tiktokUrl = "" }: { instagramUrl?: s
       <div className="grid grid-cols-2 gap-8 text-[13.5px] font-light leading-loose md:flex md:gap-14">
         <div className="flex flex-col">
           <span className="mb-1.5 font-mono text-xs font-medium tracking-wider text-surface/50">TIENDA</span>
-          <Link href="/catalogo?cat=Amigurumis" className="text-surface/85">Amigurumis</Link>
-          <Link href="/catalogo?cat=Decoraci%C3%B3n" className="text-surface/85">Decoración</Link>
-          <Link href="/catalogo?cat=Beb%C3%A9" className="text-surface/85">Bebé</Link>
+          <Link href="/categoria/amigurumis" className="text-surface/85">Amigurumis</Link>
+          <Link href="/categoria/decoracion" className="text-surface/85">Decoración</Link>
+          <Link href="/categoria/bebe" className="text-surface/85">Bebé</Link>
         </div>
         <div className="flex flex-col">
           <span className="mb-1.5 font-mono text-xs font-medium tracking-wider text-surface/50">ENCARGOS</span>

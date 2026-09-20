@@ -124,7 +124,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
         <span className="mx-2">/</span>
         {category && (
           <>
-            <Link href={`/catalogo?cat=${encodeURIComponent(category.name)}`}>{category.name}</Link>
+            <Link href={`/categoria/${category.slug}`}>{category.name}</Link>
             <span className="mx-2">/</span>
           </>
         )}
@@ -203,7 +203,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
             <h2 className="font-serif text-2xl font-normal md:text-[30px]">También te puede gustar</h2>
             {category && (
               <Link
-                href={`/catalogo?cat=${encodeURIComponent(category.name)}`}
+                href={`/categoria/${category.slug}`}
                 className="border-b border-pink pb-0.5 text-[13.5px] font-medium"
               >
                 Ver categoría completa

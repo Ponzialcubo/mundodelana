@@ -1,8 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { ProductCard } from "@/components/public/ProductCard";
-import { Footer } from "@/components/public/Footer";
+import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +102,9 @@ export default async function HomePage() {
                 pieceStatus: p.pieceStatus,
                 likes: p.likes,
                 categoryName: p.categories[0]?.name,
+                mainImage: p.mainImage,
+                mainImageFocalX: p.mainImageFocalX,
+                mainImageFocalY: p.mainImageFocalY,
               }}
             />
           ))}
@@ -112,8 +116,21 @@ export default async function HomePage() {
         <h2 className="mb-5 font-serif text-2xl font-normal md:mb-6 md:text-[32px]">Categorías</h2>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-4">
           {visibleCategories.map((cat) => (
-            <Link key={cat.id} href={`/catalogo?cat=${encodeURIComponent(cat.name)}`} className="flex flex-col gap-3">
-              <ImagePlaceholder label={cat.name.toLowerCase()} className="h-[130px] rounded-[10px] md:h-[200px]" />
+            <Link key={cat.id} href={`/categoria/${cat.slug}`} className="flex flex-col gap-3">
+              {cat.coverImage ? (
+                <div className="relative h-[130px] overflow-hidden rounded-[10px] md:h-[200px]">
+                  <Image
+                    src={cat.coverImage}
+                    alt={cat.name}
+                    fill
+                    sizes="(min-width: 768px) 25vw, 50vw"
+                    className="object-cover"
+                    style={{ objectPosition: `${cat.coverFocalX * 100}% ${cat.coverFocalY * 100}%` }}
+                  />
+                </div>
+              ) : (
+                <ImagePlaceholder label={cat.name.toLowerCase()} className="h-[130px] rounded-[10px] md:h-[200px]" />
+              )}
               <div className="flex items-baseline justify-between">
                 <span className="font-serif text-base font-medium md:text-lg">{cat.name}</span>
                 <span className="text-[12.5px] text-ink/55">{cat._count.products} piezas</span>
@@ -184,7 +201,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <Footer full />
+      <FooterWithSettings />
     </>
   );
 }

@@ -14,6 +14,8 @@ export default async function EditarMarcaPage({ params }: { params: Promise<{ id
         name: brand.name,
         slug: brand.slug,
         order: brand.order,
+        metaTitle: brand.metaTitle ?? "",
+        metaDescription: brand.metaDescription ?? "",
         productCount: brand._count.products,
       }}
     />

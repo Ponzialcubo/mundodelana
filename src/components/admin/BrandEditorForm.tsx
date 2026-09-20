@@ -9,6 +9,8 @@ export type BrandFormData = {
   name: string;
   slug: string;
   order: number;
+  metaTitle: string;
+  metaDescription: string;
   productCount?: number;
 };
 
@@ -16,6 +18,8 @@ const EMPTY: BrandFormData = {
   name: "",
   slug: "",
   order: 1,
+  metaTitle: "",
+  metaDescription: "",
 };
 
 export function BrandEditorForm({ initial }: { initial?: BrandFormData }) {
@@ -85,7 +89,7 @@ export function BrandEditorForm({ initial }: { initial?: BrandFormData }) {
           <label className="flex flex-col gap-1.5">
             <span className="text-[13px] font-medium text-admin-ink/85">Slug</span>
             <div className="flex items-center gap-1 rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5">
-              <span className="font-mono text-xs text-admin-faint">mundolana.es/catalogo?marca=</span>
+              <span className="font-mono text-xs text-admin-faint">mundolana.es/marca/</span>
               <input
                 value={data.slug}
                 onChange={(e) => {
@@ -96,6 +100,29 @@ export function BrandEditorForm({ initial }: { initial?: BrandFormData }) {
               />
             </div>
             <span className="text-xs text-admin-faint">Se genera a partir del nombre. Puedes editarlo.</span>
+          </label>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-xl border border-admin-ink/10 bg-white p-6 lg:col-span-2">
+          <span className="font-serif text-base font-medium">SEO</span>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[13px] font-medium text-admin-ink/85">Meta título</span>
+            <input
+              value={data.metaTitle}
+              onChange={(e) => set("metaTitle", e.target.value)}
+              placeholder={`Amigurumis de ${data.name || "…"} · Mundolana`}
+              className="rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5 text-sm outline-none"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[13px] font-medium text-admin-ink/85">Meta descripción</span>
+            <textarea
+              value={data.metaDescription}
+              onChange={(e) => set("metaDescription", e.target.value)}
+              rows={3}
+              placeholder="Hasta 155 caracteres. Se genera una por defecto si lo dejas en blanco."
+              className="rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5 text-sm outline-none"
+            />
           </label>
         </div>
 

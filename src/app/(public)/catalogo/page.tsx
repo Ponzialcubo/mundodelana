@@ -77,7 +77,11 @@ export default async function CatalogoPage({
           .filter(Boolean)
           .join(" y ")}. Lo vendido se puede volver a tejer por encargo.`;
 
-  function catHref(name: string) {
+  // A single filter with no search text gets its own indexable URL
+  // (/categoria/x or /marca/x); anything combined stays as a /catalogo
+  // querystring, since there's no clean URL for two filters at once.
+  function catHref(name: string, slug?: string) {
+    if (!q && marca === "Todas" && name !== "Todo" && slug) return `/categoria/${slug}`;
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (name !== "Todo") params.set("cat", name);
@@ -86,7 +90,8 @@ export default async function CatalogoPage({
     return `/catalogo${qs ? `?${qs}` : ""}`;
   }
 
-  function brandHref(name: string) {
+  function brandHref(name: string, slug?: string) {
+    if (!q && cat === "Todo" && name !== "Todas" && slug) return `/marca/${slug}`;
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (cat !== "Todo") params.set("cat", cat);
@@ -109,7 +114,7 @@ export default async function CatalogoPage({
       <section className="flex flex-wrap gap-2.5 px-5 pb-2.5 md:px-14">
         <CatalogChip label="Todo" active={cat === "Todo"} href={catHref("Todo")} />
         {availableCats.map((c) => (
-          <CatalogChip key={c.id} label={c.name} active={cat === c.name} href={catHref(c.name)} />
+          <CatalogChip key={c.id} label={c.name} active={cat === c.name} href={catHref(c.name, c.slug)} />
         ))}
       </section>
 
@@ -117,7 +122,7 @@ export default async function CatalogoPage({
         <section className="flex flex-wrap gap-2 px-5 pb-5 md:px-14">
           <CatalogChip label="Todas las marcas" active={marca === "Todas"} href={brandHref("Todas")} />
           {availableBrands.map((b) => (
-            <CatalogChip key={b.id} label={b.name} active={marca === b.name} href={brandHref(b.name)} />
+            <CatalogChip key={b.id} label={b.name} active={marca === b.name} href={brandHref(b.name, b.slug)} />
           ))}
         </section>
       )}

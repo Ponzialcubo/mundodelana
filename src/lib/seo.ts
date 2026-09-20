@@ -34,6 +34,28 @@ export function productMetaFallback(p: {
   return { metaTitle, metaDescription };
 }
 
+/** Build a template-based meta title/description for a category page. */
+export function categoryMetaFallback(c: {
+  name: string;
+  description?: string | null;
+}): { metaTitle: string; metaDescription: string } {
+  const metaTitle = clamp(`${c.name} · ${SITE_NAME}`, 60);
+  const metaDescription = c.description?.trim()
+    ? clamp(c.description, 155)
+    : clamp(`Piezas de ${c.name} tejidas a mano en algodón por ${SITE_NAME}. Envíos a toda España desde Galicia.`, 155);
+  return { metaTitle, metaDescription };
+}
+
+/** Build a template-based meta title/description for a brand page. */
+export function brandMetaFallback(b: { name: string }): { metaTitle: string; metaDescription: string } {
+  const metaTitle = clamp(`Amigurumis de ${b.name} · ${SITE_NAME}`, 60);
+  const metaDescription = clamp(
+    `Amigurumis de ${b.name} tejidos a mano en algodón por ${SITE_NAME}. Envíos a toda España desde Galicia.`,
+    155
+  );
+  return { metaTitle, metaDescription };
+}
+
 let cachedDefaults: { title: string; description: string } | null = null;
 
 /** Site-wide default meta from SiteSettings, with a hardcoded safety net. */

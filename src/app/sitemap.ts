@@ -36,5 +36,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...productPages];
+  // Only categories/brands with at least one published product are indexable.
+  const [categories, brands] = await Promise.all([
+    prisma.category.findMany({
+      where: { products: { some: { publicationStatus: "PUBLICADO" } } },
+      select: { slug: true, updatedAt: true },
+    }),
+    prisma.brand.findMany({
+      where: { products: { some: { publicationStatus: "PUBLICADO" } } },
+      select: { slug: true, updatedAt: true },
+    }),
+  ]);
+
+  const categoryPages: MetadataRoute.Sitemap = categories.map((c) => ({
+    url: url(`/categoria/${c.slug}`),
+    lastModified: c.updatedAt,
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  const brandPages: MetadataRoute.Sitemap = brands.map((b) => ({
+    url: url(`/marca/${b.slug}`),
+    lastModified: b.updatedAt,
+    changeFrequency: "weekly",
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...productPages, ...categoryPages, ...brandPages];
 }

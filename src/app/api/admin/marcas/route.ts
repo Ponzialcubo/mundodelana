@@ -14,6 +14,8 @@ export async function POST(req: Request) {
       name: body.name,
       slug: body.slug,
       order: (maxOrder._max.order ?? 0) + 1,
+      metaTitle: body.metaTitle || null,
+      metaDescription: body.metaDescription || null,
     },
   });
 

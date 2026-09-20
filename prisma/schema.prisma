@@ -108,6 +108,9 @@ model Brand {
   slug  String @unique
   order Int    @default(0)
 
+  metaTitle       String?
+  metaDescription String?
+
   products Product[]
 
   createdAt DateTime @default(now())
