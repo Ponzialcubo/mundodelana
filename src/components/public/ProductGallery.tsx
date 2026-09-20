@@ -27,7 +27,10 @@ export function ProductGallery({
   if (items.length === 0) {
     return (
       <div className="flex flex-col gap-3">
-        <ImagePlaceholder label={`${productName} — sin foto`} className="aspect-[4/5] rounded-xl" />
+        <ImagePlaceholder
+          label={`${productName} — sin foto`}
+          className="mx-auto aspect-[4/5] w-full max-w-[320px] rounded-xl md:max-w-[416px]"
+        />
       </div>
     );
   }
@@ -63,7 +66,7 @@ export function ProductGallery({
         </div>
       )}
 
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-cream">
+      <div className="relative mx-auto aspect-[4/5] w-full max-w-[320px] overflow-hidden rounded-xl bg-cream md:max-w-[416px]">
         {current.mediaType === "video" ? (
           <video
             key={current.url}
@@ -77,11 +80,13 @@ export function ProductGallery({
           // object-contain: the piece must always be fully visible here, never cropped.
           // Container matches the 4:5 upload ratio (see processImage) so a
           // correctly-cropped photo fills the box with no letterboxing.
+          // max-w caps it to roughly the old fixed-height size instead of
+          // stretching to the full column width.
           <Image
             src={current.url}
             alt={productName}
             fill
-            sizes="(min-width: 768px) 50vw, 100vw"
+            sizes="(min-width: 768px) 416px, 320px"
             className="object-contain"
             priority
           />

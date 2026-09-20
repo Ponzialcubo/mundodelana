@@ -14,21 +14,33 @@ const execFileAsync = promisify(execFile);
  * this rather than visibly degraded.
  */
 const IMAGE_TARGET_BYTES = 300 * 1024;
-const IMAGE_MAX_DIMENSION = 1920;
 const IMAGE_START_QUALITY = 82;
 const IMAGE_MIN_QUALITY = 55;
 
 /**
- * Re-encodes an uploaded photo as WebP, resized to a sane max dimension and
+ * Every product photo, portrait or landscape, is cropped to this ratio on
+ * upload so the catalog reads as one consistent set instead of depending on
+ * whatever orientation the photo happened to be shot in.
+ */
+const PRODUCT_PHOTO_WIDTH = 1200;
+const PRODUCT_PHOTO_HEIGHT = 1500; // 4:5
+
+/**
+ * Re-encodes an uploaded photo as WebP, cropped to the catalog's 4:5 ratio and
  * compressed to land near IMAGE_TARGET_BYTES. Runs entirely in-process (no
  * temp files) since sharp works on buffers directly.
+ *
+ * fit: "cover" + gravity: "attention" lets sharp pick the crop window around
+ * whatever has the most edges/contrast (usually the amigurumi itself) instead
+ * of always cropping dead-center, which is what made landscape photos lose
+ * the subject when the fixed-ratio crop used to happen only in CSS.
  */
 export async function processImage(input: Buffer): Promise<{ buffer: Buffer; extension: "webp" }> {
   const resized = sharp(input).rotate().resize({
-    width: IMAGE_MAX_DIMENSION,
-    height: IMAGE_MAX_DIMENSION,
-    fit: "inside",
-    withoutEnlargement: true,
+    width: PRODUCT_PHOTO_WIDTH,
+    height: PRODUCT_PHOTO_HEIGHT,
+    fit: "cover",
+    position: sharp.strategy.attention,
   });
 
   let quality = IMAGE_START_QUALITY;
