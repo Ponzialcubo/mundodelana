@@ -77,9 +77,10 @@ export function ProductGallery({
             className="h-full w-full object-contain"
           />
         ) : (
-          // object-contain: the piece must always be fully visible here, never cropped.
-          // Container matches the 4:5 upload ratio (see processImage) so a
-          // correctly-cropped photo fills the box with no letterboxing.
+          // object-cover fills the box edge-to-edge with no background showing
+          // through. Safe because processImage now crops every upload to this
+          // same 4:5 ratio; objectPosition still honors the focal point for
+          // older photos uploaded before that crop existed.
           // max-w caps it to roughly the old fixed-height size instead of
           // stretching to the full column width.
           <Image
@@ -87,7 +88,8 @@ export function ProductGallery({
             alt={productName}
             fill
             sizes="(min-width: 768px) 416px, 320px"
-            className="object-contain"
+            className="object-cover"
+            style={{ objectPosition: `${current.focalX * 100}% ${current.focalY * 100}%` }}
             priority
           />
         )}
