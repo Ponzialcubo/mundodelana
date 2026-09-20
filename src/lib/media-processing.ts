@@ -65,7 +65,7 @@ export async function processVideo(
     // -crf 28 + veryfast: decent quality-per-byte for product clips, not
     // archival quality. -vf caps resolution without upscaling smaller clips.
     // -movflags faststart lets the browser start playback before the full
-    // file has downloaded.
+    // file has downloaded. -an strips audio: product clips are uploaded muted.
     await execFileAsync("ffmpeg", [
       "-y",
       "-i", inputPath,
@@ -73,8 +73,7 @@ export async function processVideo(
       "-c:v", "libx264",
       "-preset", "veryfast",
       "-crf", "28",
-      "-c:a", "aac",
-      "-b:a", "128k",
+      "-an",
       "-movflags", "+faststart",
       outputPath,
     ]);
