@@ -1,19 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Lora, Work_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
-const lora = Lora({
+// Self-hosted (variable, latin subset) so builds never depend on reaching Google Fonts.
+const lora = localFont({
   variable: "--font-lora",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
+  src: [
+    { path: "./fonts/Lora-normal.woff2", weight: "400 700", style: "normal" },
+    { path: "./fonts/Lora-italic.woff2", weight: "400 700", style: "italic" },
+  ],
+  display: "swap",
 });
 
-const workSans = Work_Sans({
+const workSans = localFont({
   variable: "--font-work-sans",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  src: [{ path: "./fonts/WorkSans-normal.woff2", weight: "300 600", style: "normal" }],
+  display: "swap",
 });
 
 // Explicit viewport: default width/scale, zoom allowed (accessibility) —
