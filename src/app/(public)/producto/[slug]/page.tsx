@@ -105,7 +105,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
 
   const whatsappHref = `https://wa.me/${phoneDigits(phone)}?text=${encodeURIComponent(`Hola, me interesa «${product.name}» (${SITE_URL}/producto/${product.slug})`)}`;
   const perks: { icon: IconName; title: string; text: string }[] = [
-    product.pieceStatus === "DISPONIBLE"
+    product.pieceStatus === "DISPONIBLE" && product.priceType === "STOCK"
       ? { icon: "clock", title: "Ya tejida", text: "Sale del taller en 24-72 h" }
       : { icon: "clock", title: "Se teje para ti", text: "Plazo habitual, 1-2 semanas" },
     { icon: "pencil", title: "Personalizable", text: "En tus colores o con cambios" },

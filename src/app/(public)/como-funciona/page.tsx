@@ -47,6 +47,8 @@ export default async function ComoFuncionaPage() {
     prisma.faq.findMany({ orderBy: { order: "asc" } }),
     prisma.testimonial.findMany({ where: { visible: true }, orderBy: { order: "asc" }, take: 3 }),
   ]);
+  // Until the owner uploads this page's photo, a real delivered order fills the frame.
+  const delivered = images.how ? null : await prisma.libraryMedia.findFirst({ where: { showInGallery: true, mediaType: "IMAGE" }, orderBy: { takenAt: "desc" } });
   const wa = `https://wa.me/${phoneDigits(phone)}?text=${encodeURIComponent("Hola Elvira, me gustaría encargar una pieza.")}`;
   const keyFaqs = FAQ_KEYWORDS.map((k) => faqs.find((f) => f.question.toLowerCase().includes(k.toLowerCase()))).filter((f) => f !== undefined);
 
@@ -62,7 +64,7 @@ export default async function ComoFuncionaPage() {
           </>
         }
         text="Me cuentas qué quieres, te digo precio y plazo, y solo cuando estés conforme empiezo a tejer. Sin carritos y sin compromiso hasta que digas que sí."
-        photo={images.how}
+        photo={images.how ?? (delivered && { url: delivered.url, focalX: 0.5, focalY: 0.5 })}
         badge={
           <div className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-[0_12px_32px_rgba(74,63,59,.14)]">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E3F5E9] text-[#1FAF55]">

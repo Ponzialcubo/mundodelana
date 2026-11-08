@@ -43,7 +43,8 @@ export default async function SobreMiPage() {
     getSiteImages(),
     prisma.libraryMedia.findMany({ where: { showInGallery: true, mediaType: "IMAGE" }, orderBy: { takenAt: "desc" }, take: 5 }),
   ]);
-  const workshop = [images["about-2"] ?? WORKSHOP_FALLBACK[0], images["about-3"] ?? WORKSHOP_FALLBACK[1]];
+  // The main photo borrows the first workshop shot until uploaded, so the story uses the other one plus a delivered order.
+  const workshop = [images["about-2"] ?? (images.about ? WORKSHOP_FALLBACK[0] : (gallery[0] ? { url: gallery[0].url, focalX: 0.5, focalY: 0.5 } : WORKSHOP_FALLBACK[0])), images["about-3"] ?? WORKSHOP_FALLBACK[1]];
 
   return (
     <>
@@ -57,7 +58,7 @@ export default async function SobreMiPage() {
           </>
         }
         text="Empecé haciendo amigurumis para mi hijo y aquello acabó convirtiéndose en mi propio taller en Galicia. Cinco años después sigo en la misma silla, con mejor luz y bastante más lana."
-        photo={images.about}
+        photo={images.about ?? WORKSHOP_FALLBACK[0]}
         photoAlt="Elvira tejiendo en su taller"
         badge={
           <div className="rounded-2xl bg-white px-5 py-4 shadow-[0_12px_32px_rgba(74,63,59,.14)]">

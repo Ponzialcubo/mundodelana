@@ -60,7 +60,11 @@ const ICONS: Record<string, React.ReactNode> = {
 export default async function ContactoPage() {
   const [{ phone, publicEmail, instagramUrl, hours }, images, customerId] = await Promise.all([getSiteSettings(), getSiteImages(), getCustomerSession()]);
   const customer = customerId ? await prisma.customer.findUnique({ where: { id: customerId }, select: { name: true, email: true } }) : null;
-  const photo = images.contact;
+  // Until the owner uploads this page's photo, a real delivered order fills the frame.
+  const delivered = images.contact
+    ? null
+    : await prisma.libraryMedia.findFirst({ where: { showInGallery: true, mediaType: "IMAGE" }, orderBy: { takenAt: "desc" }, skip: 1 });
+  const photo = images.contact ?? (delivered && { url: delivered.url, focalX: 0.5, focalY: 0.5 });
 
   const channels = [
     { title: "WhatsApp", detail: "La vía más rápida", href: `https://wa.me/${phoneDigits(phone)}`, cta: "Abrir chat", color: "#1FAF55", tint: "#E3F5E9" },
