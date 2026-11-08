@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHero } from "@/components/public/PageHero";
 import { HowItWorks } from "@/components/public/HowItWorks";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages, responsive } from "@/lib/site-images";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
@@ -41,7 +41,7 @@ export default async function ComoFuncionaPage() {
         eyebrow="Cómo funciona"
         title="Pedir algo hecho a mano es más fácil de lo que parece"
         text="Hablamos por WhatsApp, acordamos lo que quieres y solo entonces pagas. Sin carritos y sin compromiso hasta que digas que sí."
-        image={images.how}
+        image={responsive(images, "how")}
       />
 
       <HowItWorks steps={STEPS} title="Paso a paso" showLink={false} />

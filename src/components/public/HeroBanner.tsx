@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { YarnBackdrop } from "@/components/public/YarnBackdrop";
+import { BannerImage } from "@/components/public/BannerImage";
 
-type Slide = { url: string; focalX: number; focalY: number };
+type Value = { url: string; focalX: number; focalY: number };
+type Slide = { desktop: Value; mobile?: Value };
 
 const SLIDE_MS = 6500;
 const PHRASE_MS = 3200;
@@ -43,17 +44,13 @@ export function HeroBanner({
     <section className="relative flex min-h-[78svh] items-end overflow-hidden md:min-h-[min(640px,calc(100svh-140px))] md:items-center">
       {hasImage ? (
         slides.map((s, i) => (
-          <Image
-            key={s.url}
-            src={s.url}
-            alt=""
-            fill
-            priority={i === 0}
-            sizes="100vw"
-            quality={80}
-            className={`object-cover transition-[opacity,transform] duration-[1400ms] ease-out ${i === slide ? "scale-100 opacity-100" : "scale-[1.04] opacity-0"}`}
-            style={{ objectPosition: `${s.focalX * 100}% ${s.focalY * 100}%` }}
-          />
+          <span
+            key={s.desktop.url}
+            aria-hidden={i !== slide}
+            className={`absolute inset-0 transition-[opacity,transform] duration-[1400ms] ease-out ${i === slide ? "scale-100 opacity-100" : "scale-[1.04] opacity-0"}`}
+          >
+            <BannerImage desktop={s.desktop} mobile={s.mobile} priority={i === 0} />
+          </span>
         ))
       ) : (
         <YarnBackdrop />
@@ -106,7 +103,7 @@ export function HeroBanner({
           <div className="mt-1 flex gap-2">
             {slides.map((s, i) => (
               <button
-                key={s.url}
+                key={s.desktop.url}
                 type="button"
                 onClick={() => setSlide(i)}
                 aria-label={`Ver banner ${i + 1}`}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
+import { BannerImage } from "@/components/public/BannerImage";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/public/ProductCard";
@@ -40,13 +40,17 @@ export default async function FechaPage({ params }: { params: Promise<{ slug: st
 
   return (
     <>
-      <section className="relative flex min-h-[46svh] items-end overflow-hidden md:min-h-[420px]">
+      <section className="relative flex aspect-[4/5] max-h-[80svh] w-full items-end overflow-hidden sm:aspect-[2/1] md:aspect-[3/1] md:max-h-[560px] md:items-center">
         {image ? (
-          <Image src={image} alt="" fill priority sizes="100vw" quality={80} className="object-cover" style={{ objectPosition: `${campaign.bannerFocalX * 100}% ${campaign.bannerFocalY * 100}%` }} />
+          <BannerImage
+            priority
+            desktop={{ url: image, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY }}
+            mobile={campaign.bannerImageMobile ? { url: campaign.bannerImageMobile, focalX: campaign.bannerMobileFocalX, focalY: campaign.bannerMobileFocalY } : undefined}
+          />
         ) : (
           <span className="absolute inset-0" style={{ background: `linear-gradient(150deg, ${campaign.accent} 0%, #F7F1EA 85%)` }} />
         )}
-        {image && <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />}
+        {image && <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent md:bg-gradient-to-r md:from-black/55 md:via-black/20" />}
         <div className={`relative flex max-w-2xl flex-col gap-3 px-5 pb-9 pt-16 md:px-14 md:pb-14 ${image ? "text-white" : "text-ink"}`}>
           <Link href="/catalogo" className="text-[13px] opacity-80">‹ Tienda</Link>
           <h1 className="font-serif text-[36px] font-normal leading-[1.06] md:text-[54px]">{campaign.bannerTitle}</h1>

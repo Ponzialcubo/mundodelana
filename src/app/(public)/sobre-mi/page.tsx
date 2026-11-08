@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages, responsive } from "@/lib/site-images";
 import { PageHero } from "@/components/public/PageHero";
 
 const title = "Sobre mí";
@@ -39,7 +39,7 @@ export default async function SobreMiPage() {
         eyebrow="Sobre mí"
         title="Soy Elvira y tejo desde mi taller en Galicia"
         text="Empecé haciendo amigurumis para mi hijo y aquello acabó convirtiéndose en mi propio taller. Cinco años después sigo en la misma silla, con mejor luz y bastante más lana."
-        image={images.about}
+        image={responsive(images, "about")}
       />
 
       <section className="grid grid-cols-1 gap-8 px-5 py-12 md:grid-cols-[1fr_1fr] md:items-center md:gap-14 md:px-14 md:py-16">

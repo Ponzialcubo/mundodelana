@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
-import { SITE_IMAGE_SLOTS } from "@/lib/site-images";
+import { SITE_IMAGE_KEYS } from "@/lib/site-images";
 
-const KEYS = SITE_IMAGE_SLOTS.map((s) => s.key) as string[];
+const KEYS = SITE_IMAGE_KEYS;
 
 export async function PUT(req: Request) {
   const adminId = await getAdminSession();

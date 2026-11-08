@@ -1,61 +1,95 @@
 import Link from "next/link";
-import Image from "next/image";
+import { BannerImage } from "@/components/public/BannerImage";
 
-type Photo = { url: string; focalX: number; focalY: number };
+type Campaign = {
+  slug: string;
+  name: string;
+  bannerTitle: string;
+  bannerText: string;
+  accent: string;
+  bannerImage: string | null;
+  bannerFocalX: number;
+  bannerFocalY: number;
+  bannerImageMobile: string | null;
+  bannerMobileFocalX: number;
+  bannerMobileFocalY: number;
+};
 
-const pos = (p: Photo) => ({ objectPosition: `${p.focalX * 100}% ${p.focalY * 100}%` });
+/** Yarn balls on the right, for dates that don't have their banner image yet. */
+function SeasonalDecor({ accent }: { accent: string }) {
+  const balls = [
+    { cx: 82, cy: 30, r: 16, c: accent },
+    { cx: 64, cy: 62, r: 10, c: "#F7F1EA" },
+    { cx: 93, cy: 72, r: 8, c: accent },
+    { cx: 70, cy: 18, r: 5, c: "#ffffff" },
+  ];
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="xMaxYMid slice" aria-hidden="true" className="absolute inset-y-0 right-0 h-full w-[60%] opacity-90 md:w-[45%]">
+      <path d="M30 90 C 45 70, 55 85, 64 62 S 80 40, 82 30" fill="none" stroke="#fff" strokeOpacity=".7" strokeWidth=".7" strokeDasharray=".6 2.2" strokeLinecap="round" />
+      {balls.map((b) => (
+        <g key={`${b.cx}-${b.cy}`}>
+          <circle cx={b.cx} cy={b.cy} r={b.r} fill={b.c} stroke="#fff" strokeOpacity=".5" strokeWidth=".4" />
+          {[-0.45, 0, 0.45].map((k) => (
+            <path
+              key={k}
+              d={`M ${b.cx - b.r * 0.85} ${b.cy + b.r * k} Q ${b.cx} ${b.cy + b.r * (k - 0.4)} ${b.cx + b.r * 0.85} ${b.cy + b.r * k}`}
+              fill="none"
+              stroke="#fff"
+              strokeOpacity=".55"
+              strokeWidth={b.r / 12}
+              strokeLinecap="round"
+            />
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+}
 
 /**
- * Seasonal banner: text on the campaign colour next to its banner image. Until
- * the owner uploads one, a collage of the campaign's own pieces fills the spot.
+ * Seasonal banner: the date's AI scene (wide on computers, vertical on phones)
+ * with the text over its clean side. Until the owner uploads one it shows the
+ * campaign colour with a yarn decoration — never cropped product photos.
  */
-export function CampaignBanner({
-  campaign,
-  photos,
-  deadline,
-  compact = false,
-}: {
-  campaign: { slug: string; name: string; bannerTitle: string; bannerText: string; accent: string; bannerImage: string | null; bannerFocalX: number; bannerFocalY: number };
-  /** Product photos for the collage fallback. */
-  photos: Photo[];
-  deadline: string | null;
-  compact?: boolean;
-}) {
-  const banner = campaign.bannerImage ? { url: campaign.bannerImage, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY } : null;
-  const collage = photos.slice(0, 3);
+export function CampaignBanner({ campaign, deadline, compact = false }: { campaign: Campaign; deadline: string | null; compact?: boolean }) {
+  const desktop = campaign.bannerImage ? { url: campaign.bannerImage, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY } : null;
+  const mobile = campaign.bannerImageMobile
+    ? { url: campaign.bannerImageMobile, focalX: campaign.bannerMobileFocalX, focalY: campaign.bannerMobileFocalY }
+    : undefined;
 
   return (
     <Link
       href={`/fechas/${campaign.slug}`}
-      className="group grid overflow-hidden rounded-3xl shadow-[0_10px_40px_rgba(74,63,59,.10)] md:grid-cols-[1fr_1.15fr]"
-      style={{ background: `linear-gradient(140deg, ${campaign.accent} 0%, #F7F1EA 130%)` }}
+      className={`group relative isolate flex overflow-hidden rounded-3xl ${
+        compact ? "aspect-square items-end sm:aspect-[2/1] md:aspect-[4/1] md:items-center" : "aspect-[4/5] items-end sm:aspect-[2/1] md:aspect-[3/1] md:items-center"
+      }`}
+      style={{ background: `linear-gradient(120deg, #F7F1EA 0%, ${campaign.accent} 100%)` }}
     >
-      <div className={`relative order-1 md:order-2 ${compact ? "aspect-[16/9] md:aspect-auto md:min-h-[260px]" : "aspect-[4/3] md:aspect-auto md:min-h-[380px]"}`}>
-        {banner ? (
-          <Image src={banner.url} alt="" fill sizes="(min-width: 768px) 55vw, 100vw" className="object-cover transition duration-700 group-hover:scale-[1.03]" style={pos(banner)} />
-        ) : collage.length > 0 ? (
-          <div className="absolute inset-0 grid grid-cols-[1.4fr_1fr] grid-rows-2 gap-1.5 p-1.5 md:gap-2 md:p-2">
-            {collage.map((p, i) => (
-              <span key={p.url} className={`relative overflow-hidden rounded-2xl bg-white/40 ${i === 0 ? "row-span-2" : ""} ${collage.length === 2 && i === 1 ? "row-span-2" : ""}`}>
-                <Image src={p.url} alt="" fill sizes="(min-width: 768px) 30vw, 60vw" className="object-cover transition duration-700 group-hover:scale-[1.04]" style={pos(p)} />
-              </span>
-            ))}
-          </div>
-        ) : null}
-      </div>
+      {desktop ? (
+        <>
+          <span className="absolute inset-0 -z-10 transition duration-700 group-hover:scale-[1.02]">
+            <BannerImage desktop={desktop} mobile={mobile} desktopSizes="1240px" />
+          </span>
+          <span aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-t from-[#2f2623]/75 via-[#2f2623]/25 to-transparent md:bg-gradient-to-r md:from-[#2f2623]/65 md:via-[#2f2623]/20" />
+        </>
+      ) : (
+        <span className="absolute inset-0 -z-10">
+          <SeasonalDecor accent={campaign.accent} />
+        </span>
+      )}
 
-      <div className={`order-2 flex flex-col justify-center gap-2.5 md:order-1 ${compact ? "p-6 md:p-9" : "p-6 md:p-12"}`}>
-        <span className="flex items-center gap-2 text-[11.5px] font-medium uppercase tracking-[.18em] text-ink/70">
-          <span className="h-px w-6 bg-ink/40" />
+      <span className={`flex max-w-xl flex-col gap-2 ${compact ? "p-5 md:px-9" : "p-6 md:px-12"} ${desktop ? "text-white" : "text-ink"}`}>
+        <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[.18em] opacity-85">
+          <span className="h-px w-6 bg-current opacity-60" />
           Fecha especial
         </span>
-        <span className={`font-serif leading-[1.08] text-ink ${compact ? "text-[28px] md:text-[34px]" : "text-[32px] md:text-[48px]"}`}>{campaign.bannerTitle}</span>
-        <span className="max-w-md text-[15px] font-light leading-relaxed text-ink/80">{campaign.bannerText}</span>
-        <span className="mt-2 flex flex-wrap items-center gap-2.5">
-          <span className="rounded-full bg-ink px-5 py-3 text-[14px] font-medium text-surface">Ver regalos de {campaign.name}</span>
-          {deadline && <span className="rounded-full bg-white/80 px-3.5 py-2 text-[13px] font-medium text-ink">Encarga antes del {deadline}</span>}
+        <span className={`font-serif leading-[1.08] ${compact ? "text-[26px] md:text-[32px]" : "text-[30px] md:text-[44px]"}`}>{campaign.bannerTitle}</span>
+        {!compact && <span className="max-w-md text-[14.5px] font-light leading-relaxed opacity-90 md:text-[15.5px]">{campaign.bannerText}</span>}
+        <span className="mt-1.5 flex flex-wrap items-center gap-2">
+          <span className={`rounded-full px-4 py-2.5 text-[13.5px] font-medium ${desktop ? "bg-white text-ink" : "bg-ink text-surface"}`}>Ver regalos</span>
+          {deadline && <span className={`rounded-full px-3.5 py-2 text-[12.5px] font-medium ${desktop ? "bg-white/20 text-white backdrop-blur" : "bg-white/75 text-ink"}`}>Encarga antes del {deadline}</span>}
         </span>
-      </div>
+      </span>
     </Link>
   );
 }

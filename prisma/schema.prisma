@@ -437,6 +437,10 @@ model Campaign {
   bannerImage String?
   bannerFocalX Float @default(0.5)
   bannerFocalY Float @default(0.5)
+  // Optional vertical version for phones; without it phones crop the wide one.
+  bannerImageMobile  String?
+  bannerMobileFocalX Float   @default(0.5)
+  bannerMobileFocalY Float   @default(0.5)
   accent      String @default("#E8B4B8")
 
   metaDescription String?

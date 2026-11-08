@@ -200,6 +200,10 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 rounded-xl border border-admin-ink/10 bg-white p-6">
             <span className="font-serif text-base font-medium">Foto de portada</span>
+            <span className="text-xs leading-relaxed text-admin-ink-soft">
+              📍 Tienda · miniatura redonda junto al nombre de la categoría, y foto del bloque si no tiene la suya. Cuadrada
+              1080 × 1080 px: una sola pieza real, centrada, sobre fondo liso.
+            </span>
             <input
               ref={coverInputRef}
               type="file"

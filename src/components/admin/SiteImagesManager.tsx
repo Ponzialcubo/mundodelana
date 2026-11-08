@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageSlotEditor, type SlotValue } from "@/components/admin/ImageSlotEditor";
 import type { SITE_IMAGE_GROUPS, SiteImageSlot, SiteImages } from "@/lib/site-images";
+import { formatLabel } from "@/lib/image-formats";
 
 /** Each change is saved right away: there's no "Save" button to forget. */
 export function SiteImagesManager({
@@ -51,22 +52,53 @@ export function SiteImagesManager({
           {slots
             .filter((slot) => slot.group === group.key)
             .map((slot) => (
-              <div key={slot.key} className="flex flex-col gap-3 rounded-xl border border-admin-ink/10 bg-white p-5 md:p-6">
+              <div key={slot.key} className="flex flex-col gap-4 rounded-xl border border-admin-ink/10 bg-white p-5 md:p-6">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col gap-1">
                     <span className="font-serif text-base font-medium">{slot.label}</span>
-                    <span className="text-xs text-admin-ink-soft">{slot.where}</span>
-                    <span className="text-xs text-admin-faint">Formato recomendado: {slot.ratio}</span>
+                    <span className="text-xs font-medium text-admin-ink">📍 {slot.where}</span>
+                    <span className="text-xs leading-relaxed text-admin-ink-soft">{slot.tips}</span>
                   </div>
-                  {saved === slot.key && <span className="shrink-0 text-xs font-medium text-admin-link">✓ Guardado</span>}
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <a href={slot.href} target="_blank" rel="noreferrer" className="text-xs font-medium text-admin-link underline">
+                      Ver en la web
+                    </a>
+                    {(saved === slot.key || saved === `${slot.key}-m`) && <span className="text-xs font-medium text-admin-link">✓ Guardado</span>}
+                  </div>
                 </div>
-                <ImageSlotEditor
-                  value={values[slot.key] ?? null}
-                  onChange={(v) => save(slot.key, v)}
-                  prompt={slot.prompt}
-                  title={`Imagen: ${slot.label}`}
-                  aspectClass={slot.aspectClass}
-                />
+
+                <div className={`grid grid-cols-1 gap-5 ${slot.mobile ? "md:grid-cols-[1fr_200px]" : ""}`}>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[13px] font-medium">
+                      {slot.mobile ? "Ordenador" : "Imagen"} · {formatLabel(slot.desktop.format)}
+                    </span>
+                    <ImageSlotEditor
+                      value={values[slot.key] ?? null}
+                      onChange={(v) => save(slot.key, v)}
+                      prompt={slot.desktop.prompt}
+                      title={`${slot.label}${slot.mobile ? " · ordenador" : ""}`}
+                      aspectClass={slot.desktop.format.aspectClass}
+                      textZone={slot.desktop.format.textZone}
+                    />
+                  </div>
+                  {slot.mobile && (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[13px] font-medium">
+                        Móvil · {formatLabel(slot.mobile.format)} <span className="font-normal text-admin-ink-soft">(opcional)</span>
+                      </span>
+                      <ImageSlotEditor
+                        value={values[`${slot.key}-m`] ?? null}
+                        onChange={(v) => save(`${slot.key}-m`, v)}
+                        prompt={slot.mobile.prompt}
+                        title={`${slot.label} · móvil`}
+                        aspectClass={slot.mobile.format.aspectClass}
+                        textZone={slot.mobile.format.textZone}
+                        previewClass="max-w-[200px]"
+                        emptyText="Sin imagen: en móvil se recorta la de ordenador."
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
         </section>

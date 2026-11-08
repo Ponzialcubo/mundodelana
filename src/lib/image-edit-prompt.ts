@@ -1,3 +1,5 @@
+import { FORMATS, buildSpotPrompt } from "@/lib/image-formats";
+
 /**
  * Prompts for editing product photos with an external image AI (Gemini,
  * ChatGPT). The owner downloads a bundle from the admin and pastes each
@@ -23,7 +25,8 @@ ESTILO
 - Fondo liso o con un degradado muy suave en tonos cálidos de la marca: crema #F7F1EA, beige #EDE4DA o rosa empolvado #E8B4B8. Nada de fondos blancos fríos ni escenarios recargados.
 - Luz natural y suave, como junto a una ventana, con una sombra ligera bajo la pieza para que no parezca recortada.
 - Pieza centrada y nítida, ocupando unos dos tercios del encuadre. Que se aprecie la textura del punto.
-- Aspecto de foto real de estudio, no de ilustración ni 3D. Sin texto, logos ni marcas de agua.
+- Aspecto de foto real de estudio, no de ilustración ni 3D.
+- No añadas nada que no esté en la foto: ni otras piezas, ni bordados, estampados, texto, logos o marcas de agua.
 
 FORMATOS (genera una imagen por formato)
 ${IMAGE_FORMATS.map((f) => `- ${f.label}: ${f.use}.`).join("\n")}
@@ -47,36 +50,34 @@ export function buildProductPhotoPrompt(product: { name: string; description?: s
 }
 
 const CAMPAIGN_SCENES: Record<string, string> = {
-  "san-valentin": "corazones de crochet, rosas rojas tejidas, una pareja de amigurumis y una caja de regalo con lazo rojo; detalles en rojo suave y rosa",
-  "dia-de-la-madre": "un ramo y una maceta de flores de crochet, una tarjeta escrita a mano y un pequeño regalo envuelto; tonos rosa, lila y verde suave, flores de primavera",
-  "dia-del-padre": "un amigurumi y un llavero de crochet junto a una taza y una tarjeta, envueltos como regalo; tonos azules suaves, beige y madera",
-  halloween: "calabazas de crochet con caritas, un gorro de bruja tejido, hojas secas y velas pequeñas; tonos naranja, morado y crema, divertido y nada terrorífico",
-  navidad: "adornos navideños de crochet (bolas, calcetines, arbolitos), un muñeco de jengibre tejido, ramas de abeto y luces cálidas desenfocadas; rojo, verde y crema",
+  "san-valentin": "pétalos de rosa roja sueltos, una cinta roja de algodón, papel kraft y luz cálida de tarde sobre madera clara",
+  "dia-de-la-madre": "flores frescas de primavera en tonos rosa y lila en un jarrón sencillo, un trozo de lino y papel kraft con cinta",
+  "dia-del-padre": "madera clara, papel kraft, una cuerda de yute y una taza de cerámica, en tonos azul suave y beige",
+  halloween: "hojas secas de otoño, calabazas pequeñas de verdad y velas encendidas, en tonos naranja y crema; acogedor, nada terrorífico",
+  navidad: "ramas de abeto, piñas, luces cálidas desenfocadas al fondo, cinta roja y papel kraft sobre madera clara",
 };
 
-/** Prompt for a seasonal banner: a brand-new concept image, wide, with room for text. */
-export function buildCampaignBannerPrompt(campaign: { slug: string; name: string }): string {
-  const scene = CAMPAIGN_SCENES[campaign.slug] ?? `una composición temática de «${campaign.name}» con piezas de crochet hechas a mano`;
-  return `Crea una fotografía para el banner de «${campaign.name}» de una tienda de crochet y amigurumis hechos a mano.
-
-ESCENA: ${scene}, sobre una mesa de madera clara con luz natural suave. Coloca las piezas en la mitad derecha y deja la mitad izquierda despejada y algo desenfocada para poner texto encima.
-
-ESTILO: fotografía real y profesional, acogedora y artesanal, con los colores de la marca (crema #F7F1EA y rosa empolvado #E8B4B8) como base. Que se aprecie la textura del punto de crochet. Sin texto, sin logos, sin marcas de agua.
-
-Si te adjunto fotos de mis piezas, úsalas como protagonistas manteniéndolas exactamente iguales.
-
-FORMATOS: horizontal 16:9 (1920 × 1080 px) para ordenador y vertical 4:5 (1080 × 1350 px) para móvil, con el mismo concepto.`;
+/** Desktop and phone prompts for a special date's banner: a generic seasonal scene, real pieces only if attached. */
+export function buildCampaignBannerPrompts(campaign: { slug: string; name: string }): { desktop: string; mobile: string } {
+  const scene = `${CAMPAIGN_SCENES[campaign.slug] ?? `elementos de decoración típicos de «${campaign.name}» (sin figuras de crochet)`}.`;
+  const purpose = `el banner de «${campaign.name}»`;
+  return {
+    desktop: buildSpotPrompt({ purpose: `${purpose} (versión ordenador)`, scene, format: FORMATS.wideDesktop }),
+    mobile: buildSpotPrompt({
+      purpose: `${purpose} (versión móvil)`,
+      scene,
+      format: FORMATS.wideMobile,
+      extra: "Si ya me has hecho la versión de ordenador, repite la misma escena en vertical.",
+    }),
+  };
 }
 
-/** Prompt for a category card: the most representative piece as the hero, room at the bottom for the white title. */
+/** Prompt for a category thumbnail: the attached piece, unchanged, on a clean generic background. */
 export function buildCategoryCoverPrompt(category: { name: string; description?: string | null }): string {
-  return `Crea la imagen de la tarjeta «${category.name}» de la tienda online Mundolana (crochet y amigurumis hechos a mano en Galicia).
-${category.description ? `\nQUÉ HAY EN ESTA CATEGORÍA: ${category.description}\n` : ""}
-ESCENA: la pieza que te adjunto (la más representativa de la categoría) como protagonista, en la mitad superior, sobre una superficie de madera clara o tela de lino, con algún detalle de ambiente discreto (ovillos, ramita, papel kraft). Deja el tercio de abajo limpio y algo más oscuro y suave, porque ahí irá el título en blanco.
-
-LO MÁS IMPORTANTE: la pieza de crochet debe quedar EXACTAMENTE igual (forma, colores, puntos y detalles). Solo cambia el fondo, la luz y la composición.
-
-ESTILO: fotografía real y profesional, luz natural de ventana, tonos cálidos de la marca (crema #F7F1EA, beige #EDE4DA, rosa empolvado #E8B4B8, verde salvia #9CAF88). Que se aprecie la textura del punto. Sin texto, sin logos, sin marcas de agua.
-
-FORMATO: vertical 4:5 (1080 × 1350 px).`;
+  return buildSpotPrompt({
+    purpose: `la miniatura de la categoría «${category.name}»`,
+    scene: `la pieza de la foto que te adjunto (la más representativa de «${category.name}»), centrada y nítida, ocupando dos tercios del encuadre, sobre un fondo liso crema o beige con una sombra suave.${category.description ? ` Contexto: ${category.description}` : ""}`,
+    format: FORMATS.square,
+    extra: "LO MÁS IMPORTANTE: la pieza debe quedar EXACTAMENTE igual que en la foto; solo cambian el fondo y la luz.",
+  });
 }

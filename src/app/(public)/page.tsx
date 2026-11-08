@@ -6,11 +6,12 @@ import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { YarnBackdrop } from "@/components/public/YarnBackdrop";
 import { HeroBanner } from "@/components/public/HeroBanner";
 import { CampaignBanner } from "@/components/public/CampaignBanner";
-import { PhotoCard } from "@/components/public/PhotoCard";
+import { SegmentCard } from "@/components/public/SegmentCard";
+import { BannerImage } from "@/components/public/BannerImage";
 import { getSiteSettings } from "@/lib/seo";
 import { HowItWorks } from "@/components/public/HowItWorks";
 import { SEGMENTS } from "@/lib/catalog-segments";
-import { getSiteImages, heroSlides } from "@/lib/site-images";
+import { getSiteImages, heroSlides, responsive } from "@/lib/site-images";
 import { deadlinePending, formatMD, getActiveCampaign } from "@/lib/campaigns";
 import type { Prisma } from "@/generated/prisma";
 
@@ -63,7 +64,7 @@ export default async function HomePage() {
 
   const count = new Map(categories.map((c) => [c.slug, c]));
   const segments = SEGMENTS.filter((s) => s.slugs.some((slug) => (count.get(slug)?._count.products ?? 0) > 0));
-  const about = images.about;
+  const about = responsive(images, "about");
   // Segment card photo: the owner's AI background, else the cover of its first category.
   const segmentPhoto = (s: (typeof SEGMENTS)[number]) => {
     const own = images[`seg-${s.key}`];
@@ -100,7 +101,6 @@ export default async function HomePage() {
           <div className="mb-7">
             <CampaignBanner
               campaign={campaign}
-              photos={campaignProducts.map((p) => ({ url: p.mainImage!, focalX: p.mainImageFocalX, focalY: p.mainImageFocalY }))}
               deadline={deadlinePending(campaign) ? formatMD(campaign.deadlineMD!) : null}
             />
           </div>
@@ -127,20 +127,9 @@ export default async function HomePage() {
             Ir a la tienda
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
-          {segments.map((s, i) => (
-            <PhotoCard
-              key={s.key}
-              href={`/catalogo#${s.key}`}
-              photo={segmentPhoto(s)}
-              title={s.title}
-              subtitle={s.subtitle}
-              tint={s.tint}
-              ink={s.ink}
-              subtitleClassName={i === 0 ? "md:hidden" : "hidden"}
-              className={i === 0 ? "col-span-2 aspect-[16/10] md:col-span-1 md:aspect-[3/4]" : "aspect-[3/4]"}
-              sizes={i === 0 ? "(min-width: 768px) 20vw, 100vw" : "(min-width: 768px) 20vw, 50vw"}
-            />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4 lg:grid-cols-5">
+          {segments.map((s) => (
+            <SegmentCard key={s.key} href={`/catalogo#${s.key}`} photo={segmentPhoto(s)} title={s.title} subtitle={s.subtitle} tint={s.tint} />
           ))}
         </div>
       </section>
@@ -188,7 +177,7 @@ export default async function HomePage() {
       <section className="px-5 pb-12 md:px-14 md:pb-16">
         <div className="relative flex min-h-[460px] items-end overflow-hidden rounded-3xl md:min-h-[420px] md:items-center">
           {about ? (
-            <Image src={about.url} alt="Elvira tejiendo en su taller" fill sizes="(min-width: 768px) 90vw, 100vw" className="object-cover" style={focal(about.focalX, about.focalY)} />
+            <BannerImage desktop={about.desktop} mobile={about.mobile} desktopSizes="90vw" />
           ) : (
             <YarnBackdrop />
           )}

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageSlotEditor, type SlotValue } from "@/components/admin/ImageSlotEditor";
+import { FORMATS, formatLabel } from "@/lib/image-formats";
 
 type CampaignForm = {
   id: string;
@@ -15,6 +16,7 @@ type CampaignForm = {
   bannerTitle: string;
   bannerText: string;
   banner: SlotValue;
+  bannerMobile: SlotValue;
   accent: string;
   productIds: string[];
 };
@@ -38,11 +40,11 @@ const fromDateInput = (value: string) => value.slice(5);
 export function CampaignEditorForm({
   initial,
   products,
-  prompt,
+  prompts,
 }: {
   initial: CampaignForm;
   products: { id: string; name: string; mainImage: string | null }[];
-  prompt: string;
+  prompts: { desktop: string; mobile: string };
 }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
@@ -137,15 +139,40 @@ export function CampaignEditorForm({
             ))}
           </div>
         </div>
+      </div>
+
+      <div className={CARD}>
+        <div className="flex flex-col gap-1">
+          <span className="font-serif text-base font-medium">Imagen del banner</span>
+          <span className="text-xs text-admin-ink-soft">
+            Se ve en: Inicio (bloque de la fecha), Tienda (arriba) y la página de la fecha. El título y el texto de arriba se
+            escriben encima, así que la imagen debe tener esa zona despejada. Crea una escena de ambiente (sin fotos de
+            productos recortadas): el prompt ya lo pide así.
+          </span>
+        </div>
         <div className="flex flex-col gap-1.5">
-          <span className="text-[13px] font-medium">Imagen</span>
+          <span className="text-[13px] font-medium">Ordenador · {formatLabel(FORMATS.wideDesktop)}</span>
           <ImageSlotEditor
             value={data.banner}
             onChange={(v) => set("banner", v)}
-            prompt={prompt}
-            title={`Banner de ${data.name}`}
-            aspectClass="aspect-[16/9]"
+            prompt={prompts.desktop}
+            title={`Banner de ${data.name} · ordenador`}
+            aspectClass={FORMATS.wideDesktop.aspectClass}
+            textZone={FORMATS.wideDesktop.textZone}
             emptyText="Sin imagen: el banner se muestra con el color elegido."
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[13px] font-medium">Móvil · {formatLabel(FORMATS.wideMobile)} <span className="font-normal text-admin-ink-soft">(opcional)</span></span>
+          <ImageSlotEditor
+            value={data.bannerMobile}
+            onChange={(v) => set("bannerMobile", v)}
+            prompt={prompts.mobile}
+            title={`Banner de ${data.name} · móvil`}
+            aspectClass={FORMATS.wideMobile.aspectClass}
+            textZone={FORMATS.wideMobile.textZone}
+            previewClass="max-w-[220px]"
+            emptyText="Sin imagen: en móvil se recorta la de ordenador."
           />
         </div>
       </div>

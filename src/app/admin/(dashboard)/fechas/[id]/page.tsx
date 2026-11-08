@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { buildCampaignBannerPrompt } from "@/lib/image-edit-prompt";
+import { buildCampaignBannerPrompts } from "@/lib/image-edit-prompt";
 import { CampaignEditorForm } from "@/components/admin/CampaignEditorForm";
 
 export default async function AdminFechaPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,11 +28,14 @@ export default async function AdminFechaPage({ params }: { params: Promise<{ id:
         bannerTitle: campaign.bannerTitle,
         bannerText: campaign.bannerText,
         banner: campaign.bannerImage ? { url: campaign.bannerImage, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY } : null,
+        bannerMobile: campaign.bannerImageMobile
+          ? { url: campaign.bannerImageMobile, focalX: campaign.bannerMobileFocalX, focalY: campaign.bannerMobileFocalY }
+          : null,
         accent: campaign.accent,
         productIds: campaign.products.map((p) => p.id),
       }}
       products={products}
-      prompt={buildCampaignBannerPrompt(campaign)}
+      prompts={buildCampaignBannerPrompts(campaign)}
     />
   );
 }

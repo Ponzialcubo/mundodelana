@@ -3,6 +3,13 @@
 import { useRef, useState } from "react";
 import { FocalPointEditor } from "@/components/admin/FocalPointEditor";
 import { ImproveImageDialog } from "@/components/admin/ImproveImageDialog";
+import type { TextZone } from "@/lib/image-formats";
+
+/** Dashed box showing where the shop writes its title over the image. */
+const ZONE_CLASS: Record<Exclude<TextZone, "none">, string> = {
+  left: "inset-y-[12%] left-[5%] w-[42%]",
+  bottom: "inset-x-[7%] bottom-[6%] h-[38%]",
+};
 
 export type SlotValue = { url: string; focalX: number; focalY: number } | null;
 
@@ -17,6 +24,8 @@ export function ImageSlotEditor({
   prompt,
   title,
   aspectClass,
+  textZone = "none",
+  previewClass = "max-w-md",
   emptyText = "Sin imagen: se usa el diseño por defecto.",
 }: {
   value: SlotValue;
@@ -24,6 +33,8 @@ export function ImageSlotEditor({
   prompt: string;
   title: string;
   aspectClass: string;
+  textZone?: TextZone;
+  previewClass?: string;
   emptyText?: string;
 }) {
   const [dialog, setDialog] = useState(false);
@@ -52,12 +63,19 @@ export function ImageSlotEditor({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className={`relative w-full max-w-sm overflow-hidden rounded-xl bg-admin-bg ${aspectClass}`}>
+      <div className={`relative w-full overflow-hidden rounded-xl bg-admin-bg ${previewClass} ${aspectClass}`}>
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element -- admin preview with the shop's exact crop
           <img src={value.url} alt="" className="h-full w-full object-cover" style={{ objectPosition: `${value.focalX * 100}% ${value.focalY * 100}%` }} />
         ) : (
           <span className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-admin-ink-soft">{emptyText}</span>
+        )}
+        {textZone !== "none" && (
+          <span
+            className={`pointer-events-none absolute flex items-center justify-center rounded-lg border-2 border-dashed border-white/90 bg-black/20 px-2 text-center text-[11px] font-medium text-white shadow-sm ${ZONE_CLASS[textZone]}`}
+          >
+            Aquí va el texto
+          </span>
         )}
       </div>
 
