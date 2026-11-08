@@ -137,6 +137,7 @@ export default async function HomePage() {
               subtitle={s.subtitle}
               tint={s.tint}
               ink={s.ink}
+              subtitleClassName={i === 0 ? "md:hidden" : "hidden"}
               className={i === 0 ? "col-span-2 aspect-[16/10] md:col-span-1 md:aspect-[3/4]" : "aspect-[3/4]"}
               sizes={i === 0 ? "(min-width: 768px) 20vw, 100vw" : "(min-width: 768px) 20vw, 50vw"}
             />

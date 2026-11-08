@@ -19,6 +19,7 @@ export function PhotoCard({
   sizes = "(min-width: 768px) 25vw, 50vw",
   className = "",
   large = false,
+  subtitleClassName = "",
 }: {
   href: string;
   photo: Photo;
@@ -30,6 +31,7 @@ export function PhotoCard({
   sizes?: string;
   className?: string;
   large?: boolean;
+  subtitleClassName?: string;
 }) {
   return (
     <Link href={href} className={`group relative isolate flex flex-col justify-end overflow-hidden rounded-2xl md:rounded-3xl ${className}`} style={{ background: tint }}>
@@ -51,12 +53,14 @@ export function PhotoCard({
       <span className={`flex items-end justify-between gap-3 ${large ? "p-5 md:p-7" : "p-4 md:p-5"}`} style={photo ? { color: "#fff" } : { color: ink }}>
         <span className="flex min-w-0 flex-col">
           {eyebrow && <span className="mb-0.5 text-[10.5px] font-medium uppercase tracking-[.16em] opacity-80">{eyebrow}</span>}
-          <span className={`font-serif leading-[1.1] ${large ? "text-[26px] md:text-[34px]" : "text-[19px] md:text-[23px]"}`}>{title}</span>
-          {subtitle && <span className="mt-1 text-[12.5px] opacity-85 md:text-[13.5px]">{subtitle}</span>}
+          <span className={`hyphens-auto break-words font-serif leading-[1.1] ${large ? "text-[26px] md:text-[34px]" : "text-[18px] md:text-[22px]"}`} lang="es">
+            {title}
+          </span>
+          {subtitle && <span className={`mt-1 line-clamp-2 text-[12.5px] opacity-85 md:text-[13px] ${subtitleClassName}`}>{subtitle}</span>}
         </span>
         <span
           aria-hidden="true"
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[15px] transition group-hover:translate-x-0.5 ${photo ? "bg-white/90 text-ink" : "bg-white/70"}`}
+          className={`${large ? "flex" : "hidden sm:flex"} h-9 w-9 shrink-0 items-center justify-center rounded-full text-[15px] transition group-hover:translate-x-0.5 ${photo ? "bg-white/90 text-ink" : "bg-white/70"}`}
         >
           →
         </span>

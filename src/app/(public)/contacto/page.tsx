@@ -106,7 +106,7 @@ export default async function ContactoPage() {
               ))}
             </div>
 
-            <div className="flex flex-col gap-3 rounded-2xl bg-white/70 p-5 md:flex-row md:items-center md:justify-between md:gap-6">
+            <div className="flex flex-col gap-3 rounded-2xl bg-white/70 p-5">
               <div className="flex items-center gap-3">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage opacity-60" />
@@ -114,7 +114,7 @@ export default async function ContactoPage() {
                 </span>
                 <span className="text-[14px] font-medium">Respondo en menos de 24 h laborables</span>
               </div>
-              <dl className="grid grid-cols-3 gap-3 text-[12.5px] md:text-right">
+              <dl className="grid grid-cols-3 gap-3 whitespace-nowrap text-[12.5px]">
                 <div><dt className="text-ink/55">Lun – Vie</dt><dd className="font-medium">{hours.weekday}</dd></div>
                 <div><dt className="text-ink/55">Sábado</dt><dd className="font-medium">{hours.saturday}</dd></div>
                 <div><dt className="text-ink/55">Domingo</dt><dd className="font-medium">{hours.sunday}</dd></div>
