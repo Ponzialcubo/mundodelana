@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
 import { FramingEditor } from "@/components/admin/FramingEditor";
+import { ProductInstagramCard } from "@/components/admin/social/ProductInstagramCard";
 import { FRAMES, frameStyle } from "@/lib/framing";
 import { ImproveImageDialog } from "@/components/admin/ImproveImageDialog";
 import { buildProductPhotoPrompt } from "@/lib/image-edit-prompt";
@@ -143,11 +144,14 @@ export function ProductEditorForm({
   categories,
   brands,
   relatedOptions,
+  instagram,
 }: {
   initial?: ProductFormData;
   categories: Category[];
   brands: Brand[];
   relatedOptions: RelatedOption[];
+  /** Instagram status, only when editing a saved product. */
+  instagram?: { url: string | null; posts: { id: string; status: string; scheduledFor: string | null }[] };
 }) {
   const router = useRouter();
   const isEdit = Boolean(initial?.id);
@@ -739,6 +743,7 @@ export function ProductEditorForm({
         </label>
       </div>
 
+        {isEdit && instagram && <ProductInstagramCard productId={initial!.id!} instagramUrl={instagram.url} posts={instagram.posts} />}
       </aside>
       </div>
 

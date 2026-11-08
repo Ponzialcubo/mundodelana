@@ -13,6 +13,7 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
         brands: true,
         relatedTo: { select: { id: true } },
         images: { orderBy: { order: "asc" } },
+        socialPosts: { where: { status: { not: "PUBLICADA" } }, select: { id: true, status: true, scheduledFor: true }, orderBy: { updatedAt: "desc" } },
       },
     }),
     prisma.category.findMany({ orderBy: { order: "asc" } }),
@@ -55,5 +56,16 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
     })),
   };
 
-  return <ProductEditorForm initial={initial} categories={categories} brands={brands} relatedOptions={relatedOptions} />;
+  return (
+    <ProductEditorForm
+      initial={initial}
+      categories={categories}
+      brands={brands}
+      relatedOptions={relatedOptions}
+      instagram={{
+        url: product.instagramUrl,
+        posts: product.socialPosts.map((p) => ({ id: p.id, status: p.status, scheduledFor: p.scheduledFor?.toISOString() ?? null })),
+      }}
+    />
+  );
 }

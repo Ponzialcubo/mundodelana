@@ -340,28 +340,41 @@ enum SocialPlatform {
   TIKTOK
 }
 
+enum SocialPostStatus {
+  BORRADOR
+  PROGRAMADA
+  PUBLICANDO
+  PUBLICADA
+  ERROR
+}
+
+// A post prepared on the web and published to Instagram (carousel of up to 10
+// photos/videos, or a single reel), usually from a product.
 model SocialPost {
   id String @id @default(cuid())
 
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productId String
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId String?
 
-  // Media específica de esta publicación: puede diferir de las fotos de la ficha.
-  mediaUrl  String?
-  mediaType String? // "image" | "video"
+  status SocialPostStatus @default(BORRADOR)
 
-  instagramText String?
+  // [{ url, kind: "image" | "video", posterUrl?, focalX, focalY, zoom }] in post order.
+  media Json @default("[]")
+
+  instagramText String? // caption without hashtags
+  hashtags      String? // "#a #b #c", added after the caption when publishing
   tiktokText    String?
 
-  // Recordatorio interno para TikTok: no se publica nada automáticamente ahí.
-  scheduledFor DateTime?
+  scheduledFor DateTime? // publish automatically at this time (status PROGRAMADA)
 
-  // Estado de la publicación real en Instagram vía API. Null = todavía no
-  // se ha intentado publicar (sigue siendo solo un borrador/recordatorio).
-  instagramPostId        String?
-  instagramPermalink     String?
-  instagramPublishedAt   DateTime?
-  instagramPublishError  String?
+  instagramPostId       String?
+  instagramPermalink    String?
+  instagramPublishedAt  DateTime?
+  instagramPublishError String?
+
+  // Legacy single-media fields from the first composer, unused by the new one.
+  mediaUrl  String?
+  mediaType String?
 
   notes String?
 
@@ -369,7 +382,15 @@ model SocialPost {
   updatedAt DateTime @updatedAt
 
   @@index([productId])
-  @@index([scheduledFor])
+  @@index([status, scheduledFor])
+}
+
+// Reusable groups of hashtags (brand, technique, each kind of piece...).
+model HashtagSet {
+  id    String @id @default(cuid())
+  name  String
+  tags  String // "#a #b #c"
+  order Int    @default(0)
 }
 
 // Photo/video library: media pulled in from Instagram (or uploaded) before it

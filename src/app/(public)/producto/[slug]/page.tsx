@@ -256,9 +256,16 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
             </details>
           </div>
 
-          <Link href="/como-funciona" className="mt-4 w-fit text-[13.5px] font-medium text-ink/70 underline underline-offset-4 hover:text-ink">
-            ¿Cómo funciona un encargo?
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[13.5px] font-medium text-ink/70">
+            <Link href="/como-funciona" className="underline underline-offset-4 hover:text-ink">
+              ¿Cómo funciona un encargo?
+            </Link>
+            {product.instagramUrl && (
+              <a href={product.instagramUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-ink">
+                Ver esta pieza en Instagram ↗
+              </a>
+            )}
+          </div>
         </div>
       </section>
 

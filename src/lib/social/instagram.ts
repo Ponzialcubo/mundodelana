@@ -97,6 +97,51 @@ export async function publishToInstagram(params: {
   return { mediaId, permalink };
 }
 
+export type PublishItem = { url: string; kind: "image" | "video" };
+
+/**
+ * Publishes a post made of 1 to 10 items: one photo, one reel, or a carousel.
+ * Every URL must be public (Instagram downloads the files itself) and photos
+ * must be JPEG. Video containers are transcoded by Instagram first, so they
+ * are polled until ready before publishing.
+ */
+export async function publishPost(items: PublishItem[], caption: string): Promise<{ mediaId: string; permalink?: string }> {
+  if (items.length === 0) throw new Error("La publicación no tiene fotos.");
+  if (items.length > 10) throw new Error("Instagram permite como máximo 10 fotos o vídeos por publicación.");
+  if (items.length === 1) return publishToInstagram({ mediaUrl: items[0].url, mediaType: items[0].kind, caption });
+
+  const igUserId = requireEnv("INSTAGRAM_BUSINESS_ACCOUNT_ID");
+  const children: string[] = [];
+  for (const item of items) {
+    const params: Record<string, string> =
+      item.kind === "video"
+        ? { media_type: "VIDEO", video_url: absoluteUrl(item.url), is_carousel_item: "true" }
+        : { image_url: absoluteUrl(item.url), is_carousel_item: "true" };
+    const { id } = await graphFetch<{ id: string }>(`/${igUserId}/media`, params, "POST");
+    if (item.kind === "video") await waitUntilContainerReady(id);
+    children.push(id);
+  }
+
+  const { id: creationId } = await graphFetch<{ id: string }>(
+    `/${igUserId}/media`,
+    { media_type: "CAROUSEL", children: children.join(","), caption },
+    "POST",
+  );
+  await waitUntilContainerReady(creationId);
+  const { id: mediaId } = await graphFetch<{ id: string }>(`/${igUserId}/media_publish`, { creation_id: creationId }, "POST");
+  const { permalink } = await graphFetch<{ permalink?: string }>(`/${mediaId}`, { fields: "permalink" });
+  return { mediaId, permalink };
+}
+
+/** Posts left today out of Instagram's daily limit for the account. */
+export async function publishingQuota(): Promise<{ used: number; total: number }> {
+  const igUserId = requireEnv("INSTAGRAM_BUSINESS_ACCOUNT_ID");
+  const { data } = await graphFetch<{ data: { quota_usage: number; config: { quota_total: number } }[] }>(`/${igUserId}/content_publishing_limit`, {
+    fields: "config,quota_usage",
+  });
+  return { used: data[0]?.quota_usage ?? 0, total: data[0]?.config.quota_total ?? 100 };
+}
+
 const CONTAINER_POLL_INTERVAL_MS = 3000;
 const CONTAINER_POLL_TIMEOUT_MS = 90_000;
 
