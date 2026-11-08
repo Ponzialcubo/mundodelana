@@ -32,9 +32,8 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-admin-canvas px-5">
       <div className="flex w-full max-w-sm flex-col gap-5">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-pink font-serif text-sm font-medium text-admin-ink">
-            m
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- tiny static logo */}
+          <img src="/logo-mundolana.png" alt="" width={32} height={32} className="h-8 w-8" />
           <span className="font-serif text-lg font-medium text-admin-ink">Mundolana · Panel</span>
         </div>
 

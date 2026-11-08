@@ -549,8 +549,12 @@ export function ProductEditorForm({
           </div>
           <span className="text-xs text-admin-faint">
             {data.priceType === "PERSONALIZADO"
-              ? `Se hace a medida. En la tienda aparece como «desde ${data.price || "…"} €».`
-              : "Ya está hecha y lista para enviar. Precio cerrado."}
+              ? Number(data.price) > 0
+                ? `Se hace a medida. En la tienda aparece como «desde ${data.price} €».`
+                : "Sin precio, en la tienda aparece «Consultar precio»."
+              : Number(data.price) > 0
+                ? "Ya está hecha y lista para enviar. Precio cerrado."
+                : "Sin precio, en la tienda aparece «Consultar precio»."}
           </span>
         </label>
       </div>

@@ -30,9 +30,8 @@ export function AdminSidebar({ pendingCount, adminName }: { pendingCount: number
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-[220px] shrink-0 flex-col gap-6 border-r border-admin-ink/10 bg-white px-4 py-6 md:flex">
         <Link href="/admin" className="flex items-center gap-2 px-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-pink font-serif text-sm font-medium text-admin-ink">
-            m
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- tiny static logo */}
+          <img src="/logo-mundolana.png" alt="" width={28} height={28} className="h-7 w-7" />
           <span className="font-serif text-base font-medium text-admin-ink">Mundolana</span>
         </Link>
 
@@ -81,9 +80,8 @@ export function AdminSidebar({ pendingCount, adminName }: { pendingCount: number
       {/* Mobile top bar */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-admin-ink/10 bg-white px-4 py-3 md:hidden">
         <Link href="/admin" className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-pink font-serif text-sm font-medium text-admin-ink">
-            m
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- tiny static logo */}
+          <img src="/logo-mundolana.png" alt="" width={28} height={28} className="h-7 w-7" />
           <span className="font-serif text-base font-medium text-admin-ink">Mundolana</span>
         </Link>
         <Link href="/" target="_blank" className="text-xs font-medium text-admin-link">

@@ -16,13 +16,13 @@ export const metadata: Metadata = {
 };
 
 
-// Real workshop photos taken from the Instagram process posts (20-cow project).
+// Real photos from Instagram: yarn and unassembled pieces from the workshop, then finished work.
 const WORKSHOP = {
-  main: { src: "/uploads/85507eed-d8c0-4577-84e3-d88b8e0afb6a.jpg", alt: "Elvira empezando un proyecto de amigurumis en su taller" },
+  main: { src: "/uploads/23048a7d-014a-44d4-bb47-ec48937d5709.jpg", alt: "Ovillos de algodón DMC en el taller de Elvira" },
   grid: [
-    { src: "/uploads/23048a7d-014a-44d4-bb47-ec48937d5709.jpg", alt: "Ovillos de algodón DMC listos para empezar" },
-    { src: "/uploads/0e67029e-0299-4b89-aee7-f6d7b2f3d07f.jpg", alt: "Veinte cabezas de vaca terminadas" },
-    { src: "/uploads/36bd5928-f9a2-410b-af35-bea0feaa2653.jpg", alt: "Un cuerpo a medio tejer" },
+    { src: "/uploads/4034d106-ef5b-4369-8160-30f8d3195a65.jpg", alt: "Piezas recién tejidas, antes de montarlas" },
+    { src: "/uploads/b7944116-ed8e-4c6c-a58e-c793326cf0d4.png", alt: "Alicia, ya terminada" },
+    { src: "/uploads/e70d8c5c-0003-4d41-939e-19b85d34a3af.jpg", alt: "Vaquita con peto y chaqueta" },
   ],
 };
 
