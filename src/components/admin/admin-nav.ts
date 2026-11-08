@@ -10,6 +10,8 @@ export const MAIN = [
 export const MORE = [
   { href: "/admin/categorias", label: "Categorías", hint: "Grupos del catálogo" },
   { href: "/admin/marcas", label: "Marcas", hint: "Pokémon, Dragon Ball…" },
+  { href: "/admin/fechas", label: "Fechas especiales", hint: "San Valentín, Navidad… banners y avisos" },
+  { href: "/admin/imagenes-web", label: "Imágenes de la web", hint: "Portada, sobre mí, contacto" },
   { href: "/admin/redes", label: "Redes sociales", hint: "Preparar y publicar posts" },
   { href: "/admin/newsletter", label: "Newsletter", hint: "Suscriptoras" },
   { href: "/admin/ajustes", label: "Configuración", hint: "Teléfono, email, redes" },

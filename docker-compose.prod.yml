@@ -8,6 +8,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - db_data:/var/lib/postgresql/data
+    cpus: 1.0
+    mem_limit: 384m
     networks:
       - internal
     healthcheck:
@@ -37,6 +39,9 @@ services:
       NODE_ENV: production
     volumes:
       - uploads_data:/app/uploads
+    # Kept here (not only "docker update") so every deploy keeps them.
+    cpus: 1.5
+    mem_limit: 768m
     depends_on:
       db:
         condition: service_healthy

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
 import { FocalPointEditor } from "@/components/admin/FocalPointEditor";
+import { ImproveImageDialog } from "@/components/admin/ImproveImageDialog";
+import { buildProductPhotoPrompt } from "@/lib/image-edit-prompt";
 
 export type CategoryFormData = {
   id?: string;
@@ -47,6 +49,7 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
   const [data, setData] = useState<CategoryFormData>(initial ?? EMPTY);
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [framing, setFraming] = useState(false);
+  const [improving, setImproving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -226,6 +229,22 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
                     Encuadre
                   </span>
                 </button>
+                <button type="button" onClick={() => setImproving(true)} className="w-fit rounded-full bg-pink px-4 py-2 text-xs font-medium">
+                  ✨ Mejorar con IA
+                </button>
+                {improving && (
+                  <ImproveImageDialog
+                    title="Mejorar la portada"
+                    prompt={buildProductPhotoPrompt({ name: `portada de la categoría «${data.name}»`, description: data.description })}
+                    originalUrl={data.coverImage}
+                    onUploaded={(url) => {
+                      set("coverImage", url);
+                      set("coverFocalX", 0.5);
+                      set("coverFocalY", 0.5);
+                    }}
+                    onClose={() => setImproving(false)}
+                  />
+                )}
                 {framing && (
                   <FocalPointEditor
                     src={data.coverImage}

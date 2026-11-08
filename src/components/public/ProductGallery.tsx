@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
+import { FadeImage } from "@/components/public/FadeImage";
+import { LoopVideo } from "@/components/public/LoopVideo";
 
 export type GalleryItem = {
   url: string;
@@ -94,17 +96,10 @@ export function ProductGallery({ productName, items }: { productName: string; it
           {visible.map((item, i) => (
             <div key={item.url} className="relative aspect-[4/5] w-full shrink-0 snap-center bg-cream">
               {item.mediaType === "video" ? (
-                <video
-                  src={item.url}
-                  poster={item.posterUrl ?? undefined}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="h-full w-full object-contain"
-                />
+                <LoopVideo src={item.url} poster={item.posterUrl} />
               ) : (
                 <button type="button" onClick={() => setZoomed(true)} className="absolute inset-0 cursor-zoom-in" aria-label="Ver foto a pantalla completa">
-                  <Image
+                  <FadeImage
                     src={item.url}
                     alt={i === 0 ? productName : `${productName} — foto ${i + 1}`}
                     fill
@@ -127,16 +122,17 @@ export function ProductGallery({ productName, items }: { productName: string; it
       </div>
 
       {visible.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 py-1 [scrollbar-width:none]">
           {visible.map((item, i) => (
             <button
               key={item.url}
               type="button"
               onClick={() => goTo(i)}
-              className="relative aspect-[4/5] w-[68px] shrink-0 overflow-hidden rounded-lg md:w-[84px]"
-              style={{ outline: active === i ? "2px solid #4A3F3B" : "none", outlineOffset: 2, opacity: active === i ? 1 : 0.75 }}
-              aria-label={`Ver foto ${i + 1}`}
+              className={`shrink-0 rounded-xl border-2 p-[3px] transition ${active === i ? "border-ink" : "border-transparent opacity-70"}`}
+              aria-label={`Ver ${item.mediaType === "video" ? "vídeo" : "foto"} ${i + 1}`}
+              aria-current={active === i}
             >
+              <span className="relative block aspect-[4/5] w-[64px] overflow-hidden rounded-lg bg-cream md:w-[80px]">
               <Image
                 src={item.mediaType === "video" ? item.posterUrl ?? item.url : item.url}
                 alt=""
@@ -148,6 +144,7 @@ export function ProductGallery({ productName, items }: { productName: string; it
               {item.mediaType === "video" && (
                 <span className="absolute inset-0 flex items-center justify-center bg-black/20 text-xs text-white">▶</span>
               )}
+              </span>
             </button>
           ))}
         </div>

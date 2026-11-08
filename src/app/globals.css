@@ -71,3 +71,19 @@ body {
   font-family: var(--font-work-sans), system-ui, sans-serif;
   overflow-x: hidden;
 }
+
+/* Loading shimmer for images and media */
+.shimmer {
+  background: linear-gradient(100deg, #efe5da 20%, #f7f1ea 40%, #efe5da 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+}
+@keyframes shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+/* iOS zooms into any field under 16px when focused: keep every form control at 16px on phones */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px !important; }
+}

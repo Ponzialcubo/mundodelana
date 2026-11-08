@@ -39,3 +39,31 @@ export const BUNDLE_README = `CÓMO USAR ESTE PAQUETE
 5. En el panel de Mundolana, entra en Fotos → «Subir fotos editadas» y súbelas todas de golpe.
    Aparecerán en «Por revisar» marcadas como IA, listas para crear productos.
 `;
+
+/** Prompt for one product photo, using the product's own name and description as context. */
+export function buildProductPhotoPrompt(product: { name: string; description?: string | null }): string {
+  return buildImageEditPrompt([product.name, product.description].filter(Boolean).join(". "))
+    .replace("CONTEXTO DE LA PIEZA (texto original de Instagram)", "QUÉ PIEZA ES");
+}
+
+const CAMPAIGN_SCENES: Record<string, string> = {
+  "san-valentin": "corazones de crochet, rosas rojas tejidas, una pareja de amigurumis y una caja de regalo con lazo rojo; detalles en rojo suave y rosa",
+  "dia-de-la-madre": "un ramo y una maceta de flores de crochet, una tarjeta escrita a mano y un pequeño regalo envuelto; tonos rosa, lila y verde suave, flores de primavera",
+  "dia-del-padre": "un amigurumi y un llavero de crochet junto a una taza y una tarjeta, envueltos como regalo; tonos azules suaves, beige y madera",
+  halloween: "calabazas de crochet con caritas, un gorro de bruja tejido, hojas secas y velas pequeñas; tonos naranja, morado y crema, divertido y nada terrorífico",
+  navidad: "adornos navideños de crochet (bolas, calcetines, arbolitos), un muñeco de jengibre tejido, ramas de abeto y luces cálidas desenfocadas; rojo, verde y crema",
+};
+
+/** Prompt for a seasonal banner: a brand-new concept image, wide, with room for text. */
+export function buildCampaignBannerPrompt(campaign: { slug: string; name: string }): string {
+  const scene = CAMPAIGN_SCENES[campaign.slug] ?? `una composición temática de «${campaign.name}» con piezas de crochet hechas a mano`;
+  return `Crea una fotografía para el banner de «${campaign.name}» de una tienda de crochet y amigurumis hechos a mano.
+
+ESCENA: ${scene}, sobre una mesa de madera clara con luz natural suave. Coloca las piezas en la mitad derecha y deja la mitad izquierda despejada y algo desenfocada para poner texto encima.
+
+ESTILO: fotografía real y profesional, acogedora y artesanal, con los colores de la marca (crema #F7F1EA y rosa empolvado #E8B4B8) como base. Que se aprecie la textura del punto de crochet. Sin texto, sin logos, sin marcas de agua.
+
+Si te adjunto fotos de mis piezas, úsalas como protagonistas manteniéndolas exactamente iguales.
+
+FORMATOS: horizontal 16:9 (1920 × 1080 px) para ordenador y vertical 4:5 (1080 × 1350 px) para móvil, con el mismo concepto.`;
+}

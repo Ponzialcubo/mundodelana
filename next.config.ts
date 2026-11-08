@@ -3,8 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
-    // AVIF first (~30 % lighter than WebP on photos), WebP as fallback.
-    formats: ["image/avif", "image/webp"],
+    // WebP only: AVIF is ~20 % lighter but takes ~2.5x longer to encode on this
+    // VPS, which made catalog images appear late while scrolling.
+    formats: ["image/webp"],
     // Phone-first widths: 2-column cards on a 390px screen at 2x need ~400px.
     deviceSizes: [390, 640, 828, 1080, 1366, 1920],
     imageSizes: [64, 96, 128, 192, 256, 384],

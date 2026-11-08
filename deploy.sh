@@ -29,6 +29,8 @@ if docker ps --filter "name=^${CONTAINER}$" --filter "status=running" --format '
   docker logs "$CONTAINER" --tail 15 2>&1
   echo ""
   echo "=== Deploy completado ==="
+  # Optimized images are regenerated after each build: warm them in the background.
+  nohup bash "$PROJECT_DIR/scripts/warm-images.sh" >/tmp/mundodelana-warm.log 2>&1 &
 else
   echo ""
   echo "✗ ERROR: El contenedor no está corriendo"

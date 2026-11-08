@@ -109,3 +109,17 @@ export async function processVideo(
 export function randomFilename(extension: string): string {
   return `${randomUUID()}.${extension}`;
 }
+
+/**
+ * Re-encodes an image to WebP (max 1920px on the long side) WITHOUT cropping:
+ * for AI-edited photos, banners and site images, where the owner already chose
+ * the exact framing.
+ */
+export async function processImageUncropped(input: Buffer): Promise<{ buffer: Buffer; width: number; height: number }> {
+  const { data, info } = await sharp(input)
+    .rotate()
+    .resize({ width: 1920, height: 1920, fit: "inside", withoutEnlargement: true })
+    .webp({ quality: 82 })
+    .toBuffer({ resolveWithObject: true });
+  return { buffer: data, width: info.width, height: info.height };
+}

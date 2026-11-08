@@ -59,6 +59,7 @@ export default async function MarcaPage({ params }: { params: Promise<{ slug: st
       <section className="flex flex-col gap-3 px-5 pb-4 pt-6 md:flex-row md:items-end md:justify-between md:px-14 md:pb-5 md:pt-11">
         <div className="flex max-w-2xl flex-col gap-2.5">
           <span className="font-mono text-[11.5px] uppercase tracking-[.16em] text-ink-soft">Marca</span>
+          <Link href="/catalogo" className="text-[13.5px] text-ink/60">‹ Tienda</Link>
           <h1 className="font-serif text-[30px] font-normal leading-tight md:text-[42px]">{brand.name}</h1>
           <p className="text-[14px] font-light leading-relaxed text-ink/75 md:text-[15.5px]">
             Amigurumis de {brand.name}. Todo se teje a mano y por encargo.

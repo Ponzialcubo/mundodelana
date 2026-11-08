@@ -149,6 +149,7 @@ model Product {
   categories Category[]
   brands     Brand[]
 
+  campaigns   Campaign[]
   relatedTo   Product[] @relation("RelatedProducts")
   relatedFrom Product[] @relation("RelatedProducts")
 
@@ -391,4 +392,42 @@ model LibraryMedia {
 
   @@index([instagramPostId])
   @@index([status])
+}
+
+// Images for fixed spots of the public site (home hero, about, how it works,
+// contact). Keyed by spot so the code knows where each one goes.
+model SiteImage {
+  key       String   @id // "hero" | "about" | "how" | "contact"
+  url       String
+  focalX    Float    @default(0.5)
+  focalY    Float    @default(0.5)
+  updatedAt DateTime @updatedAt
+}
+
+// Yearly dates people order for (Valentine's, Mother's Day, Christmas...).
+// Dates are "MM-DD" so they repeat every year; a window may wrap the new year.
+model Campaign {
+  id     String @id @default(cuid())
+  slug   String @unique
+  name   String
+  active Boolean @default(true)
+  order  Int     @default(0)
+
+  startMD    String // shown from this day ("11-01")
+  endMD      String // until this day, inclusive ("01-06")
+  deadlineMD String? // last day to order with delivery in time
+
+  bannerTitle String
+  bannerText  String
+  bannerImage String?
+  bannerFocalX Float @default(0.5)
+  bannerFocalY Float @default(0.5)
+  accent      String @default("#E8B4B8")
+
+  metaDescription String?
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

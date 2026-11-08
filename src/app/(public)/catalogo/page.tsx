@@ -1,179 +1,177 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/public/ProductCard";
-import { CatalogSearch, CatalogChip } from "@/components/public/CatalogFilters";
+import { SearchLauncher } from "@/components/public/SearchLauncher";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
-import type { Prisma } from "@/generated/prisma";
+import { SEGMENTS } from "@/lib/catalog-segments";
+import { deadlinePending, formatMD, getActiveCampaign } from "@/lib/campaigns";
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string; cat?: string; marca?: string }>;
-}): Promise<Metadata> {
-  const { cat = "Todo" } = await searchParams;
-  const title = cat === "Todo" ? "Tienda de crochet y amigurumis" : `${cat} · Tienda`;
+const PUBLISHED = { publicationStatus: "PUBLICADO" } as const;
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ q?: string }> }): Promise<Metadata> {
+  const { q } = await searchParams;
+  const title = q ? `Resultados para «${q}»` : "Tienda de crochet y amigurumis";
   const description =
-    cat === "Todo"
-      ? "Todas las piezas de crochet, amigurumis y decoración tejidas a mano por Mundolana. Todo se teje a mano y por encargo."
-      : `Piezas de ${cat} tejidas a mano en algodón por Mundolana. Envíos a toda España desde Galicia.`;
-  // Canonical always points to the clean catalog (filters/search are not indexable variants).
-  return {
-    title,
-    description,
-    alternates: { canonical: "/catalogo" },
-    openGraph: { title, description, url: "/catalogo" },
-  };
+    "Amigurumis, ropita de bebé, pendientes, flores que no se marchitan y regalos de crochet tejidos a mano por encargo en Galicia.";
+  return { title, description, alternates: { canonical: "/catalogo" }, robots: q ? { index: false } : undefined, openGraph: { title, description, url: "/catalogo" } };
 }
 
-export default async function CatalogoPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string; cat?: string; marca?: string }>;
-}) {
-  const { q = "", cat = "Todo", marca = "Todas" } = await searchParams;
+export default async function CatalogoPage({ searchParams }: { searchParams: Promise<{ q?: string; cat?: string; marca?: string }> }) {
+  const { q = "", cat, marca } = await searchParams;
 
-  const where: Prisma.ProductWhereInput = {
-    publicationStatus: "PUBLICADO",
-    ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
-    ...(cat !== "Todo" ? { categories: { some: { name: cat } } } : {}),
-    ...(marca !== "Todas" ? { brands: { some: { name: marca } } } : {}),
-  };
+  // Old filter URLs keep working by sending them to their clean pages.
+  if (cat || marca) {
+    const target = cat
+      ? await prisma.category.findFirst({ where: { name: cat }, select: { slug: true } }).then((c) => c && `/categoria/${c.slug}`)
+      : await prisma.brand.findFirst({ where: { name: marca }, select: { slug: true } }).then((b) => b && `/marca/${b.slug}`);
+    redirect(target ?? "/catalogo/todo");
+  }
 
-  const [products, categories, brands] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      include: { categories: { orderBy: { order: "asc" } } },
-      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-    }),
+  if (q) return <SearchResults q={q} />;
+
+  const [categories, brands, campaign, total] = await Promise.all([
     prisma.category.findMany({
       orderBy: { order: "asc" },
-      include: { _count: { select: { products: { where: { publicationStatus: "PUBLICADO" } } } } },
+      select: { name: true, slug: true, coverImage: true, coverFocalX: true, coverFocalY: true, _count: { select: { products: { where: PUBLISHED } } } },
     }),
-    prisma.brand.findMany({
-      orderBy: { order: "asc" },
-      include: {
-        _count: {
-          select: {
-            products: {
-              where: {
-                publicationStatus: "PUBLICADO",
-                ...(cat !== "Todo" ? { categories: { some: { name: cat } } } : {}),
-              },
-            },
-          },
-        },
-      },
-    }),
+    prisma.brand.findMany({ orderBy: { order: "asc" }, select: { name: true, slug: true, _count: { select: { products: { where: PUBLISHED } } } } }),
+    getActiveCampaign(),
+    prisma.product.count({ where: PUBLISHED }),
   ]);
 
-  const availableCats = categories.filter((c) => c._count.products > 0);
-  const availableBrands = brands.filter((b) => b._count.products > 0);
-  const title = marca !== "Todas" ? marca : cat === "Todo" ? "Toda la tienda" : cat;
-  const intro =
-    cat === "Todo" && marca === "Todas"
-      ? "Todo se teje a mano y por encargo, en los colores que prefieras."
-      : `Piezas de ${[cat !== "Todo" ? `la categoría ${cat}` : null, marca !== "Todas" ? `la marca ${marca}` : null]
-          .filter(Boolean)
-          .join(" y ")}. Todo se teje a mano y por encargo.`;
-
-  // A single filter with no search text gets its own indexable URL
-  // (/categoria/x or /marca/x); anything combined stays as a /catalogo
-  // querystring, since there's no clean URL for two filters at once.
-  function catHref(name: string, slug?: string) {
-    if (!q && marca === "Todas" && name !== "Todo" && slug) return `/categoria/${slug}`;
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (name !== "Todo") params.set("cat", name);
-    if (marca !== "Todas") params.set("marca", marca);
-    const qs = params.toString();
-    return `/catalogo${qs ? `?${qs}` : ""}`;
-  }
-
-  function brandHref(name: string, slug?: string) {
-    if (!q && cat === "Todo" && name !== "Todas" && slug) return `/marca/${slug}`;
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (cat !== "Todo") params.set("cat", cat);
-    if (name !== "Todas") params.set("marca", name);
-    const qs = params.toString();
-    return `/catalogo${qs ? `?${qs}` : ""}`;
-  }
+  const bySlug = new Map(categories.filter((c) => c._count.products > 0).map((c) => [c.slug, c]));
+  const segments = SEGMENTS.map((s) => ({ ...s, cats: s.slugs.map((slug) => bySlug.get(slug)).filter((c) => c !== undefined) })).filter((s) => s.cats.length > 0);
+  const liveBrands = brands.filter((b) => b._count.products > 0);
 
   return (
     <>
-      <section className="flex flex-col gap-4 px-5 pb-4 pt-6 md:flex-row md:items-end md:justify-between md:px-14 md:pb-5 md:pt-11">
-        <div className="flex max-w-2xl flex-col gap-1.5">
-          <h1 className="font-serif text-[30px] font-normal leading-tight md:text-[42px]">{title}</h1>
-          <p className="text-[14px] font-light leading-relaxed text-ink/75 md:text-[15.5px]">{intro}</p>
-        </div>
-        <CatalogSearch defaultValue={q} />
+      <section className="flex flex-col gap-4 px-5 pb-6 pt-7 md:px-14 md:pb-8 md:pt-12">
+        <h1 className="font-serif text-[34px] font-normal leading-tight md:text-[46px]">Tienda</h1>
+        <p className="-mt-2 max-w-xl text-[15px] font-light text-ink/75">Todo se teje a mano y por encargo, en los colores que prefieras.</p>
+        <SearchLauncher />
       </section>
 
-      {/* One scrollable row per filter group: on a phone the products start right below */}
-      <nav aria-label="Categorías" className="flex gap-2 overflow-x-auto px-5 pb-2.5 [scrollbar-width:none] md:flex-wrap md:px-14">
-        <CatalogChip label="Todo" active={cat === "Todo"} href={catHref("Todo")} />
-        {availableCats.map((c) => (
-          <CatalogChip key={c.id} label={c.name} active={cat === c.name} href={catHref(c.name, c.slug)} />
-        ))}
-      </nav>
-
-      {availableBrands.length > 0 && (
-        <nav aria-label="Colecciones" className="flex gap-2 overflow-x-auto px-5 pb-3 [scrollbar-width:none] md:flex-wrap md:px-14">
-          <CatalogChip label="Todas las colecciones" active={marca === "Todas"} href={brandHref("Todas")} small />
-          {availableBrands.map((b) => (
-            <CatalogChip key={b.id} label={b.name} active={marca === b.name} href={brandHref(b.name, b.slug)} small />
-          ))}
-        </nav>
+      {campaign && (
+        <section className="px-5 pb-8 md:px-14">
+          <Link href={`/fechas/${campaign.slug}`} className="flex items-center justify-between gap-4 rounded-2xl px-5 py-5" style={{ background: campaign.accent }}>
+            <span className="flex flex-col">
+              <span className="text-[11.5px] uppercase tracking-[.16em] text-ink/70">Fecha especial</span>
+              <span className="font-serif text-[22px]">{campaign.name}</span>
+              {deadlinePending(campaign) && <span className="text-[13px] text-ink/80">Encarga antes del {formatMD(campaign.deadlineMD!)}</span>}
+            </span>
+            <span className="text-2xl text-ink/60">›</span>
+          </Link>
+        </section>
       )}
 
-      <section className="flex items-center justify-between border-b border-ink/10 px-5 pb-3 pt-1 md:px-14">
-        <span className="text-[13px] text-ink/65">
-          {products.length} {products.length === 1 ? "pieza" : "piezas"}
-        </span>
-        {(cat !== "Todo" || marca !== "Todas" || q) && (
-          <Link href="/catalogo" className="border-b border-ink/25 text-[13px] text-ink/65">
-            Quitar filtros
-          </Link>
-        )}
-      </section>
+      <div className="flex flex-col gap-10 px-5 pb-10 md:gap-14 md:px-14">
+        {segments.map((s) => (
+          <section key={s.key} id={s.key} className="scroll-mt-24">
+            <div className="mb-3.5 flex flex-col">
+              <h2 className="font-serif text-[24px] font-normal md:text-[30px]">{s.title}</h2>
+              <span className="text-[13.5px] text-ink/60">{s.subtitle}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+              {s.cats.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/categoria/${c.slug}`}
+                  className="relative flex min-h-[132px] flex-col justify-between overflow-hidden rounded-2xl p-4 md:min-h-[170px] md:p-5"
+                  style={{ background: s.tint, color: s.ink }}
+                >
+                  <span className="relative z-10 flex flex-col">
+                    <span className="font-serif text-[21px] leading-tight md:text-[24px]">{c.name}</span>
+                    <span className="text-[12.5px] opacity-75">{c._count.products} piezas</span>
+                  </span>
+                  <span className="relative z-10 text-[13px] font-medium">Ver ›</span>
+                  {c.coverImage && (
+                    <span className="absolute -bottom-5 -right-5 h-[92px] w-[92px] overflow-hidden rounded-full border-4 border-white/70 md:h-[120px] md:w-[120px]">
+                      <Image src={c.coverImage} alt="" fill sizes="120px" className="object-cover" style={{ objectPosition: `${c.coverFocalX * 100}% ${c.coverFocalY * 100}%` }} />
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </section>
+        ))}
 
-      <section className="px-5 py-6 md:px-14 md:py-8">
+        {liveBrands.length > 0 && (
+          <section>
+            <div className="mb-3.5 flex flex-col">
+              <h2 className="font-serif text-[24px] font-normal md:text-[30px]">Personajes y colecciones</h2>
+              <span className="text-[13.5px] text-ink/60">Y si no está tu personaje, te lo tejo por encargo.</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {liveBrands.map((b) => (
+                <Link key={b.slug} href={`/marca/${b.slug}`} className="rounded-full border border-ink/14 bg-white px-4 py-2.5 text-[14.5px]">
+                  {b.name} <span className="text-ink/45">· {b._count.products}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <Link href="/catalogo/todo" className="rounded-full bg-ink py-4 text-center text-[15.5px] font-medium text-surface md:mx-auto md:w-96">
+          Ver todas las piezas ({total})
+        </Link>
+      </div>
+
+      <FooterWithSettings />
+    </>
+  );
+}
+
+/** Text search across name, short description, categories and characters. */
+async function SearchResults({ q }: { q: string }) {
+  const contains = { contains: q, mode: "insensitive" as const };
+  const products = await prisma.product.findMany({
+    where: {
+      ...PUBLISHED,
+      OR: [
+        { name: contains },
+        { shortDescription: contains },
+        { categories: { some: { name: contains } } },
+        { brands: { some: { name: contains } } },
+      ],
+    },
+    include: { categories: { orderBy: { order: "asc" } } },
+    orderBy: [{ featured: "desc" }, { name: "asc" }],
+    take: 48,
+  });
+
+  return (
+    <>
+      <section className="flex flex-col gap-4 px-5 pb-5 pt-7 md:px-14 md:pt-12">
+        <Link href="/catalogo" className="text-[13.5px] text-ink/60">‹ Tienda</Link>
+        <h1 className="font-serif text-[30px] font-normal leading-tight md:text-[40px]">Resultados para «{q}»</h1>
+        <SearchLauncher placeholder="Buscar otra cosa…" />
+      </section>
+      <section className="px-5 pb-12 md:px-14">
         {products.length > 0 ? (
           <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 md:gap-x-5 md:gap-y-8 xl:grid-cols-4">
             {products.map((p, i) => (
               <ProductCard
                 key={p.id}
                 priority={i < 4}
-                showCategory={cat === "Todo"}
+                showCategory
                 product={{
-                  slug: p.slug,
-                  name: p.name,
-                  price: p.price.toString(),
-                  priceType: p.priceType,
-                  pieceStatus: p.pieceStatus,
-                  likes: p.likes,
-                  categoryName: p.categories[0]?.name,
-                  mainImage: p.mainImage,
-                  mainImageFocalX: p.mainImageFocalX,
-                  mainImageFocalY: p.mainImageFocalY,
+                  slug: p.slug, name: p.name, price: p.price.toString(), priceType: p.priceType, pieceStatus: p.pieceStatus, likes: p.likes,
+                  categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY,
                 }}
               />
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-ink/20 bg-white p-14 text-center">
-            <span className="font-serif text-2xl">Nada por aquí todavía</span>
-            <span className="max-w-md text-[14.5px] font-light text-ink/70">
-              No encuentro esa pieza, pero casi todo se puede tejer por encargo. Cuéntame qué buscas.
-            </span>
-            <Link href="/encargo" className="mt-1.5 rounded-full bg-pink px-5.5 py-3 text-[14px] font-medium">
-              Pedir personalizado
-            </Link>
+          <div className="flex flex-col items-center gap-3 rounded-2xl bg-white p-12 text-center">
+            <span className="font-serif text-2xl">No encuentro esa pieza</span>
+            <span className="max-w-md text-[14.5px] font-light text-ink/70">Casi todo se puede tejer por encargo. Cuéntame qué buscas.</span>
+            <Link href="/encargo" className="mt-1.5 rounded-full bg-pink px-5 py-3 text-[14.5px] font-medium">Pedir a medida</Link>
           </div>
         )}
       </section>
-
       <FooterWithSettings />
     </>
   );

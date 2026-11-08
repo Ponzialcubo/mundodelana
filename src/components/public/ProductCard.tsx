@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { FadeImage } from "@/components/public/FadeImage";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { formatPrice, hasPrice, productAction } from "@/lib/product-status";
 import type { PieceStatus, PriceType } from "@/generated/prisma";
@@ -34,7 +34,7 @@ export function ProductCard({
     <Link href={`/producto/${product.slug}`} className="group flex flex-col gap-2.5">
       <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-cream">
         {product.mainImage ? (
-          <Image
+          <FadeImage
             src={product.mainImage}
             alt={product.name}
             fill

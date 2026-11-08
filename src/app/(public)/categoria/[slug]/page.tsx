@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/public/ProductCard";
 import { CatalogChip } from "@/components/public/CatalogFilters";
+import { segmentOf } from "@/lib/catalog-segments";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { categoryMetaFallback } from "@/lib/seo";
 
@@ -52,13 +53,18 @@ export default async function CategoriaPage({ params }: { params: Promise<{ slug
     orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
   });
 
-  const availableCats = categories.filter((c) => c._count.products > 0);
+  // Only the categories of the same block (e.g. Pendientes + Complementos), not the whole list.
+  const segment = segmentOf(slug);
+  const siblings = categories.filter((c) => c._count.products > 0 && segment?.slugs.includes(c.slug));
 
   return (
     <>
       <section className="flex flex-col gap-3 px-5 pb-4 pt-6 md:flex-row md:items-end md:justify-between md:px-14 md:pb-5 md:pt-11">
         <div className="flex max-w-2xl flex-col gap-2.5">
-                    <h1 className="font-serif text-[30px] font-normal leading-tight md:text-[42px]">{category.name}</h1>
+          <Link href={segment ? `/catalogo#${segment.key}` : "/catalogo"} className="text-[13.5px] text-ink/60">
+            ‹ {segment ? segment.title : "Tienda"}
+          </Link>
+          <h1 className="font-serif text-[30px] font-normal leading-tight md:text-[42px]">{category.name}</h1>
           <p className="text-[14px] font-light leading-relaxed text-ink/75 md:text-[15.5px]">
             {category.description || `Piezas de ${category.name}. Todo se teje a mano y por encargo.`}
           </p>
@@ -66,8 +72,7 @@ export default async function CategoriaPage({ params }: { params: Promise<{ slug
       </section>
 
       <nav className="flex gap-2 overflow-x-auto px-5 pb-4 [scrollbar-width:none] md:flex-wrap md:px-14">
-        <CatalogChip label="Todo" active={false} href="/catalogo" />
-        {availableCats.map((c) => (
+        {siblings.length > 1 && siblings.map((c) => (
           <CatalogChip key={c.id} label={c.name} active={c.slug === slug} href={`/categoria/${c.slug}`} />
         ))}
       </nav>

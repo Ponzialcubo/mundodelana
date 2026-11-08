@@ -88,7 +88,7 @@ export async function getSiteSettings() {
   return {
     phone: settings?.phone || "+34 600 00 00 00",
     publicEmail: settings?.publicEmail || "infomundolana@gmail.com",
-    instagramUrl: settings?.instagramUrl || "instagram.com/mundodelana16",
+    instagramUrl: settings?.instagramUrl || "instagram.com/mundolana16",
     tiktokUrl: settings?.tiktokUrl || "",
   };
 }

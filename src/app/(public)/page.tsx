@@ -3,11 +3,17 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { ProductCard, type ProductCardData } from "@/components/public/ProductCard";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
+import { YarnBackdrop } from "@/components/public/YarnBackdrop";
+import { HowItWorks } from "@/components/public/HowItWorks";
+import { SEGMENTS } from "@/lib/catalog-segments";
+import { getSiteImages } from "@/lib/site-images";
+import { deadlinePending, formatMD, getActiveCampaign } from "@/lib/campaigns";
 import type { Prisma } from "@/generated/prisma";
 
 export const dynamic = "force-dynamic";
 
 const PUBLISHED = { publicationStatus: "PUBLICADO" } as const;
+const CARD_INCLUDE = { categories: { orderBy: { order: "asc" as const } } };
 
 type ProductWithCategories = Prisma.ProductGetPayload<{ include: { categories: true } }>;
 
@@ -26,132 +32,137 @@ function toCard(p: ProductWithCategories): ProductCardData {
   };
 }
 
-/** Christmas pieces get their own block from November to Epiphany. */
-function isChristmasSeason(now: Date) {
-  const m = now.getMonth();
-  return m === 10 || m === 11 || (m === 0 && now.getDate() <= 6);
-}
-
-const STEPS = [
-  { n: "1", title: "Elige o cuéntame tu idea", text: "Una pieza del catálogo, en tus colores, o algo nuevo a partir de una foto." },
-  { n: "2", title: "Te digo precio y plazo", text: "Te respondo por WhatsApp y, cuando estés conforme, empiezo a tejer." },
-  { n: "3", title: "Ves el avance y te llega a casa", text: "Te enseño fotos mientras la hago y la envío a toda España." },
-];
+const focal = (x: number, y: number) => ({ objectPosition: `${x * 100}% ${y * 100}%` });
 
 export default async function HomePage() {
-  const now = new Date();
-  const productInclude = { categories: { orderBy: { order: "asc" as const } } };
-
-  const [featured, categories, gallery, testimonials, christmas] = await Promise.all([
-    prisma.product.findMany({
-      where: { ...PUBLISHED, featured: true, mainImage: { not: null } },
-      include: productInclude,
-      take: 8,
-      orderBy: { updatedAt: "desc" },
-    }),
-    prisma.category.findMany({
-      orderBy: { order: "asc" },
-      include: { _count: { select: { products: { where: PUBLISHED } } } },
-    }),
+  const [images, campaign, featured, categories, gallery, testimonials] = await Promise.all([
+    getSiteImages(),
+    getActiveCampaign(),
+    prisma.product.findMany({ where: { ...PUBLISHED, featured: true, mainImage: { not: null } }, include: CARD_INCLUDE, take: 8, orderBy: { updatedAt: "desc" } }),
+    prisma.category.findMany({ select: { slug: true, name: true, _count: { select: { products: { where: PUBLISHED } } } } }),
     prisma.libraryMedia.findMany({ where: { showInGallery: true, mediaType: "IMAGE" }, orderBy: { takenAt: "desc" }, take: 6 }),
     prisma.testimonial.findMany({ where: { visible: true }, orderBy: { order: "asc" }, take: 3 }),
-    isChristmasSeason(now)
-      ? prisma.product.findMany({
-          where: { ...PUBLISHED, categories: { some: { slug: "navidad" } }, mainImage: { not: null } },
-          include: productInclude,
-          take: 4,
-          orderBy: { createdAt: "desc" },
-        })
-      : Promise.resolve([] as ProductWithCategories[]),
   ]);
 
-  const visibleCategories = categories.filter((c) => c._count.products > 0);
-  const heroPhotos = featured.slice(0, 3);
-  // A group shot reads as "the workshop"; keep it out of the delivered-work strip to avoid repeating it.
-  const workshopPhoto = gallery.find((g) => g.galleryTitle?.toLowerCase().includes("vaquitas")) ?? gallery[gallery.length - 1];
-  const deliveredWork = gallery.filter((g) => g.id !== workshopPhoto?.id);
+  const campaignProducts = campaign
+    ? await prisma.product.findMany({
+        where: { ...PUBLISHED, campaigns: { some: { id: campaign.id } }, mainImage: { not: null } },
+        include: CARD_INCLUDE,
+        orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+        take: 4,
+      })
+    : [];
+
+  const count = new Map(categories.map((c) => [c.slug, c]));
+  const segments = SEGMENTS.filter((s) => s.slugs.some((slug) => (count.get(slug)?._count.products ?? 0) > 0));
+  const hero = images.hero;
+  const about = images.about;
 
   return (
     <>
-      {/* Hero */}
-      <section className="grid grid-cols-1 items-center gap-8 px-5 pb-10 pt-8 md:grid-cols-[1fr_1.1fr] md:gap-14 md:px-14 md:pb-16 md:pt-14">
-        <div className="flex flex-col gap-5 md:gap-6">
-          <span className="text-[11.5px] uppercase tracking-[.18em] text-ink-soft">Crochet hecho a mano en Galicia</span>
-          <h1 className="font-serif text-[36px] font-normal leading-[1.08] tracking-[-.015em] md:text-[58px]">
-            Amigurumis y regalos tejidos <em className="text-pink-deep">a mano</em>, pieza a pieza
+      {/* Hero: full-bleed banner, text over the owner's background image (or the yarn backdrop) */}
+      <section className="relative flex min-h-[78svh] items-end overflow-hidden md:min-h-[620px] md:items-center">
+        {hero ? (
+          <Image src={hero.url} alt="" fill priority sizes="100vw" quality={80} className="object-cover" style={focal(hero.focalX, hero.focalY)} />
+        ) : (
+          <YarnBackdrop />
+        )}
+        <div
+          aria-hidden="true"
+          className={hero ? "absolute inset-0 bg-gradient-to-t from-[#3d322e]/80 via-[#3d322e]/25 to-transparent md:bg-gradient-to-r md:from-[#3d322e]/70 md:via-[#3d322e]/30" : ""}
+        />
+        <div className={`relative flex w-full max-w-2xl flex-col gap-5 px-5 pb-10 pt-24 md:px-14 md:py-20 ${hero ? "text-white" : "text-ink"}`}>
+          {campaign && (
+            <Link href={`/fechas/${campaign.slug}`} className="w-fit rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-ink" style={{ background: campaign.accent }}>
+              {campaign.name} · ver regalos ›
+            </Link>
+          )}
+          <h1 className="font-serif text-[40px] font-normal leading-[1.05] tracking-[-.015em] md:text-[64px]">
+            Tejido a mano,
+            <br />
+            <em className={hero ? "text-pink" : "text-pink-deep"}>pensado para ti</em>
           </h1>
-          <p className="max-w-md text-[15px] font-light leading-relaxed text-ink/78 md:text-[17px]">
-            Muñecos, ropita de bebé, flores que no se marchitan y detalles para regalar. Todo se teje por encargo, en
-            los colores que elijas.
+          <p className={`max-w-md text-[16px] font-light leading-relaxed md:text-[18px] ${hero ? "text-white/90" : "text-ink/80"}`}>
+            Amigurumis, ropita de bebé, flores que no se marchitan y regalos de crochet hechos por encargo en Galicia.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href="/catalogo" className="rounded-full bg-pink px-7 py-3.5 text-center text-[15px] font-medium text-ink">
+            <Link href="/catalogo" className="rounded-full bg-pink px-7 py-4 text-center text-[15.5px] font-medium text-ink">
               Ver la tienda
             </Link>
             <Link
               href="/encargo"
-              className="rounded-full border border-ink/22 bg-white px-7 py-3.5 text-center text-[15px] font-medium text-ink"
+              className={`rounded-full px-7 py-4 text-center text-[15.5px] font-medium ${hero ? "border border-white/60 text-white backdrop-blur-sm" : "border border-ink/22 bg-white/70 text-ink"}`}
             >
               Encargar algo personalizado
             </Link>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[12.5px] text-ink/60">
-            <span>✓ Algodón 100 %</span>
-            <span>✓ Envíos a toda España</span>
-            <span>✓ +50 encargos entregados</span>
-          </div>
         </div>
-
-        {heroPhotos.length === 3 && (
-          <div className="grid grid-cols-[1.25fr_1fr] grid-rows-2 gap-2.5 md:gap-3.5">
-            <Link href={`/producto/${heroPhotos[0].slug}`} className="relative row-span-2 aspect-[4/5] overflow-hidden rounded-2xl">
-              <Image
-                src={heroPhotos[0].mainImage!}
-                alt={heroPhotos[0].name}
-                fill
-                priority
-                sizes="(min-width: 768px) 30vw, 55vw"
-                className="object-cover"
-                style={{ objectPosition: `${heroPhotos[0].mainImageFocalX * 100}% ${heroPhotos[0].mainImageFocalY * 100}%` }}
-              />
-            </Link>
-            {heroPhotos.slice(1).map((p) => (
-              <Link key={p.id} href={`/producto/${p.slug}`} className="relative overflow-hidden rounded-2xl">
-                <Image
-                  src={p.mainImage!}
-                  alt={p.name}
-                  fill
-                  priority
-                  sizes="(min-width: 768px) 22vw, 42vw"
-                  className="object-cover"
-                  style={{ objectPosition: `${p.mainImageFocalX * 100}% ${p.mainImageFocalY * 100}%` }}
-                />
-              </Link>
-            ))}
-          </div>
-        )}
       </section>
 
-      {/* Categories: horizontal scroller on phones, grid on desktop */}
-      <section className="pb-12 md:px-14 md:pb-16">
-        <h2 className="mb-4 px-5 font-serif text-[26px] font-normal md:mb-6 md:px-0 md:text-[34px]">Explora por categoría</h2>
-        <div className="flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:grid md:grid-cols-5 md:gap-4 md:overflow-visible md:px-0">
-          {visibleCategories.map((cat) => (
-            <Link key={cat.id} href={`/categoria/${cat.slug}`} className="flex w-[38vw] max-w-[180px] shrink-0 snap-start flex-col gap-2 md:w-auto md:max-w-none">
-              <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream">
-                {cat.coverImage && (
-                  <Image
-                    src={cat.coverImage}
-                    alt={cat.name}
-                    fill
-                    sizes="(min-width: 768px) 18vw, 38vw"
-                    className="object-cover"
-                    style={{ objectPosition: `${cat.coverFocalX * 100}% ${cat.coverFocalY * 100}%` }}
-                  />
-                )}
+      {/* Trust strip */}
+      <section className="grid grid-cols-3 border-b border-ink/8 bg-white text-center">
+        {[
+          ["100 %", "algodón"],
+          ["+50", "encargos entregados"],
+          ["1-2 sem.", "plazo habitual"],
+        ].map(([big, small]) => (
+          <div key={small} className="flex flex-col gap-0.5 px-2 py-4">
+            <span className="font-serif text-[20px] md:text-[24px]">{big}</span>
+            <span className="text-[11.5px] text-ink/60 md:text-[13px]">{small}</span>
+          </div>
+        ))}
+      </section>
+
+      {/* Running special date */}
+      {campaign && (
+        <section className="px-5 py-12 md:px-14 md:py-16">
+          <Link href={`/fechas/${campaign.slug}`} className="relative mb-6 flex min-h-[220px] items-end overflow-hidden rounded-3xl md:min-h-[300px]">
+            {campaign.bannerImage ? (
+              <Image src={campaign.bannerImage} alt="" fill sizes="(min-width: 768px) 90vw, 100vw" className="object-cover" style={focal(campaign.bannerFocalX, campaign.bannerFocalY)} />
+            ) : (
+              <span className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${campaign.accent}, #F7F1EA)` }} />
+            )}
+            <span aria-hidden="true" className={campaign.bannerImage ? "absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" : ""} />
+            <span className={`relative flex flex-col gap-2 p-6 md:p-10 ${campaign.bannerImage ? "text-white" : "text-ink"}`}>
+              <span className="text-[11.5px] uppercase tracking-[.16em] opacity-80">Fecha especial</span>
+              <span className="font-serif text-[30px] leading-tight md:text-[44px]">{campaign.bannerTitle}</span>
+              <span className="max-w-lg text-[15px] opacity-90">{campaign.bannerText}</span>
+              {deadlinePending(campaign) && (
+                <span className="mt-1 w-fit rounded-full bg-white/90 px-3.5 py-1.5 text-[13px] font-medium text-ink">
+                  Encarga antes del {formatMD(campaign.deadlineMD!)}
+                </span>
+              )}
+            </span>
+          </Link>
+          {campaignProducts.length > 0 && (
+            <>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 md:gap-x-5">
+                {campaignProducts.map((p) => (
+                  <ProductCard key={p.id} product={toCard(p)} />
+                ))}
               </div>
-              <span className="font-serif text-[15px] font-medium leading-tight md:text-[17px]">{cat.name}</span>
-              <span className="-mt-1.5 text-[12px] text-ink/55">{cat._count.products} piezas</span>
+              <Link href={`/fechas/${campaign.slug}`} className="mt-6 block rounded-full border border-ink/20 bg-white py-3.5 text-center text-[14.5px] font-medium md:mx-auto md:w-80">
+                Ver todo para {campaign.name}
+              </Link>
+            </>
+          )}
+        </section>
+      )}
+
+      {/* What are you looking for: typographic segment cards */}
+      <section className="px-5 py-12 md:px-14 md:py-16">
+        <h2 className="mb-5 font-serif text-[28px] font-normal md:mb-7 md:text-[36px]">¿Qué estás buscando?</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
+          {segments.map((s, i) => (
+            <Link
+              key={s.key}
+              href={`/catalogo#${s.key}`}
+              className={`relative flex min-h-[150px] flex-col justify-end overflow-hidden rounded-2xl p-4 md:min-h-[210px] md:p-5 ${i === 0 ? "col-span-2 md:col-span-1" : ""}`}
+              style={{ background: s.tint, color: s.ink }}
+            >
+              <span aria-hidden="true" className="absolute -right-6 -top-6 h-24 w-24 rounded-full border-[10px] opacity-25" style={{ borderColor: s.ink }} />
+              <span className="font-serif text-[20px] leading-tight md:text-[22px]">{s.title}</span>
+              <span className="mt-1 text-[12.5px] opacity-80">{s.subtitle}</span>
             </Link>
           ))}
         </div>
@@ -159,10 +170,10 @@ export default async function HomePage() {
 
       {/* Favourites */}
       {featured.length > 0 && (
-        <section className="px-5 pb-12 md:px-14 md:pb-16">
-          <div className="mb-5 flex items-end justify-between gap-4 md:mb-6">
-            <h2 className="font-serif text-[26px] font-normal md:text-[34px]">Las favoritas</h2>
-            <Link href="/catalogo" className="shrink-0 border-b border-pink pb-0.5 text-[13.5px] font-medium text-ink">
+        <section className="bg-white px-5 py-12 md:px-14 md:py-16">
+          <div className="mb-5 flex items-end justify-between gap-4 md:mb-7">
+            <h2 className="font-serif text-[28px] font-normal md:text-[36px]">Las favoritas</h2>
+            <Link href="/catalogo/todo" className="shrink-0 border-b border-pink pb-0.5 text-[13.5px] font-medium">
               Ver todo
             </Link>
           </div>
@@ -174,57 +185,20 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Seasonal block */}
-      {christmas.length > 0 && (
-        <section className="bg-white px-5 py-12 md:px-14 md:py-16">
-          <div className="mb-5 flex items-end justify-between gap-4 md:mb-6">
-            <div className="flex flex-col gap-1">
-              <span className="text-[11.5px] uppercase tracking-[.18em] text-pink-deep">Temporada</span>
-              <h2 className="font-serif text-[26px] font-normal md:text-[34px]">Ya llega la Navidad</h2>
-            </div>
-            <Link href="/categoria/navidad" className="shrink-0 border-b border-pink pb-0.5 text-[13.5px] font-medium text-ink">
-              Ver Navidad
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 md:gap-x-5">
-            {christmas.map((p) => (
-              <ProductCard key={p.id} product={toCard(p)} />
-            ))}
-          </div>
-        </section>
-      )}
+      <HowItWorks />
 
-      {/* How it works */}
-      <section className="px-5 py-12 md:px-14 md:py-16">
-        <h2 className="mb-6 font-serif text-[26px] font-normal md:mb-8 md:text-[34px]">Así funciona un encargo</h2>
-        <ol className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
-          {STEPS.map((s) => (
-            <li key={s.n} className="flex gap-4 rounded-2xl bg-white p-5 md:flex-col md:gap-3 md:p-6">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pink font-serif text-lg">{s.n}</span>
-              <span className="flex flex-col gap-1">
-                <span className="font-serif text-[17px] font-medium">{s.title}</span>
-                <span className="text-[14px] font-light leading-relaxed text-ink/75">{s.text}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-        <Link href="/como-funciona" className="mt-5 inline-block border-b border-pink pb-0.5 text-[13.5px] font-medium">
-          Más detalles sobre plazos, envíos y pagos
-        </Link>
-      </section>
-
-      {/* Finished work */}
-      {deliveredWork.length > 0 && (
-        <section className="bg-cream py-12 md:px-14 md:py-16">
-          <div className="mb-5 flex flex-col gap-1 px-5 md:mb-6 md:px-0">
-            <h2 className="font-serif text-[26px] font-normal md:text-[34px]">Trabajos entregados</h2>
-            <p className="text-[14px] font-light text-ink/70">Algunos encargos que ya están en su nueva casa.</p>
+      {/* Delivered work */}
+      {gallery.length > 0 && (
+        <section className="py-12 md:px-14 md:py-16">
+          <div className="mb-5 flex flex-col gap-1 px-5 md:mb-7 md:px-0">
+            <h2 className="font-serif text-[28px] font-normal md:text-[36px]">Trabajos entregados</h2>
+            <p className="text-[14.5px] font-light text-ink/70">Algunos encargos que ya están en su nueva casa.</p>
           </div>
           <div className="flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:grid md:grid-cols-5 md:overflow-visible md:px-0">
-            {deliveredWork.slice(0, 5).map((g) => (
-              <figure key={g.id} className="flex w-[62vw] max-w-[260px] shrink-0 snap-start flex-col gap-2 md:w-auto md:max-w-none">
-                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
-                  <Image src={g.url} alt={g.galleryTitle ?? "Trabajo de crochet entregado"} fill sizes="(min-width: 768px) 18vw, 62vw" className="object-cover" />
+            {gallery.slice(0, 5).map((g) => (
+              <figure key={g.id} className="flex w-[64vw] max-w-[260px] shrink-0 snap-start flex-col gap-2 md:w-auto md:max-w-none">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-cream">
+                  <Image src={g.url} alt={g.galleryTitle ?? "Trabajo de crochet entregado"} fill sizes="(min-width: 768px) 18vw, 64vw" className="object-cover" />
                 </div>
                 {g.galleryTitle && <figcaption className="text-[13.5px] text-ink/75">{g.galleryTitle}</figcaption>}
               </figure>
@@ -233,37 +207,31 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* About */}
-      <section className="grid grid-cols-1 gap-7 px-5 py-12 md:grid-cols-[400px_1fr] md:items-center md:gap-14 md:px-14 md:py-16">
-        {workshopPhoto && (
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
-            <Image src={workshopPhoto.url} alt="Piezas de crochet en el taller de Mundolana" fill sizes="(min-width: 768px) 400px, 90vw" className="object-cover" />
+      {/* About: the owner's professional photo as background (never product photos) */}
+      <section className="px-5 pb-12 md:px-14 md:pb-16">
+        <div className="relative flex min-h-[460px] items-end overflow-hidden rounded-3xl md:min-h-[420px] md:items-center">
+          {about ? (
+            <Image src={about.url} alt="Elvira tejiendo en su taller" fill sizes="(min-width: 768px) 90vw, 100vw" className="object-cover" style={focal(about.focalX, about.focalY)} />
+          ) : (
+            <YarnBackdrop />
+          )}
+          <div aria-hidden="true" className={about ? "absolute inset-0 bg-gradient-to-t from-[#3d322e]/85 via-[#3d322e]/30 to-transparent md:bg-gradient-to-r md:from-[#3d322e]/80" : ""} />
+          <div className={`relative flex max-w-lg flex-col gap-3 p-6 md:p-12 ${about ? "text-white" : "text-ink"}`}>
+            <span className="text-[11.5px] uppercase tracking-[.18em] opacity-80">Sobre mí</span>
+            <h2 className="font-serif text-[28px] font-normal leading-tight md:text-[38px]">Soy Elvira, y cada pieza pasa por mis manos</h2>
+            <p className="text-[15px] font-light leading-relaxed opacity-90">
+              Empecé tejiendo amigurumis para mi hijo y hoy tejo encargos para toda España desde mi taller en Galicia.
+            </p>
+            <Link href="/sobre-mi" className={`mt-1 w-fit rounded-full px-6 py-3 text-[14.5px] font-medium ${about ? "bg-white text-ink" : "bg-ink text-surface"}`}>
+              Conóceme
+            </Link>
           </div>
-        )}
-        <div className="flex max-w-xl flex-col gap-4">
-          <span className="text-[11.5px] uppercase tracking-[.18em] text-ink-soft">Sobre mí</span>
-          <h2 className="font-serif text-[26px] font-normal leading-tight md:text-[36px]">
-            Soy Elvira, y llevo cinco años tejiendo por encargo
-          </h2>
-          <p className="text-[15px] font-light leading-relaxed text-ink/80 md:text-base">
-            Empecé haciendo amigurumis para mi hijo y, punto a punto, aquello acabó convirtiéndose en mi propio taller.
-            Trabajo con algodón de alta calidad, relleno antialérgico y ojos de seguridad con anclaje, para que cada
-            pieza aguante el cariño diario.
-          </p>
-          <p className="text-[15px] font-light leading-relaxed text-ink/80 md:text-base">
-            Cada encargo empieza con una conversación: colores, tamaño y fecha. Te voy enseñando el avance en fotos
-            antes de enviarlo.
-          </p>
-          <Link href="/sobre-mi" className="w-fit border-b border-pink pb-0.5 text-[13.5px] font-medium">
-            Conóceme mejor
-          </Link>
         </div>
       </section>
 
-      {/* Testimonials only when there are any */}
       {testimonials.length > 0 && (
         <section className="bg-cream px-5 py-12 md:px-14 md:py-16">
-          <h2 className="mb-5 font-serif text-[26px] font-normal md:mb-6 md:text-[34px]">Lo que dicen mis clientas</h2>
+          <h2 className="mb-5 font-serif text-[28px] font-normal md:mb-7 md:text-[36px]">Lo que dicen mis clientas</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
             {testimonials.map((t) => (
               <figure key={t.id} className="flex flex-col gap-4 rounded-2xl bg-white p-6">
@@ -279,15 +247,10 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Closing call to action */}
       <section className="flex flex-col items-center gap-4 bg-pink/35 px-5 py-12 text-center md:py-16">
-        <h2 className="max-w-xl font-serif text-[26px] font-normal leading-tight md:text-[34px]">
-          ¿Tienes una idea? La tejemos juntas
-        </h2>
-        <p className="max-w-md text-[15px] font-light text-ink/78">
-          Mándame una foto o descríbeme lo que buscas y te digo precio y plazo, sin compromiso.
-        </p>
-        <Link href="/encargo" className="rounded-full bg-ink px-7 py-3.5 text-[15px] font-medium text-surface">
+        <h2 className="max-w-xl font-serif text-[28px] font-normal leading-tight md:text-[36px]">¿Tienes una idea? La tejemos juntas</h2>
+        <p className="max-w-md text-[15px] font-light text-ink/78">Mándame una foto o descríbeme lo que buscas y te digo precio y plazo, sin compromiso.</p>
+        <Link href="/encargo" className="rounded-full bg-ink px-7 py-4 text-[15px] font-medium text-surface">
           Pedir a medida
         </Link>
       </section>

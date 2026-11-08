@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
 import { FocalPointEditor } from "@/components/admin/FocalPointEditor";
+import { ImproveImageDialog } from "@/components/admin/ImproveImageDialog";
+import { buildProductPhotoPrompt } from "@/lib/image-edit-prompt";
 
 type Category = { id: string; name: string };
 type Brand = { id: string; name: string };
@@ -156,6 +158,7 @@ export function ProductEditorForm({
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [autofilling, setAutofilling] = useState(false);
   const [framing, setFraming] = useState<string | null>(null); // url of the photo being framed
+  const [improving, setImproving] = useState<string | null>(null); // url of the photo being improved with AI
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function set<K extends keyof FormFields>(key: K, value: FormFields[K]) {
@@ -347,7 +350,8 @@ export function ProductEditorForm({
         <div className="flex flex-col gap-0.5">
           <span className="font-serif text-base font-medium">Fotos y vídeos</span>
           <span className="text-xs text-admin-faint">
-            La primera foto es la portada del catálogo. Toca una foto para ajustar qué parte se ve en la tienda.
+            La primera foto es la portada del catálogo. Toca una foto para ajustar qué parte se ve en la tienda, o
+            pulsa «✨ Mejorar» para ponerle un fondo profesional con ChatGPT o Gemini.
           </span>
         </div>
 
@@ -384,6 +388,15 @@ export function ProductEditorForm({
                   </span>
                 )}
               </button>
+              {item.mediaType === "IMAGE" && (
+                <button
+                  type="button"
+                  onClick={() => setImproving(item.url)}
+                  className="absolute bottom-[42px] right-1.5 rounded-full bg-admin-ink/80 px-2 py-1 text-[10px] font-medium text-white"
+                >
+                  ✨ Mejorar
+                </button>
+              )}
               {index === coverIndex && (
                 <span className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-pink px-2 py-0.5 text-[10px] font-medium text-admin-ink">
                   Portada
@@ -694,6 +707,18 @@ export function ProductEditorForm({
           )}
         </div>
       </details>
+
+      {improving && (
+        <ImproveImageDialog
+          title="Mejorar esta foto"
+          prompt={buildProductPhotoPrompt({ name: data.name || "pieza de crochet", description: data.description })}
+          originalUrl={improving}
+          onUploaded={(url) =>
+            setMedia((m) => m.map((i) => (i.url === improving ? { ...i, url, focalX: 0.5, focalY: 0.5 } : i)))
+          }
+          onClose={() => setImproving(null)}
+        />
+      )}
 
       {framing && (() => {
         const item = media.find((m) => m.url === framing);
