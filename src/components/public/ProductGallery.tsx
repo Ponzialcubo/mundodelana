@@ -82,7 +82,7 @@ export function ProductGallery({ productName, items }: { productName: string; it
           className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] md:h-full md:rounded-2xl"
         >
           {visible.map((item, i) => (
-            <div key={item.url} className="relative aspect-[4/5] w-full shrink-0 snap-center bg-cream md:aspect-auto md:h-full">
+            <div key={item.url} className="relative aspect-[4/5] w-full shrink-0 snap-center overflow-hidden bg-cream md:aspect-auto md:h-full">
               {item.mediaType === "video" ? (
                 <LoopVideo src={item.url} poster={item.posterUrl} />
               ) : (

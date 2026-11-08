@@ -45,7 +45,7 @@ export function InstagramPreview({ media, caption, hashtags }: { media: PostMedi
         <span className="ml-auto text-lg leading-none text-admin-ink-soft">···</span>
       </div>
 
-      <div className="relative aspect-[4/5] bg-admin-bg">
+      <div className="relative aspect-[4/5] overflow-hidden bg-admin-bg">
         {current ? (
           current.kind === "video" ? (
             // eslint-disable-next-line jsx-a11y/media-has-caption -- silent preview of the reel
