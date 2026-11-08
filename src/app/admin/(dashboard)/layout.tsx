@@ -8,9 +8,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const pendingCount = await prisma.order.count({ where: { state: "NUEVO" } });
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen flex-col md:flex-row">
       <AdminSidebar pendingCount={pendingCount} adminName={admin?.name ?? "Admin"} />
-      <main className="flex-1 overflow-x-hidden">{children}</main>
+      {/* Bottom padding leaves room for the mobile tab bar */}
+      <main className="min-w-0 flex-1 overflow-x-hidden pb-24 md:pb-0">{children}</main>
     </div>
   );
 }

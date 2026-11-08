@@ -38,14 +38,14 @@ export default async function AdminProductosPage({
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-9">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 p-5 md:p-9">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-serif text-2xl font-normal">Productos</h1>
           <p className="text-sm text-admin-ink-soft">{products.length} de {total} productos</p>
         </div>
         <Link href="/admin/productos/nuevo" className="rounded-full bg-pink px-4 py-2.5 text-sm font-medium">
-          + Nuevo producto
+          + Nuevo
         </Link>
       </div>
 
@@ -69,76 +69,57 @@ export default async function AdminProductosPage({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-admin-ink/10 bg-white">
-        <table className="w-full min-w-[720px] text-sm">
-          <thead>
-            <tr className="border-b border-admin-ink/10 bg-admin-surface-soft text-left text-xs text-admin-faint">
-              <th className="px-4 py-3 font-medium">Foto</th>
-              <th className="px-4 py-3 font-medium">Nombre</th>
-              <th className="px-4 py-3 font-medium">Categoría</th>
-              <th className="px-4 py-3 font-medium">Precio</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Publicación</th>
-              <th className="px-4 py-3 font-medium" />
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => {
-              const badge = PUBLICATION_BADGE[p.publicationStatus];
-              return (
-                <tr key={p.id} className="border-b border-admin-ink/6">
-                  <td className="px-4 py-3">
-                    {p.mainImage ? (
-                      <div className="relative h-11 w-11 overflow-hidden rounded-md">
-                        <Image
-                          src={p.mainImage}
-                          alt={p.name}
-                          fill
-                          sizes="44px"
-                          className="object-cover"
-                          style={{ objectPosition: `${p.mainImageFocalX * 100}% ${p.mainImageFocalY * 100}%` }}
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className="h-11 w-11 rounded-md"
-                        style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 6px,#F7F6F4 6px 12px)" }}
-                      />
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{p.name}</span>
-                      <span className="font-mono text-xs text-admin-faint">/{p.slug}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-admin-ink-soft">{p.categories[0]?.name ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    {p.priceType === "PERSONALIZADO" ? "desde " : ""}
-                    {Number(p.price).toFixed(0)} €
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="flex items-center gap-1.5">
+      <div className="flex flex-col divide-y divide-admin-ink/8 overflow-hidden rounded-xl border border-admin-ink/10 bg-white">
+        {products.map((p) => {
+          const badge = PUBLICATION_BADGE[p.publicationStatus];
+          return (
+            <div key={p.id} className="flex items-center gap-3 px-3 py-3 md:px-4">
+              <Link href={`/admin/productos/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                {p.mainImage ? (
+                  <div className="relative h-16 w-[52px] shrink-0 overflow-hidden rounded-md">
+                    <Image
+                      src={p.mainImage}
+                      alt={p.name}
+                      fill
+                      sizes="52px"
+                      className="object-cover"
+                      style={{ objectPosition: `${p.mainImageFocalX * 100}% ${p.mainImageFocalY * 100}%` }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="flex h-16 w-[52px] shrink-0 items-center justify-center rounded-md text-[9px] text-admin-faint"
+                    style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 6px,#F7F6F4 6px 12px)" }}
+                  >
+                    sin foto
+                  </div>
+                )}
+                <div className="flex min-w-0 flex-col gap-1">
+                  <span className="truncate text-sm font-medium">{p.name}</span>
+                  <span className="truncate text-xs text-admin-ink-soft">
+                    {p.categories[0]?.name ?? "Sin categoría"} ·{" "}
+                    {Number(p.price) > 0
+                      ? `${p.priceType === "PERSONALIZADO" ? "desde " : ""}${Number(p.price).toFixed(0)} €`
+                      : "sin precio"}
+                  </span>
+                  <span className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-full px-2 py-0.5 font-medium" style={{ background: badge.bg, color: badge.fg }}>
+                      {PUBLICATION_LABEL[p.publicationStatus]}
+                    </span>
+                    <span className="flex items-center gap-1 text-admin-ink-soft">
                       <span className="h-1.5 w-1.5 rounded-full" style={{ background: PIECE_STATUS_DOT[p.pieceStatus] }} />
                       {PIECE_STATUS_LABEL[p.pieceStatus]}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className="rounded-full px-2.5 py-1 text-xs font-medium"
-                      style={{ background: badge.bg, color: badge.fg }}
-                    >
-                      {PUBLICATION_LABEL[p.publicationStatus]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <ProductRowActions id={p.id} publicationStatus={p.publicationStatus} />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  </span>
+                </div>
+              </Link>
+              <div className="hidden md:block">
+                <ProductRowActions id={p.id} publicationStatus={p.publicationStatus} />
+              </div>
+              <span className="text-admin-faint md:hidden">›</span>
+            </div>
+          );
+        })}
         {products.length === 0 && (
           <div className="flex flex-col items-center gap-3 p-12 text-center">
             <span className="text-admin-ink-soft">Ningún producto con estos filtros</span>
