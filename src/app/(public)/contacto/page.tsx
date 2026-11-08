@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/public/ContactForm";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
-import Image from "next/image";
+import { SplitHero } from "@/components/public/SplitHero";
+import { Icon } from "@/components/public/Icon";
 import { prisma } from "@/lib/prisma";
 import { getCustomerSession } from "@/lib/session";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
@@ -68,93 +69,107 @@ export default async function ContactoPage() {
     { title: "Teléfono", detail: phone, href: `tel:${phoneDigits(phone)}`, cta: "Llamar", color: "#4A3F3B", tint: "#EFE7DE" },
   ].filter(Boolean) as { title: string; detail: string; href: string; cta: string; color: string; tint: string }[];
 
+  const channelCard = (c: (typeof channels)[number]) => (
+    <a
+      key={c.title}
+      href={c.href}
+      target={c.href.startsWith("http") ? "_blank" : undefined}
+      rel="noopener noreferrer"
+      className="group flex items-center gap-3.5 rounded-2xl border border-ink/8 bg-white p-4 shadow-[0_6px_24px_rgba(74,63,59,.05)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(74,63,59,.10)] md:p-5"
+    >
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ background: c.tint, color: c.color }}>
+        <svg viewBox="0 0 32 32" className="h-[22px] w-[22px]" aria-hidden="true">
+          {ICONS[c.title]}
+        </svg>
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="font-serif text-[18px] leading-tight">{c.title}</span>
+        <span className="truncate text-[13px] text-ink/60">{c.detail}</span>
+      </span>
+      <span className="shrink-0 text-[13px] font-medium" style={{ color: c.color }}>
+        {c.cta} <span className="inline-block transition group-hover:translate-x-0.5">→</span>
+      </span>
+    </a>
+  );
+
   return (
     <>
-      <section className="bg-gradient-to-b from-cream to-surface px-5 pb-12 pt-8 md:px-14 md:pb-16 md:pt-14">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-3">
-              <span className="text-[11.5px] font-medium uppercase tracking-[.18em] text-ink-soft">Contacto</span>
-              <h1 className="font-serif text-[36px] font-normal leading-[1.06] md:text-[52px]">Escríbeme y hablamos</h1>
-              <p className="max-w-lg text-[15.5px] font-light leading-relaxed text-ink/78 md:text-[17px]">
-                Contesto yo, no un bot, normalmente en menos de 24 horas. Pregunta lo que quieras: presupuestos, colores o plazos.
+      <SplitHero
+        eyebrow="Contacto"
+        title={
+          <>
+            Escríbeme y <em className="text-pink-deep">hablamos</em>
+          </>
+        }
+        text="Contesto yo, no un bot, normalmente en menos de 24 horas. Pregunta lo que quieras: presupuestos, colores, tamaños o plazos."
+        photo={photo}
+        badge={
+          <div className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-[0_12px_32px_rgba(74,63,59,.14)]">
+            <span className="flex items-center gap-2 text-[13px] font-medium">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-sage" />
+              </span>
+              Horario del taller
+            </span>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 whitespace-nowrap text-[12.5px]">
+              <dt className="text-ink/55">Lun – Vie</dt>
+              <dd className="text-right font-medium">{hours.weekday}</dd>
+              <dt className="text-ink/55">Sábado</dt>
+              <dd className="text-right font-medium">{hours.saturday}</dd>
+              <dt className="text-ink/55">Domingo</dt>
+              <dd className="text-right font-medium">{hours.sunday}</dd>
+            </dl>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-2.5">{channels.map(channelCard)}</div>
+      </SplitHero>
+
+      <section className="px-5 py-12 md:px-14 md:py-16">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[1.15fr_.85fr] lg:gap-10">
+          <div className="flex flex-col gap-4 rounded-3xl bg-white p-5 shadow-[0_14px_44px_rgba(74,63,59,.07)] md:p-9">
+            <div className="flex flex-col gap-1.5">
+              <h2 className="font-serif text-[26px] font-normal md:text-[32px]">¿Prefieres dejarlo por escrito?</h2>
+              <p className="text-[14.5px] font-light text-ink/72">
+                Te respondo por el medio que me digas. Si tienes cuenta, verás mi respuesta en «Mi cuenta → Mensajes».
               </p>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {channels.map((c) => (
-                <a
-                  key={c.title}
-                  href={c.href}
-                  target={c.href.startsWith("http") ? "_blank" : undefined}
-                  rel="noopener noreferrer"
-                  className="group flex flex-col gap-3 rounded-2xl border border-ink/8 bg-white p-4 shadow-[0_6px_24px_rgba(74,63,59,.06)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(74,63,59,.10)] md:p-5"
-                >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full" style={{ background: c.tint, color: c.color }}>
-                    <svg viewBox="0 0 32 32" className="h-[22px] w-[22px]" aria-hidden="true">
-                      {ICONS[c.title]}
-                    </svg>
-                  </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="font-serif text-[19px] leading-tight">{c.title}</span>
-                    <span className="truncate text-[12.5px] text-ink/60 md:text-[13.5px]">{c.detail}</span>
-                  </span>
-                  <span className="mt-auto text-[13px] font-medium" style={{ color: c.color }}>
-                    {c.cta} <span className="inline-block transition group-hover:translate-x-0.5">→</span>
-                  </span>
-                </a>
-              ))}
-            </div>
-
-            <div className="flex flex-col gap-3 rounded-2xl bg-white/70 p-5">
-              <div className="flex items-center gap-3">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage opacity-60" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-sage" />
-                </span>
-                <span className="text-[14px] font-medium">Respondo en menos de 24 h laborables</span>
-              </div>
-              <dl className="grid grid-cols-3 gap-3 whitespace-nowrap text-[12.5px]">
-                <div><dt className="text-ink/55">Lun – Vie</dt><dd className="font-medium">{hours.weekday}</dd></div>
-                <div><dt className="text-ink/55">Sábado</dt><dd className="font-medium">{hours.saturday}</dd></div>
-                <div><dt className="text-ink/55">Domingo</dt><dd className="font-medium">{hours.sunday}</dd></div>
-              </dl>
-            </div>
+            <ContactForm defaultName={customer?.name} defaultContact={customer?.email} />
           </div>
 
-          <div className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_14px_44px_rgba(74,63,59,.08)] lg:self-start">
-            {photo && (
-              <div className="relative aspect-[16/7]">
-                <Image src={photo.url} alt="" fill sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" style={{ objectPosition: `${photo.focalX * 100}% ${photo.focalY * 100}%` }} />
-              </div>
-            )}
-            <div className="flex flex-col gap-4 p-5 md:p-8">
-              <div className="flex flex-col gap-1.5">
-                <h2 className="font-serif text-[24px] font-normal md:text-[28px]">¿Prefieres dejarlo por escrito?</h2>
-                <p className="text-[14.5px] font-light text-ink/75">Te respondo por el medio que me digas. Si tienes cuenta, verás mi respuesta en «Mi cuenta → Mensajes».</p>
-              </div>
-              <ContactForm defaultName={customer?.name} defaultContact={customer?.email} />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 rounded-3xl bg-cream p-6 md:p-7">
+              <span className="font-serif text-[21px]">Para darte presupuesto me ayuda saber</span>
+              <ul className="flex flex-col gap-2.5 text-[14.5px] text-ink/80">
+                {["Una foto o idea de referencia", "El tamaño aproximado", "Los colores que te gustan", "Para qué fecha lo necesitas"].map((t) => (
+                  <li key={t} className="flex items-center gap-2.5">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-sage">
+                      <Icon name="check" className="h-3.5 w-3.5" />
+                    </span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/encargo" className="mt-1 w-fit rounded-full bg-ink px-5 py-3 text-[14px] font-medium text-surface">
+                Pedir a medida con foto
+              </Link>
             </div>
+            <Link href="/como-funciona" className="group flex items-center justify-between gap-4 rounded-3xl border border-ink/10 bg-white p-6">
+              <span className="flex flex-col gap-0.5">
+                <span className="font-serif text-[19px]">Cómo funciona un encargo</span>
+                <span className="text-[13.5px] text-ink/65">Pasos, plazos y pagos</span>
+              </span>
+              <span className="transition group-hover:translate-x-0.5">→</span>
+            </Link>
+            <Link href="/faq" className="group flex items-center justify-between gap-4 rounded-3xl border border-ink/10 bg-white p-6">
+              <span className="flex flex-col gap-0.5">
+                <span className="font-serif text-[19px]">Preguntas frecuentes</span>
+                <span className="text-[13.5px] text-ink/65">Envíos, materiales y cuidados</span>
+              </span>
+              <span className="transition group-hover:translate-x-0.5">→</span>
+            </Link>
           </div>
-        </div>
-      </section>
-
-      <section className="px-5 pb-14 md:px-14 md:pb-16">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
-          <Link href="/encargo" className="group flex items-center justify-between gap-4 rounded-2xl bg-pink/35 p-6 md:p-7">
-            <span className="flex flex-col gap-1">
-              <span className="font-serif text-[21px]">¿Quieres encargar algo?</span>
-              <span className="text-[14px] text-ink/75">Cuéntame tu idea con una foto y te digo precio y plazo.</span>
-            </span>
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-surface transition group-hover:translate-x-0.5">→</span>
-          </Link>
-          <Link href="/faq" className="group flex items-center justify-between gap-4 rounded-2xl border border-ink/10 bg-white p-6 md:p-7">
-            <span className="flex flex-col gap-1">
-              <span className="font-serif text-[21px]">Preguntas frecuentes</span>
-              <span className="text-[14px] text-ink/75">Plazos, envíos, pagos y cuidados de las piezas.</span>
-            </span>
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-ink/15 transition group-hover:translate-x-0.5">→</span>
-          </Link>
         </div>
       </section>
 

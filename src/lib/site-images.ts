@@ -16,8 +16,8 @@ export const SITE_IMAGE_GROUPS: { key: SiteImageGroup; title: string; text: stri
   },
   {
     key: "paginas",
-    title: "Cabeceras de páginas",
-    text: "La imagen de arriba de «Sobre mí», «Cómo funciona» y «Contacto».",
+    title: "Páginas",
+    text: "Las fotos de «Sobre mí», «Cómo funciona» y «Contacto». Van al lado del texto (nunca debajo), así que pueden ir llenas.",
   },
 ];
 
@@ -98,51 +98,72 @@ const SEGMENT_SLOTS: SiteImageSlot[] = SEGMENTS.map((s) => ({
   },
 }));
 
+/** Portrait photo shown beside a page's text: one version works on every screen. */
+function portrait(purpose: string, scene: string, allowPeople = false): { desktop: SpotVersion } {
+  return { desktop: { format: FORMATS.portrait, prompt: buildSpotPrompt({ purpose, scene, format: FORMATS.portrait, allowPeople }) } };
+}
+
 const PAGE_SLOTS: SiteImageSlot[] = [
   {
     key: "about",
     group: "paginas",
-    label: "Sobre mí",
-    where: "Sobre mí · cabecera — e Inicio · bloque «Soy Elvira»",
+    label: "Sobre mí · foto principal",
+    where: "Sobre mí · arriba, junto al título — e Inicio · bloque «Soy Elvira»",
     href: "/sobre-mi",
-    tips: "Lo ideal es una foto tuya real (manos tejiendo o tu taller) mejorada con IA: adjúntala y la IA solo mejora luz y fondo. El texto va encima a la izquierda (ordenador) o abajo (móvil).",
-    ...bannerVersions(
-      "la cabecera de «Sobre mí»",
+    tips: "Lo ideal es una foto tuya real (tus manos tejiendo o tú en el taller) mejorada con IA: adjúntala y la IA solo mejora luz y fondo. Va al lado del texto, así que puede ir llena.",
+    ...portrait(
+      "la foto principal de «Sobre mí»",
       "unas manos tejiendo con ganchillo y algodón en tono pastel, en un taller casero ordenado, encuadre cerrado en manos y labor (sin cara). Si te adjunto una foto mía o de mi taller, mantén el parecido y mejora solo luz, encuadre y ambiente.",
-      FORMATS.wideDesktop,
-      FORMATS.wideMobile,
       true,
+    ),
+  },
+  {
+    key: "about-2",
+    group: "paginas",
+    label: "Sobre mí · foto del taller 1",
+    where: "Sobre mí · bloque «Cómo empezó todo» (izquierda)",
+    href: "/sobre-mi",
+    tips: "Una foto real de tu taller o de tus materiales (ovillos, ganchillos, cestas). Adjúntala para que la IA mejore la luz sin cambiar nada.",
+    ...portrait(
+      "una foto del taller en «Sobre mí»",
+      "ovillos de algodón ordenados por colores en una cesta de mimbre y un ganchillo, sobre madera clara. Si te adjunto una foto real de mi taller, respétala y mejora solo luz y encuadre.",
+    ),
+  },
+  {
+    key: "about-3",
+    group: "paginas",
+    label: "Sobre mí · foto del taller 2",
+    where: "Sobre mí · bloque «Cómo empezó todo» (derecha)",
+    href: "/sobre-mi",
+    tips: "Piezas a medio tejer o el proceso, con fotos reales tuyas adjuntas.",
+    ...portrait(
+      "una foto del proceso en «Sobre mí»",
+      "piezas de crochet a medio tejer de la foto que te adjunto, sobre lino claro junto al ganchillo y el ovillo. Si no adjunto foto, solo el ovillo, el ganchillo y la tela.",
     ),
   },
   {
     key: "how",
     group: "paginas",
     label: "Cómo funciona",
-    where: "Cómo funciona · cabecera",
+    where: "Cómo funciona · arriba, junto al título",
     href: "/como-funciona",
-    tips: "Una escena de proceso sin piezas inventadas: ovillos, ganchillo, una libreta y una caja de envío.",
-    ...bannerVersions(
-      "la cabecera de «Cómo funciona»",
-      "vista desde arriba de una mesa de madera clara con ovillos de algodón, un ganchillo, una libreta abierta con un boceto a lápiz (sin texto legible) y una caja de envío de kraft, en orden de izquierda a derecha.",
-      FORMATS.wideDesktop,
-      FORMATS.wideMobile,
+    tips: "Una escena de proceso sin piezas inventadas: ovillos, ganchillo, una libreta y una caja de envío. Va al lado del texto.",
+    ...portrait(
+      "la foto principal de «Cómo funciona»",
+      "vista desde arriba de una mesa de madera clara con ovillos de algodón, un ganchillo, una libreta abierta con un boceto a lápiz (sin texto legible) y una caja de envío de kraft.",
     ),
   },
   {
     key: "contact",
     group: "paginas",
     label: "Contacto",
-    where: "Contacto · encima del formulario",
+    where: "Contacto · arriba, junto al título",
     href: "/contacto",
-    tips: "Algo cercano: una caja de envío con papel de seda y ovillos. Va en una franja horizontal, sin texto encima.",
-    desktop: {
-      format: { ...FORMATS.wideDesktop, textZone: "none" },
-      prompt: buildSpotPrompt({
-        purpose: "la imagen de la página de «Contacto»",
-        scene: "una caja de envío de kraft abierta con papel de seda y cinta, junto a ovillos de algodón y un móvil boca abajo, sobre una mesa de madera clara.",
-        format: { ...FORMATS.wideDesktop, textZone: "none" },
-      }),
-    },
+    tips: "Algo cercano: una caja de envío con papel de seda y ovillos. Va al lado del texto.",
+    ...portrait(
+      "la foto principal de «Contacto»",
+      "una caja de envío de kraft abierta con papel de seda y cinta, junto a ovillos de algodón y un móvil boca abajo, sobre una mesa de madera clara.",
+    ),
   },
 ];
 

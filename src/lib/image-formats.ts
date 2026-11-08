@@ -22,12 +22,14 @@ export const FORMATS = {
   heroDesktop: { width: 2400, height: 1050, ratio: "16:7", aspectClass: "aspect-[16/7]", textZone: "left" },
   /** Home banner on phones (the whole first screen). */
   heroMobile: { width: 1080, height: 1620, ratio: "2:3", aspectClass: "aspect-[2/3]", textZone: "bottom" },
-  /** Special dates and page headers on computers. */
+  /** Special date banners on computers. */
   wideDesktop: { width: 2400, height: 800, ratio: "3:1", aspectClass: "aspect-[3/1]", textZone: "left" },
-  /** Special dates and page headers on phones. */
+  /** Special date banners on phones. */
   wideMobile: { width: 1080, height: 1350, ratio: "4:5", aspectClass: "aspect-[4/5]", textZone: "bottom" },
   /** Shop block cards (title goes under the image). */
   card: { width: 1200, height: 900, ratio: "4:3", aspectClass: "aspect-[4/3]", textZone: "none" },
+  /** Page headers and story photos (shown beside the text, never under it). */
+  portrait: { width: 1080, height: 1350, ratio: "4:5", aspectClass: "aspect-[4/5]", textZone: "none" },
   /** Category thumbnails. */
   square: { width: 1080, height: 1080, ratio: "1:1", aspectClass: "aspect-square", textZone: "none" },
 } satisfies Record<string, ImageFormat>;

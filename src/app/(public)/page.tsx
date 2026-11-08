@@ -7,11 +7,10 @@ import { YarnBackdrop } from "@/components/public/YarnBackdrop";
 import { HeroBanner } from "@/components/public/HeroBanner";
 import { CampaignBanner } from "@/components/public/CampaignBanner";
 import { SegmentCard } from "@/components/public/SegmentCard";
-import { BannerImage } from "@/components/public/BannerImage";
 import { getSiteSettings } from "@/lib/seo";
 import { HowItWorks } from "@/components/public/HowItWorks";
 import { SEGMENTS } from "@/lib/catalog-segments";
-import { getSiteImages, heroSlides, responsive } from "@/lib/site-images";
+import { getSiteImages, heroSlides } from "@/lib/site-images";
 import { deadlinePending, formatMD, getActiveCampaign } from "@/lib/campaigns";
 import type { Prisma } from "@/generated/prisma";
 
@@ -64,7 +63,7 @@ export default async function HomePage() {
 
   const count = new Map(categories.map((c) => [c.slug, c]));
   const segments = SEGMENTS.filter((s) => s.slugs.some((slug) => (count.get(slug)?._count.products ?? 0) > 0));
-  const about = responsive(images, "about");
+  const about = images.about;
   // Segment card photo: the owner's AI background, else the cover of its first category.
   const segmentPhoto = (s: (typeof SEGMENTS)[number]) => {
     const own = images[`seg-${s.key}`];
@@ -173,22 +172,23 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* About: the owner's professional photo as background (never product photos) */}
+      {/* About: the owner's own portrait photo beside the text (never product photos) */}
       <section className="px-5 pb-12 md:px-14 md:pb-16">
-        <div className="relative flex min-h-[460px] items-end overflow-hidden rounded-3xl md:min-h-[420px] md:items-center">
-          {about ? (
-            <BannerImage desktop={about.desktop} mobile={about.mobile} desktopSizes="90vw" />
-          ) : (
-            <YarnBackdrop />
-          )}
-          <div aria-hidden="true" className={about ? "absolute inset-0 bg-gradient-to-t from-[#3d322e]/85 via-[#3d322e]/30 to-transparent md:bg-gradient-to-r md:from-[#3d322e]/80" : ""} />
-          <div className={`relative flex max-w-lg flex-col gap-3 p-6 md:p-12 ${about ? "text-white" : "text-ink"}`}>
-            <span className="text-[11.5px] uppercase tracking-[.18em] opacity-80">Sobre mí</span>
+        <div className="grid grid-cols-1 items-center gap-6 overflow-hidden rounded-[28px] bg-cream p-4 md:grid-cols-[minmax(0,380px)_1fr] md:gap-12 md:p-6">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl sm:aspect-[4/5]">
+            {about ? (
+              <Image src={about.url} alt="Elvira tejiendo en su taller" fill sizes="(min-width: 768px) 380px, 100vw" className="object-cover" style={focal(about.focalX, about.focalY)} />
+            ) : (
+              <YarnBackdrop />
+            )}
+          </div>
+          <div className="flex max-w-lg flex-col gap-3 px-2 pb-4 md:px-0 md:pb-0">
+            <span className="text-[11.5px] font-medium uppercase tracking-[.2em] text-ink-soft">Sobre mí</span>
             <h2 className="font-serif text-[28px] font-normal leading-tight md:text-[38px]">Soy Elvira, y cada pieza pasa por mis manos</h2>
-            <p className="text-[15px] font-light leading-relaxed opacity-90">
+            <p className="text-[15.5px] font-light leading-relaxed text-ink/78">
               Empecé tejiendo amigurumis para mi hijo y hoy tejo encargos para toda España desde mi taller en Galicia.
             </p>
-            <Link href="/sobre-mi" className={`mt-1 w-fit rounded-full px-6 py-3 text-[14.5px] font-medium ${about ? "bg-white text-ink" : "bg-ink text-surface"}`}>
+            <Link href="/sobre-mi" className="mt-1 w-fit rounded-full bg-ink px-6 py-3 text-[14.5px] font-medium text-surface">
               Conóceme
             </Link>
           </div>
