@@ -15,7 +15,7 @@ export async function generateMetadata({
   const title = cat === "Todo" ? "Tienda de crochet y amigurumis" : `${cat} · Tienda`;
   const description =
     cat === "Todo"
-      ? "Todas las piezas de crochet, amigurumis y decoración tejidas a mano por Mundolana. Lo vendido se puede volver a tejer por encargo."
+      ? "Todas las piezas de crochet, amigurumis y decoración tejidas a mano por Mundolana. Todo se teje a mano y por encargo."
       : `Piezas de ${cat} tejidas a mano en algodón por Mundolana. Envíos a toda España desde Galicia.`;
   // Canonical always points to the clean catalog (filters/search are not indexable variants).
   return {
@@ -43,8 +43,8 @@ export default async function CatalogoPage({
   const [products, categories, brands] = await Promise.all([
     prisma.product.findMany({
       where,
-      include: { categories: true },
-      orderBy: { createdAt: "desc" },
+      include: { categories: { orderBy: { order: "asc" } } },
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     }),
     prisma.category.findMany({
       orderBy: { order: "asc" },
@@ -72,10 +72,10 @@ export default async function CatalogoPage({
   const title = marca !== "Todas" ? marca : cat === "Todo" ? "Toda la tienda" : cat;
   const intro =
     cat === "Todo" && marca === "Todas"
-      ? "Lo vendido se puede volver a tejer por encargo."
+      ? "Todo se teje a mano y por encargo, en los colores que prefieras."
       : `Piezas de ${[cat !== "Todo" ? `la categoría ${cat}` : null, marca !== "Todas" ? `la marca ${marca}` : null]
           .filter(Boolean)
-          .join(" y ")}. Lo vendido se puede volver a tejer por encargo.`;
+          .join(" y ")}. Todo se teje a mano y por encargo.`;
 
   // A single filter with no search text gets its own indexable URL
   // (/categoria/x or /marca/x); anything combined stays as a /catalogo
@@ -102,47 +102,50 @@ export default async function CatalogoPage({
 
   return (
     <>
-      <section className="flex flex-col gap-3 px-5 pb-4 pt-8 md:flex-row md:items-end md:justify-between md:px-14 md:pb-5 md:pt-11">
-        <div className="flex max-w-2xl flex-col gap-2.5">
-          <span className="font-mono text-[11.5px] uppercase tracking-[.16em] text-ink-soft">Tienda</span>
+      <section className="flex flex-col gap-4 px-5 pb-4 pt-6 md:flex-row md:items-end md:justify-between md:px-14 md:pb-5 md:pt-11">
+        <div className="flex max-w-2xl flex-col gap-1.5">
           <h1 className="font-serif text-[30px] font-normal leading-tight md:text-[42px]">{title}</h1>
           <p className="text-[14px] font-light leading-relaxed text-ink/75 md:text-[15.5px]">{intro}</p>
         </div>
         <CatalogSearch defaultValue={q} />
       </section>
 
-      <section className="flex flex-wrap gap-2.5 px-5 pb-2.5 md:px-14">
+      {/* One scrollable row per filter group: on a phone the products start right below */}
+      <nav aria-label="Categorías" className="flex gap-2 overflow-x-auto px-5 pb-2.5 [scrollbar-width:none] md:flex-wrap md:px-14">
         <CatalogChip label="Todo" active={cat === "Todo"} href={catHref("Todo")} />
         {availableCats.map((c) => (
           <CatalogChip key={c.id} label={c.name} active={cat === c.name} href={catHref(c.name, c.slug)} />
         ))}
-      </section>
+      </nav>
 
       {availableBrands.length > 0 && (
-        <section className="flex flex-wrap gap-2 px-5 pb-5 md:px-14">
-          <CatalogChip label="Todas las marcas" active={marca === "Todas"} href={brandHref("Todas")} />
+        <nav aria-label="Colecciones" className="flex gap-2 overflow-x-auto px-5 pb-3 [scrollbar-width:none] md:flex-wrap md:px-14">
+          <CatalogChip label="Todas las colecciones" active={marca === "Todas"} href={brandHref("Todas")} small />
           {availableBrands.map((b) => (
-            <CatalogChip key={b.id} label={b.name} active={marca === b.name} href={brandHref(b.name, b.slug)} />
+            <CatalogChip key={b.id} label={b.name} active={marca === b.name} href={brandHref(b.name, b.slug)} small />
           ))}
-        </section>
+        </nav>
       )}
 
-      <section className="flex items-center justify-between border-b border-ink/10 px-5 pb-3 pt-1.5 md:px-14">
+      <section className="flex items-center justify-between border-b border-ink/10 px-5 pb-3 pt-1 md:px-14">
         <span className="text-[13px] text-ink/65">
           {products.length} {products.length === 1 ? "pieza" : "piezas"}
         </span>
-        <Link href="/catalogo" className="border-b border-ink/25 text-[13px] text-ink/65">
-          Quitar filtros
-        </Link>
+        {(cat !== "Todo" || marca !== "Todas" || q) && (
+          <Link href="/catalogo" className="border-b border-ink/25 text-[13px] text-ink/65">
+            Quitar filtros
+          </Link>
+        )}
       </section>
 
       <section className="px-5 py-6 md:px-14 md:py-8">
         {products.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-4.5 lg:grid-cols-4">
-            {products.map((p) => (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 md:gap-x-5 md:gap-y-8 xl:grid-cols-4">
+            {products.map((p, i) => (
               <ProductCard
                 key={p.id}
-                showCategory
+                priority={i < 4}
+                showCategory={cat === "Todo"}
                 product={{
                   slug: p.slug,
                   name: p.name,

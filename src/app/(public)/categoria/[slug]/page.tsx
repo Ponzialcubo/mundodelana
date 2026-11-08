@@ -48,30 +48,29 @@ export default async function CategoriaPage({ params }: { params: Promise<{ slug
 
   const products = await prisma.product.findMany({
     where: { publicationStatus: "PUBLICADO", categories: { some: { slug } } },
-    include: { categories: true },
-    orderBy: { createdAt: "desc" },
+    include: { categories: { orderBy: { order: "asc" } } },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
   });
 
   const availableCats = categories.filter((c) => c._count.products > 0);
 
   return (
     <>
-      <section className="flex flex-col gap-3 px-5 pb-4 pt-8 md:flex-row md:items-end md:justify-between md:px-14 md:pb-5 md:pt-11">
+      <section className="flex flex-col gap-3 px-5 pb-4 pt-6 md:flex-row md:items-end md:justify-between md:px-14 md:pb-5 md:pt-11">
         <div className="flex max-w-2xl flex-col gap-2.5">
-          <span className="font-mono text-[11.5px] uppercase tracking-[.16em] text-ink-soft">Tienda</span>
-          <h1 className="font-serif text-[30px] font-normal leading-tight md:text-[42px]">{category.name}</h1>
+                    <h1 className="font-serif text-[30px] font-normal leading-tight md:text-[42px]">{category.name}</h1>
           <p className="text-[14px] font-light leading-relaxed text-ink/75 md:text-[15.5px]">
-            {category.description || `Piezas de ${category.name}. Lo vendido se puede volver a tejer por encargo.`}
+            {category.description || `Piezas de ${category.name}. Todo se teje a mano y por encargo.`}
           </p>
         </div>
       </section>
 
-      <section className="flex flex-wrap gap-2.5 px-5 pb-5 md:px-14">
+      <nav className="flex gap-2 overflow-x-auto px-5 pb-4 [scrollbar-width:none] md:flex-wrap md:px-14">
         <CatalogChip label="Todo" active={false} href="/catalogo" />
         {availableCats.map((c) => (
           <CatalogChip key={c.id} label={c.name} active={c.slug === slug} href={`/categoria/${c.slug}`} />
         ))}
-      </section>
+      </nav>
 
       <section className="flex items-center justify-between border-b border-ink/10 px-5 pb-3 pt-1.5 md:px-14">
         <span className="text-[13px] text-ink/65">
@@ -84,10 +83,11 @@ export default async function CategoriaPage({ params }: { params: Promise<{ slug
 
       <section className="px-5 py-6 md:px-14 md:py-8">
         {products.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-4.5 lg:grid-cols-4">
-            {products.map((p) => (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 md:gap-x-5 md:gap-y-8 xl:grid-cols-4">
+            {products.map((p, i) => (
               <ProductCard
                 key={p.id}
+                priority={i < 4}
                 product={{
                   slug: p.slug,
                   name: p.name,

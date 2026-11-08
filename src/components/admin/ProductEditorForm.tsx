@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
-import { FocalPointPicker } from "@/components/admin/FocalPointPicker";
+import { FocalPointEditor } from "@/components/admin/FocalPointEditor";
 
 type Category = { id: string; name: string };
 type Brand = { id: string; name: string };
@@ -155,6 +155,7 @@ export function ProductEditorForm({
   const [error, setError] = useState("");
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [autofilling, setAutofilling] = useState(false);
+  const [framing, setFraming] = useState<string | null>(null); // url of the photo being framed
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function set<K extends keyof FormFields>(key: K, value: FormFields[K]) {
@@ -346,7 +347,7 @@ export function ProductEditorForm({
         <div className="flex flex-col gap-0.5">
           <span className="font-serif text-base font-medium">Fotos y vídeos</span>
           <span className="text-xs text-admin-faint">
-            La primera foto es la portada del catálogo. Toca una foto para elegir el centro del encuadre.
+            La primera foto es la portada del catálogo. Toca una foto para ajustar qué parte se ve en la tienda.
           </span>
         </div>
 
@@ -364,14 +365,25 @@ export function ProductEditorForm({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {media.map((item, index) => (
             <div key={item.url} className="relative flex flex-col gap-1.5">
-              <FocalPointPicker
-                src={item.mediaType === "VIDEO" ? item.posterUrl ?? item.url : item.url}
-                focalX={item.focalX}
-                focalY={item.focalY}
-                onChange={(x, y) => setFocal(item.url, x, y)}
-                className="aspect-[4/5]"
-                hint={false}
-              />
+              <button
+                type="button"
+                onClick={() => setFraming(item.url)}
+                className="relative aspect-[4/5] overflow-hidden rounded-lg bg-admin-bg"
+                aria-label="Ajustar encuadre"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- admin preview with the shop's exact crop */}
+                <img
+                  src={item.mediaType === "VIDEO" ? item.posterUrl ?? item.url : item.url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: `${item.focalX * 100}% ${item.focalY * 100}%` }}
+                />
+                {item.mediaType === "IMAGE" && (
+                  <span className="absolute bottom-1.5 left-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-admin-ink">
+                    Encuadre
+                  </span>
+                )}
+              </button>
               {index === coverIndex && (
                 <span className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-pink px-2 py-0.5 text-[10px] font-medium text-admin-ink">
                   Portada
@@ -678,6 +690,20 @@ export function ProductEditorForm({
           )}
         </div>
       </details>
+
+      {framing && (() => {
+        const item = media.find((m) => m.url === framing);
+        if (!item || item.mediaType !== "IMAGE") return null;
+        return (
+          <FocalPointEditor
+            src={item.url}
+            focalX={item.focalX}
+            focalY={item.focalY}
+            onChange={(x, y) => setFocal(item.url, x, y)}
+            onClose={() => setFraming(null)}
+          />
+        );
+      })()}
 
       {/* Mobile sticky save bar, above the bottom tabs */}
       <div className="fixed inset-x-0 bottom-[calc(57px+env(safe-area-inset-bottom))] z-20 flex gap-2.5 border-t border-admin-ink/10 bg-white/95 px-4 py-3 backdrop-blur md:hidden">

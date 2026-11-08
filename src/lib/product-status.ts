@@ -68,3 +68,35 @@ export function formatPrice(price: number | string, priceType: "STOCK" | "PERSON
   const formatted = `${n.toFixed(0)} €`;
   return priceType === "PERSONALIZADO" ? `desde ${formatted}` : formatted;
 }
+
+export type ProductAction = {
+  /** Short status shown on the product page. */
+  label: string;
+  /** Badge for catalog cards; null when there's nothing worth flagging. */
+  badge: { label: string; bg: string; fg: string } | null;
+  cta: string;
+  note: string;
+};
+
+/**
+ * What the shop says about a piece. Made-to-order pieces (priceType
+ * PERSONALIZADO) that are "available" are really "we knit one for you", not
+ * a finished item in stock, so they get the order wording instead.
+ */
+export function productAction(pieceStatus: PieceStatus, priceType: "STOCK" | "PERSONALIZADO"): ProductAction {
+  if (pieceStatus === "DISPONIBLE" && priceType === "PERSONALIZADO") {
+    return {
+      label: "Por encargo",
+      badge: null,
+      cta: "Encargar esta pieza",
+      note: "Se teje para ti por encargo, en tus colores si quieres. Plazo habitual: 1-2 semanas.",
+    };
+  }
+  const showBadge = pieceStatus !== "DISPONIBLE" && pieceStatus !== "RESERVADO";
+  return {
+    label: pieceStatus === "RESERVADO" ? "A medida" : STATUS_LABEL[pieceStatus],
+    badge: showBadge ? STATUS_BADGE[pieceStatus] : null,
+    cta: STATUS_CTA[pieceStatus].cta,
+    note: STATUS_CTA[pieceStatus].note,
+  };
+}

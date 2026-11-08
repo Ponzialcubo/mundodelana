@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
-import { FocalPointPicker } from "@/components/admin/FocalPointPicker";
+import { FocalPointEditor } from "@/components/admin/FocalPointEditor";
 
 export type CategoryFormData = {
   id?: string;
@@ -46,6 +46,7 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
   const isEdit = Boolean(initial?.id);
   const [data, setData] = useState<CategoryFormData>(initial ?? EMPTY);
   const [slugTouched, setSlugTouched] = useState(isEdit);
+  const [framing, setFraming] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -207,16 +208,37 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
               }}
             />
             {data.coverImage ? (
-              <FocalPointPicker
-                src={data.coverImage}
-                focalX={data.coverFocalX}
-                focalY={data.coverFocalY}
-                onChange={(x, y) => {
-                  set("coverFocalX", x);
-                  set("coverFocalY", y);
-                }}
-                className="h-32"
-              />
+              <>
+                <button
+                  type="button"
+                  onClick={() => setFraming(true)}
+                  className="relative aspect-square w-40 overflow-hidden rounded-lg"
+                  aria-label="Ajustar encuadre"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- admin preview with the shop's exact crop */}
+                  <img
+                    src={data.coverImage}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    style={{ objectPosition: `${data.coverFocalX * 100}% ${data.coverFocalY * 100}%` }}
+                  />
+                  <span className="absolute bottom-1.5 left-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium">
+                    Encuadre
+                  </span>
+                </button>
+                {framing && (
+                  <FocalPointEditor
+                    src={data.coverImage}
+                    focalX={data.coverFocalX}
+                    focalY={data.coverFocalY}
+                    onChange={(x, y) => {
+                      set("coverFocalX", x);
+                      set("coverFocalY", y);
+                    }}
+                    onClose={() => setFraming(false)}
+                  />
+                )}
+              </>
             ) : (
               <button
                 type="button"

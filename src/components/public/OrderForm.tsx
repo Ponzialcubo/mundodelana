@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-export function OrderForm({ phone }: { phone: string }) {
+export function OrderForm({ phone, product }: { phone: string; product?: { slug: string; name: string } | null }) {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -14,17 +14,11 @@ export function OrderForm({ phone }: { phone: string }) {
     e.preventDefault();
     setLoading(true);
     setError(false);
+    // Multipart so the reference photo travels with the text.
     const form = new FormData(e.currentTarget);
+    if (product) form.set("productSlug", product.slug);
     try {
-      const res = await fetch("/api/encargos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          requestText: form.get("requestText"),
-          name: form.get("name"),
-          phone: form.get("phone"),
-        }),
-      });
+      const res = await fetch("/api/encargos", { method: "POST", body: form });
       if (!res.ok) throw new Error();
       const data = await res.json();
       setRef(data.ref);
@@ -78,7 +72,9 @@ export function OrderForm({ phone }: { phone: string }) {
     <section className="grid grid-cols-1 gap-10 px-5 py-10 md:grid-cols-[1fr_320px] md:gap-14 md:px-14 md:py-14">
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-[28px] font-normal md:text-[36px]">Cuéntame qué quieres que teja</h1>
+          <h1 className="font-serif text-[28px] font-normal md:text-[36px]">
+            {product ? `Encargar «${product.name}»` : "Cuéntame qué quieres que teja"}
+          </h1>
           <p className="text-[14.5px] font-light leading-relaxed text-ink/78">
             Rellenar esto no compromete a nada. Te contesto con precio y plazo, y tú decides después.
           </p>
@@ -91,6 +87,7 @@ export function OrderForm({ phone }: { phone: string }) {
               name="requestText"
               required
               rows={5}
+              defaultValue={product ? `Me interesa «${product.name}». ` : undefined}
               placeholder="Ej: un amigurumi de mi perro, un teckel marrón con collar rojo, de unos 25 cm, para el cumpleaños de mi madre el 14 de octubre."
               className="rounded-lg border border-ink/16 bg-white px-4 py-3 text-sm outline-none"
             />
@@ -98,13 +95,14 @@ export function OrderForm({ phone }: { phone: string }) {
           </label>
 
           <label className="flex flex-col gap-2">
-            <span className="text-[13px] font-medium text-ink/80">Foto de referencia</span>
-            <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-ink/25 bg-white px-4 py-8 text-center">
+            <span className="text-[13px] font-medium text-ink/80">Foto de referencia (opcional)</span>
+            <div className="relative flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-ink/25 bg-white px-4 py-8 text-center">
               <span className="h-7 w-7 rounded-md bg-pink" />
-              <span className="text-sm text-ink/75">{fileName || "Arrastra una foto aquí o haz clic para buscarla"}</span>
-              <span className="text-xs text-ink/50">JPG o PNG, hasta 10 MB. Cuantas más referencias, mejor.</span>
+              <span className="text-sm text-ink/75">{fileName || "Toca para elegir una foto"}</span>
+              <span className="text-xs text-ink/50">JPG o PNG, hasta 10 MB.</span>
               <input
                 type="file"
+                name="photo"
                 accept="image/*"
                 className="absolute h-0 w-0 opacity-0"
                 onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}

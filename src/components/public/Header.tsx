@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 
 const NAV_LINKS = [
@@ -21,13 +22,18 @@ export function Header({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="border-b border-ink/10 bg-surface">
-      <div className="flex items-center justify-between px-5 py-3.5 md:px-14 md:py-5">
+    <header className="sticky top-0 z-30 border-b border-ink/10 bg-surface/95 backdrop-blur">
+      <div className="flex items-center justify-between px-4 py-2.5 md:px-14 md:py-4">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-pink font-serif text-[12px] font-medium text-ink md:h-[30px] md:w-[30px] md:text-[13px]">
-            m
-          </span>
-          <span className="font-serif text-[17px] font-medium leading-none text-ink md:text-[20px]">
+          <Image
+            src="/logo-mundolana.png"
+            alt=""
+            width={40}
+            height={40}
+            priority
+            className="h-9 w-9 md:h-10 md:w-10"
+          />
+          <span className="font-serif text-[19px] font-medium leading-none text-ink md:text-[22px]">
             Mundolana
           </span>
         </Link>
@@ -69,9 +75,7 @@ export function Header({
             className="flex items-center justify-between border-b border-ink/8 bg-cream px-5 py-4 text-[14.5px] font-medium text-ink"
           >
             <span className="flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-pink font-serif text-xs font-medium">
-                m
-              </span>
+              <Image src="/logo-mundolana.png" alt="" width={28} height={28} className="h-7 w-7" />
               {loggedIn ? "Mi cuenta" : "Entrar o crear cuenta"}
             </span>
             <span className="text-ink/40">›</span>

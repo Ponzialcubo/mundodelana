@@ -21,12 +21,12 @@ export function LikeButton({ slug, initialLikes }: { slug: string; initialLikes:
   return (
     <button
       onClick={toggle}
-      className="ml-auto flex items-center gap-2 rounded-full border border-ink/14 bg-white px-4 py-2.5 text-[13.5px] text-ink"
+      className="flex shrink-0 items-center gap-2 rounded-full border border-ink/14 bg-white px-4 py-2.5 text-[13.5px] text-ink"
     >
       <span style={{ color: liked ? "#D08F94" : "#4A3F3B" }} className="text-[15px]">
         ♥
       </span>
-      {likes} {likes === 1 ? "persona" : "personas"}
+      {likes > 0 ? likes : "Me gusta"}
     </button>
   );
 }

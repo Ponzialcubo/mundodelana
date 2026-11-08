@@ -48,30 +48,30 @@ export default async function MarcaPage({ params }: { params: Promise<{ slug: st
 
   const products = await prisma.product.findMany({
     where: { publicationStatus: "PUBLICADO", brands: { some: { slug } } },
-    include: { categories: true },
-    orderBy: { createdAt: "desc" },
+    include: { categories: { orderBy: { order: "asc" } } },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
   });
 
   const availableBrands = brands.filter((b) => b._count.products > 0);
 
   return (
     <>
-      <section className="flex flex-col gap-3 px-5 pb-4 pt-8 md:flex-row md:items-end md:justify-between md:px-14 md:pb-5 md:pt-11">
+      <section className="flex flex-col gap-3 px-5 pb-4 pt-6 md:flex-row md:items-end md:justify-between md:px-14 md:pb-5 md:pt-11">
         <div className="flex max-w-2xl flex-col gap-2.5">
           <span className="font-mono text-[11.5px] uppercase tracking-[.16em] text-ink-soft">Marca</span>
           <h1 className="font-serif text-[30px] font-normal leading-tight md:text-[42px]">{brand.name}</h1>
           <p className="text-[14px] font-light leading-relaxed text-ink/75 md:text-[15.5px]">
-            Amigurumis de {brand.name}. Lo vendido se puede volver a tejer por encargo.
+            Amigurumis de {brand.name}. Todo se teje a mano y por encargo.
           </p>
         </div>
       </section>
 
       {availableBrands.length > 1 && (
-        <section className="flex flex-wrap gap-2.5 px-5 pb-5 md:px-14">
+        <nav className="flex gap-2 overflow-x-auto px-5 pb-4 [scrollbar-width:none] md:flex-wrap md:px-14">
           {availableBrands.map((b) => (
             <CatalogChip key={b.id} label={b.name} active={b.slug === slug} href={`/marca/${b.slug}`} />
           ))}
-        </section>
+        </nav>
       )}
 
       <section className="flex items-center justify-between border-b border-ink/10 px-5 pb-3 pt-1.5 md:px-14">
@@ -85,10 +85,11 @@ export default async function MarcaPage({ params }: { params: Promise<{ slug: st
 
       <section className="px-5 py-6 md:px-14 md:py-8">
         {products.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 md:gap-4.5 lg:grid-cols-4">
-            {products.map((p) => (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-3 md:gap-x-5 md:gap-y-8 xl:grid-cols-4">
+            {products.map((p, i) => (
               <ProductCard
                 key={p.id}
+                priority={i < 4}
                 showCategory
                 product={{
                   slug: p.slug,
