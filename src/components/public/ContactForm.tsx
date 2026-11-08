@@ -1,8 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export function ContactForm() {
+export function ContactForm({
+  defaultName = "",
+  defaultContact = "",
+  compact = false,
+  onSent,
+}: {
+  defaultName?: string;
+  defaultContact?: string;
+  /** Inside the account: name and contact are already known, only the message is asked. */
+  compact?: boolean;
+  onSent?: () => void;
+} = {}) {
+  const router = useRouter();
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -24,6 +37,8 @@ export function ContactForm() {
       });
       if (!res.ok) throw new Error();
       setSent(true);
+      onSent?.();
+      if (compact) router.refresh();
     } catch {
       setError(true);
     } finally {
@@ -36,26 +51,39 @@ export function ContactForm() {
       <div className="flex flex-col gap-2 rounded-xl border border-sage/40 bg-sage/10 p-6">
         <span className="font-serif text-xl">¡Mensaje enviado!</span>
         <span className="text-sm text-ink/75">Te contesto en cuanto pueda, normalmente el mismo día.</span>
+        {compact && (
+          <button type="button" onClick={() => setSent(false)} className="mt-1 w-fit text-sm font-medium text-pink-deep underline">
+            Escribir otro mensaje
+          </button>
+        )}
       </div>
     );
   }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5">
+      {compact && (
+        <>
+          <input type="hidden" name="name" value={defaultName} />
+          <input type="hidden" name="contact" value={defaultContact} />
+        </>
+      )}
+      <label className={compact ? "hidden" : "flex flex-col gap-1.5"}>
         <span className="text-[13px] font-medium text-ink/80">Tu nombre</span>
         <input
-          name="name"
-          required
+          name={compact ? undefined : "name"}
+          defaultValue={defaultName}
+          required={!compact}
           placeholder="María García"
           className="rounded-lg border border-ink/16 bg-white px-4 py-3 text-sm outline-none"
         />
       </label>
-      <label className="flex flex-col gap-1.5">
+      <label className={compact ? "hidden" : "flex flex-col gap-1.5"}>
         <span className="text-[13px] font-medium text-ink/80">Email o teléfono</span>
         <input
-          name="contact"
-          required
+          name={compact ? undefined : "contact"}
+          defaultValue={defaultContact}
+          required={!compact}
           placeholder="maria@correo.com o 600 000 000"
           className="rounded-lg border border-ink/16 bg-white px-4 py-3 text-sm outline-none"
         />

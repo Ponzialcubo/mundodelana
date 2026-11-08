@@ -67,3 +67,16 @@ Si te adjunto fotos de mis piezas, úsalas como protagonistas manteniéndolas ex
 
 FORMATOS: horizontal 16:9 (1920 × 1080 px) para ordenador y vertical 4:5 (1080 × 1350 px) para móvil, con el mismo concepto.`;
 }
+
+/** Prompt for a category card: the most representative piece as the hero, room at the bottom for the white title. */
+export function buildCategoryCoverPrompt(category: { name: string; description?: string | null }): string {
+  return `Crea la imagen de la tarjeta «${category.name}» de la tienda online Mundolana (crochet y amigurumis hechos a mano en Galicia).
+${category.description ? `\nQUÉ HAY EN ESTA CATEGORÍA: ${category.description}\n` : ""}
+ESCENA: la pieza que te adjunto (la más representativa de la categoría) como protagonista, en la mitad superior, sobre una superficie de madera clara o tela de lino, con algún detalle de ambiente discreto (ovillos, ramita, papel kraft). Deja el tercio de abajo limpio y algo más oscuro y suave, porque ahí irá el título en blanco.
+
+LO MÁS IMPORTANTE: la pieza de crochet debe quedar EXACTAMENTE igual (forma, colores, puntos y detalles). Solo cambia el fondo, la luz y la composición.
+
+ESTILO: fotografía real y profesional, luz natural de ventana, tonos cálidos de la marca (crema #F7F1EA, beige #EDE4DA, rosa empolvado #E8B4B8, verde salvia #9CAF88). Que se aprecie la textura del punto. Sin texto, sin logos, sin marcas de agua.
+
+FORMATO: vertical 4:5 (1080 × 1350 px).`;
+}

@@ -90,5 +90,11 @@ export async function getSiteSettings() {
     publicEmail: settings?.publicEmail || "infomundolana@gmail.com",
     instagramUrl: settings?.instagramUrl || "instagram.com/mundolana16",
     tiktokUrl: settings?.tiktokUrl || "",
+    hours: {
+      weekday: settings?.hoursWeekday || "10:00 – 19:00",
+      saturday: settings?.hoursSaturday || "10:00 – 14:00",
+      sunday: settings?.hoursSunday || "Cerrado",
+    },
+    heroPhrases: settings?.heroPhrases?.length ? settings.heroPhrases : ["pensado para ti", "para regalar", "con mucho cariño", "a tu medida"],
   };
 }

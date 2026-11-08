@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
+/** Without the AI rewrite, the idea still goes in, as a closing instruction. */
+function withIdea(prompt: string, idea: string) {
+  return idea.trim() ? `${prompt}\n\nIDEA PRINCIPAL (tenla muy en cuenta): ${idea.trim()}` : prompt;
+}
+
 /**
  * Three-step helper to improve or create an image with an external AI
  * (ChatGPT / Gemini): copy the ready-made prompt, attach the original photo
@@ -24,6 +29,11 @@ export function ImproveImageDialog({
   const [copied, setCopied] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [idea, setIdea] = useState("");
+  const [rewritten, setRewritten] = useState<string | null>(null);
+  const [writing, setWriting] = useState(false);
+  const [ideaError, setIdeaError] = useState("");
+  const finalPrompt = rewritten ?? withIdea(prompt, idea);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -35,7 +45,7 @@ export function ImproveImageDialog({
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(prompt);
+      await navigator.clipboard.writeText(finalPrompt);
     } catch {
       // Older mobile browsers: fall back to selecting the text so it can be copied by hand.
       const area = document.getElementById("improve-prompt") as HTMLTextAreaElement | null;
@@ -44,6 +54,25 @@ export function ImproveImageDialog({
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  }
+
+  async function askClaude() {
+    setWriting(true);
+    setIdeaError("");
+    try {
+      const res = await fetch("/api/admin/imagenes/prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, idea }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setRewritten(json.prompt);
+    } catch (err) {
+      setIdeaError(err instanceof Error && err.message ? err.message : "No se ha podido reescribir el prompt");
+    } finally {
+      setWriting(false);
+    }
   }
 
   async function upload(file: File) {
@@ -77,12 +106,44 @@ export function ImproveImageDialog({
           </button>
         </div>
 
+        <div className="flex flex-col gap-2 rounded-xl bg-admin-bg p-3.5">
+          <span className="text-sm font-medium">¿Tienes una idea? <span className="font-normal text-admin-ink-soft">(opcional)</span></span>
+          <input
+            value={idea}
+            onChange={(e) => {
+              setIdea(e.target.value);
+              setRewritten(null);
+            }}
+            placeholder="Ej.: con nieve y luces de Navidad, en tonos rojos"
+            className="rounded-lg border border-admin-ink/14 bg-white px-3 py-2.5 text-sm outline-none"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={askClaude}
+              disabled={!idea.trim() || writing}
+              className="rounded-full border border-admin-ink/16 bg-white px-4 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              {writing ? "Escribiendo…" : rewritten ? "✓ Prompt adaptado · repetir" : "✨ Que la IA adapte el prompt"}
+            </button>
+            {rewritten && (
+              <button type="button" onClick={() => setRewritten(null)} className="text-xs text-admin-ink-soft underline">
+                Volver al original
+              </button>
+            )}
+          </div>
+          <span className="text-xs text-admin-ink-soft">
+            Tu idea se añade al prompt. Si pulsas el botón, la IA lo reescribe entero a partir de ella.
+          </span>
+          {ideaError && <span className="text-xs text-admin-danger">{ideaError}</span>}
+        </div>
+
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">1. Copia el prompt</span>
           <textarea
             id="improve-prompt"
             readOnly
-            value={prompt}
+            value={finalPrompt}
             rows={6}
             className="rounded-lg border border-admin-ink/14 bg-admin-bg px-3 py-2.5 text-[13px] leading-relaxed outline-none"
           />

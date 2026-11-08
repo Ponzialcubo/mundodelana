@@ -1,32 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getCustomerSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { FooterWithSettings } from "@/components/public/FooterWithSettings";
-import type { OrderState } from "@/generated/prisma";
-
-const STATE_LABEL: Record<OrderState, string> = {
-  NUEVO: "Nuevo",
-  COTIZADO: "Cotizado",
-  CONFIRMADO: "Confirmado",
-  ENVIADO: "Enviado",
-  ENTREGADO: "Entregado",
-};
-
-const STATE_DOT: Record<OrderState, string> = {
-  NUEVO: "#E8B4B8",
-  COTIZADO: "#D9A566",
-  CONFIRMADO: "#6F8A64",
-  ENVIADO: "#8FA3B0",
-  ENTREGADO: "#9CAF88",
-};
-
-const STATE_STEPS: OrderState[] = ["NUEVO", "COTIZADO", "CONFIRMADO", "ENVIADO", "ENTREGADO"];
+import { STATE_DOT, STATE_LABEL, STATE_STEPS } from "@/lib/order-state";
 
 export default async function PedidoDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const customerId = await getCustomerSession();
-  if (!customerId) redirect("/acceso");
 
   const { id } = await params;
 
@@ -48,9 +28,9 @@ export default async function PedidoDetallePage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <section className="mx-auto flex max-w-3xl flex-col gap-6 px-5 py-10 md:px-0 md:py-12">
-        <Link href="/cuenta" className="text-sm text-ink/60 underline">
-          ← Volver a mis pedidos
+      <section className="flex flex-col gap-6 pt-6 md:pt-0">
+        <Link href="/cuenta/pedidos" className="text-sm text-ink/60">
+          ‹ Mis pedidos
         </Link>
 
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -148,14 +128,13 @@ export default async function PedidoDetallePage({ params }: { params: Promise<{ 
               <p className="mt-1.5 text-xs text-ink/70">
                 Escríbeme mencionando la referencia {order.ref} y lo miramos.
               </p>
-              <Link href="/contacto" className="mt-3 inline-block rounded-full bg-white px-4 py-2 text-xs font-medium">
+              <Link href="/cuenta/mensajes" className="mt-3 inline-block rounded-full bg-white px-4 py-2 text-xs font-medium">
                 Contactar
               </Link>
             </div>
           </aside>
         </div>
       </section>
-      <FooterWithSettings />
     </>
   );
 }

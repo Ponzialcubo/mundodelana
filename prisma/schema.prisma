@@ -35,7 +35,8 @@ model Customer {
   googleId        String? @unique
   newsletterOptIn Boolean @default(true)
 
-  orders Order[]
+  orders   Order[]
+  messages ContactMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -292,6 +293,17 @@ model ContactMessage {
   contact   String // email o teléfono
   message   String
   createdAt DateTime @default(now())
+
+  // Set when the sender was signed in, so it shows in their account.
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerId String?
+
+  readAt    DateTime? // opened by the owner in the admin inbox
+  reply     String? // owner's answer, shown in the customer's account
+  repliedAt DateTime?
+  replySeenAt DateTime? // the customer opened Mensajes after the reply
+
+  @@index([customerId])
 }
 
 model SiteSettings {
@@ -306,6 +318,9 @@ model SiteSettings {
 
   instagramUrl String @default("instagram.com/mundodelana16")
   tiktokUrl    String @default("")
+
+  // Words that rotate after "Tejido a mano," in the home banner.
+  heroPhrases String[] @default(["pensado para ti", "para regalar", "con mucho cariño", "a tu medida", "en Galicia"])
 
   aboutPhoto    String?
   aboutHeadline String  @default("Soy Elvira y tejo desde mi taller en Galicia")

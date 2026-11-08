@@ -18,7 +18,7 @@ export default async function AdminDashboardPage() {
     OR: [{ mainImage: null }, { mainImage: "" }, { price: { lte: 0 } }, { publicationStatus: "BORRADOR" as const }],
   };
 
-  const [pendingOrders, productCounts, activeSubs, likesAgg, incomplete, topProducts, incompleteCount] = await Promise.all([
+  const [pendingOrders, productCounts, activeSubs, likesAgg, incomplete, topProducts, incompleteCount, unreadMessages] = await Promise.all([
     prisma.order.findMany({ where: { state: "NUEVO" }, orderBy: { createdAt: "asc" }, take: 5 }),
     prisma.product.groupBy({ by: ["publicationStatus"], _count: true }),
     prisma.subscriber.count({ where: { state: "ACTIVO" } }),
@@ -31,6 +31,7 @@ export default async function AdminDashboardPage() {
       take: 5,
     }),
     prisma.product.count({ where: incompleteWhere }),
+    prisma.contactMessage.count({ where: { readAt: null, reply: null } }),
   ]);
 
   const publishedProducts = productCounts.find((p) => p.publicationStatus === "PUBLICADO")?._count ?? 0;
@@ -63,6 +64,18 @@ export default async function AdminDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {unreadMessages > 0 && (
+        <Link href="/admin/mensajes" className="flex items-center justify-between gap-3 rounded-xl border border-pink/40 bg-admin-accent-soft p-5">
+          <span className="flex flex-col">
+            <span className="font-serif text-lg font-medium">
+              {unreadMessages} mensaje{unreadMessages === 1 ? "" : "s"} sin atender
+            </span>
+            <span className="text-xs text-admin-ink-soft">Desde «Contacto» o desde la cuenta de una clienta.</span>
+          </span>
+          <span className="text-sm font-medium text-admin-link">Ver ›</span>
+        </Link>
+      )}
 
       {pendingOrders.length > 0 ? (
         <div className="flex flex-col gap-3 rounded-xl border border-pink/40 bg-admin-accent-soft p-5 md:p-6">

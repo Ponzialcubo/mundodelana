@@ -135,7 +135,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
         <span className="text-ink">{product.name}</span>
       </div>
 
-      <section className="grid grid-cols-1 gap-6 px-5 pb-8 pt-3 md:grid-cols-2 md:gap-14 md:px-14 md:py-8">
+      <section className="grid grid-cols-1 gap-6 px-5 pb-8 pt-3 md:grid-cols-2 md:gap-10 md:px-14 md:py-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-14 xl:px-20">
         <ProductGallery productName={product.name} items={galleryItems} />
 
         <div className="flex flex-col">

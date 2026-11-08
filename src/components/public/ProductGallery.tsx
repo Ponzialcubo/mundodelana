@@ -86,15 +86,16 @@ export function ProductGallery({ productName, items }: { productName: string; it
         </div>
       )}
 
+      <div className="flex flex-col gap-3 md:flex-row md:items-start">
       {/* Main image: swipeable on touch screens, one slide per item */}
-      <div className="relative -mx-5 md:mx-0">
+      <div className="relative -mx-5 md:mx-0 md:aspect-[4/5] md:h-[clamp(400px,calc(100svh-260px),720px)] md:max-w-full">
         <div
           ref={trackRef}
           onScroll={onScroll}
-          className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] md:rounded-2xl"
+          className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] md:h-full md:rounded-2xl"
         >
           {visible.map((item, i) => (
-            <div key={item.url} className="relative aspect-[4/5] w-full shrink-0 snap-center bg-cream">
+            <div key={item.url} className="relative aspect-[4/5] w-full shrink-0 snap-center bg-cream md:aspect-auto md:h-full">
               {item.mediaType === "video" ? (
                 <LoopVideo src={item.url} poster={item.posterUrl} />
               ) : (
@@ -103,7 +104,7 @@ export function ProductGallery({ productName, items }: { productName: string; it
                     src={item.url}
                     alt={i === 0 ? productName : `${productName} — foto ${i + 1}`}
                     fill
-                    sizes="(min-width: 768px) 45vw, 100vw"
+                    sizes="(min-width: 768px) 560px, 100vw"
                     quality={80}
                     priority={i === 0}
                     className="object-cover"
@@ -122,7 +123,7 @@ export function ProductGallery({ productName, items }: { productName: string; it
       </div>
 
       {visible.length > 1 && (
-        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 py-1 [scrollbar-width:none]">
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 py-1 [scrollbar-width:none] md:order-first md:mx-0 md:max-h-[clamp(400px,calc(100svh-260px),720px)] md:shrink-0 md:flex-col md:overflow-y-auto md:overflow-x-visible md:px-0 md:py-0">
           {visible.map((item, i) => (
             <button
               key={item.url}
@@ -132,7 +133,7 @@ export function ProductGallery({ productName, items }: { productName: string; it
               aria-label={`Ver ${item.mediaType === "video" ? "vídeo" : "foto"} ${i + 1}`}
               aria-current={active === i}
             >
-              <span className="relative block aspect-[4/5] w-[64px] overflow-hidden rounded-lg bg-cream md:w-[80px]">
+              <span className="relative block aspect-[4/5] w-[64px] overflow-hidden rounded-lg bg-cream md:w-[72px]">
               <Image
                 src={item.mediaType === "video" ? item.posterUrl ?? item.url : item.url}
                 alt=""
@@ -149,6 +150,8 @@ export function ProductGallery({ productName, items }: { productName: string; it
           ))}
         </div>
       )}
+
+      </div>
 
       {/* Full-screen viewer: whole photo, never cropped */}
       {zoomed && current?.mediaType === "image" && (

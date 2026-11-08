@@ -3,6 +3,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCustomerSession } from "@/lib/session";
 import { UPLOADS_DIR } from "@/lib/uploads";
 import { randomFilename } from "@/lib/media-processing";
 
@@ -61,6 +62,10 @@ export async function POST(req: Request) {
 
   const ref = await nextRef("ENC");
 
+  // Signed-in customers can follow the order from their account.
+  const customerId = await getCustomerSession();
+  const customer = customerId ? await prisma.customer.findUnique({ where: { id: customerId }, select: { id: true, email: true } }) : null;
+
   const order = await prisma.order.create({
     data: {
       ref,
@@ -70,6 +75,8 @@ export async function POST(req: Request) {
       type: "PERSONALIZADO",
       state: "NUEVO",
       productId: product?.id,
+      customerId: customer?.id,
+      clientEmail: customer?.email,
       referenceImages: photoUrl ? { create: [{ url: photoUrl }] } : undefined,
     },
   });

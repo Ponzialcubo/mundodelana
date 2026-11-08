@@ -4,9 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { ProductCard, type ProductCardData } from "@/components/public/ProductCard";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { YarnBackdrop } from "@/components/public/YarnBackdrop";
+import { HeroBanner } from "@/components/public/HeroBanner";
+import { CampaignBanner } from "@/components/public/CampaignBanner";
+import { PhotoCard } from "@/components/public/PhotoCard";
+import { getSiteSettings } from "@/lib/seo";
 import { HowItWorks } from "@/components/public/HowItWorks";
 import { SEGMENTS } from "@/lib/catalog-segments";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages, heroSlides } from "@/lib/site-images";
 import { deadlinePending, formatMD, getActiveCampaign } from "@/lib/campaigns";
 import type { Prisma } from "@/generated/prisma";
 
@@ -35,11 +39,15 @@ function toCard(p: ProductWithCategories): ProductCardData {
 const focal = (x: number, y: number) => ({ objectPosition: `${x * 100}% ${y * 100}%` });
 
 export default async function HomePage() {
-  const [images, campaign, featured, categories, gallery, testimonials] = await Promise.all([
+  const [{ heroPhrases }, images, campaign, featured, categories, gallery, testimonials] = await Promise.all([
+    getSiteSettings(),
     getSiteImages(),
     getActiveCampaign(),
     prisma.product.findMany({ where: { ...PUBLISHED, featured: true, mainImage: { not: null } }, include: CARD_INCLUDE, take: 8, orderBy: { updatedAt: "desc" } }),
-    prisma.category.findMany({ select: { slug: true, name: true, _count: { select: { products: { where: PUBLISHED } } } } }),
+    prisma.category.findMany({
+      orderBy: { order: "asc" },
+      select: { slug: true, name: true, coverImage: true, coverFocalX: true, coverFocalY: true, _count: { select: { products: { where: PUBLISHED } } } },
+    }),
     prisma.libraryMedia.findMany({ where: { showInGallery: true, mediaType: "IMAGE" }, orderBy: { takenAt: "desc" }, take: 6 }),
     prisma.testimonial.findMany({ where: { visible: true }, orderBy: { order: "asc" }, take: 3 }),
   ]);
@@ -55,49 +63,22 @@ export default async function HomePage() {
 
   const count = new Map(categories.map((c) => [c.slug, c]));
   const segments = SEGMENTS.filter((s) => s.slugs.some((slug) => (count.get(slug)?._count.products ?? 0) > 0));
-  const hero = images.hero;
   const about = images.about;
+  // Segment card photo: the owner's AI background, else the cover of its first category.
+  const segmentPhoto = (s: (typeof SEGMENTS)[number]) => {
+    const own = images[`seg-${s.key}`];
+    if (own) return own;
+    const cat = s.slugs.map((slug) => count.get(slug)).find((c) => c?.coverImage);
+    return cat ? { url: cat.coverImage!, focalX: cat.coverFocalX, focalY: cat.coverFocalY } : null;
+  };
 
   return (
     <>
-      {/* Hero: full-bleed banner, text over the owner's background image (or the yarn backdrop) */}
-      <section className="relative flex min-h-[78svh] items-end overflow-hidden md:min-h-[620px] md:items-center">
-        {hero ? (
-          <Image src={hero.url} alt="" fill priority sizes="100vw" quality={80} className="object-cover" style={focal(hero.focalX, hero.focalY)} />
-        ) : (
-          <YarnBackdrop />
-        )}
-        <div
-          aria-hidden="true"
-          className={hero ? "absolute inset-0 bg-gradient-to-t from-[#3d322e]/80 via-[#3d322e]/25 to-transparent md:bg-gradient-to-r md:from-[#3d322e]/70 md:via-[#3d322e]/30" : ""}
-        />
-        <div className={`relative flex w-full max-w-2xl flex-col gap-5 px-5 pb-10 pt-24 md:px-14 md:py-20 ${hero ? "text-white" : "text-ink"}`}>
-          {campaign && (
-            <Link href={`/fechas/${campaign.slug}`} className="w-fit rounded-full px-3.5 py-1.5 text-[12.5px] font-medium text-ink" style={{ background: campaign.accent }}>
-              {campaign.name} · ver regalos ›
-            </Link>
-          )}
-          <h1 className="font-serif text-[40px] font-normal leading-[1.05] tracking-[-.015em] md:text-[64px]">
-            Tejido a mano,
-            <br />
-            <em className={hero ? "text-pink" : "text-pink-deep"}>pensado para ti</em>
-          </h1>
-          <p className={`max-w-md text-[16px] font-light leading-relaxed md:text-[18px] ${hero ? "text-white/90" : "text-ink/80"}`}>
-            Amigurumis, ropita de bebé, flores que no se marchitan y regalos de crochet hechos por encargo en Galicia.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href="/catalogo" className="rounded-full bg-pink px-7 py-4 text-center text-[15.5px] font-medium text-ink">
-              Ver la tienda
-            </Link>
-            <Link
-              href="/encargo"
-              className={`rounded-full px-7 py-4 text-center text-[15.5px] font-medium ${hero ? "border border-white/60 text-white backdrop-blur-sm" : "border border-ink/22 bg-white/70 text-ink"}`}
-            >
-              Encargar algo personalizado
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroBanner
+        slides={heroSlides(images)}
+        phrases={heroPhrases}
+        campaign={campaign ? { name: campaign.name, slug: campaign.slug, accent: campaign.accent } : null}
+      />
 
       {/* Trust strip */}
       <section className="grid grid-cols-3 border-b border-ink/8 bg-white text-center">
@@ -116,24 +97,13 @@ export default async function HomePage() {
       {/* Running special date */}
       {campaign && (
         <section className="px-5 py-12 md:px-14 md:py-16">
-          <Link href={`/fechas/${campaign.slug}`} className="relative mb-6 flex min-h-[220px] items-end overflow-hidden rounded-3xl md:min-h-[300px]">
-            {campaign.bannerImage ? (
-              <Image src={campaign.bannerImage} alt="" fill sizes="(min-width: 768px) 90vw, 100vw" className="object-cover" style={focal(campaign.bannerFocalX, campaign.bannerFocalY)} />
-            ) : (
-              <span className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${campaign.accent}, #F7F1EA)` }} />
-            )}
-            <span aria-hidden="true" className={campaign.bannerImage ? "absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" : ""} />
-            <span className={`relative flex flex-col gap-2 p-6 md:p-10 ${campaign.bannerImage ? "text-white" : "text-ink"}`}>
-              <span className="text-[11.5px] uppercase tracking-[.16em] opacity-80">Fecha especial</span>
-              <span className="font-serif text-[30px] leading-tight md:text-[44px]">{campaign.bannerTitle}</span>
-              <span className="max-w-lg text-[15px] opacity-90">{campaign.bannerText}</span>
-              {deadlinePending(campaign) && (
-                <span className="mt-1 w-fit rounded-full bg-white/90 px-3.5 py-1.5 text-[13px] font-medium text-ink">
-                  Encarga antes del {formatMD(campaign.deadlineMD!)}
-                </span>
-              )}
-            </span>
-          </Link>
+          <div className="mb-7">
+            <CampaignBanner
+              campaign={campaign}
+              photos={campaignProducts.map((p) => ({ url: p.mainImage!, focalX: p.mainImageFocalX, focalY: p.mainImageFocalY }))}
+              deadline={deadlinePending(campaign) ? formatMD(campaign.deadlineMD!) : null}
+            />
+          </div>
           {campaignProducts.length > 0 && (
             <>
               <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 md:gap-x-5">
@@ -149,21 +119,27 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* What are you looking for: typographic segment cards */}
+      {/* What are you looking for: one photo card per shop block */}
       <section className="px-5 py-12 md:px-14 md:py-16">
-        <h2 className="mb-5 font-serif text-[28px] font-normal md:mb-7 md:text-[36px]">¿Qué estás buscando?</h2>
+        <div className="mb-5 flex items-end justify-between gap-4 md:mb-7">
+          <h2 className="font-serif text-[28px] font-normal md:text-[36px]">¿Qué estás buscando?</h2>
+          <Link href="/catalogo" className="shrink-0 border-b border-pink pb-0.5 text-[13.5px] font-medium">
+            Ir a la tienda
+          </Link>
+        </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-4">
           {segments.map((s, i) => (
-            <Link
+            <PhotoCard
               key={s.key}
               href={`/catalogo#${s.key}`}
-              className={`relative flex min-h-[150px] flex-col justify-end overflow-hidden rounded-2xl p-4 md:min-h-[210px] md:p-5 ${i === 0 ? "col-span-2 md:col-span-1" : ""}`}
-              style={{ background: s.tint, color: s.ink }}
-            >
-              <span aria-hidden="true" className="absolute -right-6 -top-6 h-24 w-24 rounded-full border-[10px] opacity-25" style={{ borderColor: s.ink }} />
-              <span className="font-serif text-[20px] leading-tight md:text-[22px]">{s.title}</span>
-              <span className="mt-1 text-[12.5px] opacity-80">{s.subtitle}</span>
-            </Link>
+              photo={segmentPhoto(s)}
+              title={s.title}
+              subtitle={s.subtitle}
+              tint={s.tint}
+              ink={s.ink}
+              className={i === 0 ? "col-span-2 aspect-[16/10] md:col-span-1 md:aspect-[3/4]" : "aspect-[3/4]"}
+              sizes={i === 0 ? "(min-width: 768px) 20vw, 100vw" : "(min-width: 768px) 20vw, 50vw"}
+            />
           ))}
         </div>
       </section>

@@ -7,6 +7,9 @@ import { ProductCard } from "@/components/public/ProductCard";
 import { SearchLauncher } from "@/components/public/SearchLauncher";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { SEGMENTS } from "@/lib/catalog-segments";
+import { getSiteImages } from "@/lib/site-images";
+import { PhotoCard } from "@/components/public/PhotoCard";
+import { CampaignBanner } from "@/components/public/CampaignBanner";
 import { deadlinePending, formatMD, getActiveCampaign } from "@/lib/campaigns";
 
 const PUBLISHED = { publicationStatus: "PUBLICADO" } as const;
@@ -32,7 +35,7 @@ export default async function CatalogoPage({ searchParams }: { searchParams: Pro
 
   if (q) return <SearchResults q={q} />;
 
-  const [categories, brands, campaign, total] = await Promise.all([
+  const [categories, brands, campaign, total, images, latest] = await Promise.all([
     prisma.category.findMany({
       orderBy: { order: "asc" },
       select: { name: true, slug: true, coverImage: true, coverFocalX: true, coverFocalY: true, _count: { select: { products: { where: PUBLISHED } } } },
@@ -40,73 +43,145 @@ export default async function CatalogoPage({ searchParams }: { searchParams: Pro
     prisma.brand.findMany({ orderBy: { order: "asc" }, select: { name: true, slug: true, _count: { select: { products: { where: PUBLISHED } } } } }),
     getActiveCampaign(),
     prisma.product.count({ where: PUBLISHED }),
+    getSiteImages(),
+    prisma.product.findMany({
+      where: { ...PUBLISHED, mainImage: { not: null } },
+      include: { categories: { orderBy: { order: "asc" } } },
+      orderBy: { createdAt: "desc" },
+      take: 4,
+    }),
   ]);
 
+  const campaignPhotos = campaign
+    ? await prisma.product.findMany({
+        where: { ...PUBLISHED, campaigns: { some: { id: campaign.id } }, mainImage: { not: null } },
+        orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+        select: { mainImage: true, mainImageFocalX: true, mainImageFocalY: true },
+        take: 3,
+      })
+    : [];
+
   const bySlug = new Map(categories.filter((c) => c._count.products > 0).map((c) => [c.slug, c]));
-  const segments = SEGMENTS.map((s) => ({ ...s, cats: s.slugs.map((slug) => bySlug.get(slug)).filter((c) => c !== undefined) })).filter((s) => s.cats.length > 0);
+  const segments = SEGMENTS.map((s) => {
+    const cats = s.slugs.map((slug) => bySlug.get(slug)).filter((c) => c !== undefined);
+    return { ...s, cats, pieces: cats.reduce((n, c) => n + c._count.products, 0), photo: images[`seg-${s.key}`] ?? null };
+  }).filter((s) => s.cats.length > 0);
   const liveBrands = brands.filter((b) => b._count.products > 0);
+  const cover = (c: (typeof categories)[number]) => (c.coverImage ? { url: c.coverImage, focalX: c.coverFocalX, focalY: c.coverFocalY } : null);
 
   return (
     <>
-      <section className="flex flex-col gap-4 px-5 pb-6 pt-7 md:px-14 md:pb-8 md:pt-12">
-        <h1 className="font-serif text-[34px] font-normal leading-tight md:text-[46px]">Tienda</h1>
-        <p className="-mt-2 max-w-xl text-[15px] font-light text-ink/75">Todo se teje a mano y por encargo, en los colores que prefieras.</p>
-        <SearchLauncher />
+      <section className="relative overflow-hidden border-b border-ink/8 bg-cream">
+        <div className="relative flex flex-col gap-4 px-5 pb-5 pt-7 md:px-14 md:pb-7 md:pt-12">
+          <span className="text-[11.5px] font-medium uppercase tracking-[.18em] text-ink-soft">{total} piezas tejidas a mano</span>
+          <h1 className="-mt-2 font-serif text-[36px] font-normal leading-tight md:text-[52px]">La tienda</h1>
+          <p className="-mt-2 max-w-xl text-[15px] font-light text-ink/75 md:text-[16.5px]">Todo se teje a mano y por encargo, en los colores que prefieras.</p>
+          <div className="md:max-w-md">
+            <SearchLauncher />
+          </div>
+          {/* Quick jump to each block: saves scrolling on mobile */}
+          <nav aria-label="Secciones de la tienda" className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0">
+            {segments.map((s) => (
+              <a key={s.key} href={`#${s.key}`} className="shrink-0 rounded-full border border-ink/12 bg-white px-4 py-2 text-[13.5px] font-medium">
+                {s.title}
+              </a>
+            ))}
+            <Link href="/catalogo/todo" className="shrink-0 rounded-full bg-ink px-4 py-2 text-[13.5px] font-medium text-surface">
+              Ver todo
+            </Link>
+          </nav>
+        </div>
       </section>
 
       {campaign && (
-        <section className="px-5 pb-8 md:px-14">
-          <Link href={`/fechas/${campaign.slug}`} className="flex items-center justify-between gap-4 rounded-2xl px-5 py-5" style={{ background: campaign.accent }}>
-            <span className="flex flex-col">
-              <span className="text-[11.5px] uppercase tracking-[.16em] text-ink/70">Fecha especial</span>
-              <span className="font-serif text-[22px]">{campaign.name}</span>
-              {deadlinePending(campaign) && <span className="text-[13px] text-ink/80">Encarga antes del {formatMD(campaign.deadlineMD!)}</span>}
-            </span>
-            <span className="text-2xl text-ink/60">›</span>
-          </Link>
+        <section className="px-5 pt-8 md:px-14 md:pt-12">
+          <CampaignBanner
+            compact
+            campaign={campaign}
+            photos={campaignPhotos.map((p) => ({ url: p.mainImage!, focalX: p.mainImageFocalX, focalY: p.mainImageFocalY }))}
+            deadline={deadlinePending(campaign) ? formatMD(campaign.deadlineMD!) : null}
+          />
         </section>
       )}
 
-      <div className="flex flex-col gap-10 px-5 pb-10 md:gap-14 md:px-14">
+      <div className="flex flex-col gap-11 px-5 py-10 md:gap-16 md:px-14 md:py-14">
         {segments.map((s) => (
-          <section key={s.key} id={s.key} className="scroll-mt-24">
-            <div className="mb-3.5 flex flex-col">
-              <h2 className="font-serif text-[24px] font-normal md:text-[30px]">{s.title}</h2>
-              <span className="text-[13.5px] text-ink/60">{s.subtitle}</span>
+          <section key={s.key} id={s.key} className="scroll-mt-24 md:flex md:h-[380px] md:gap-4">
+            {/* Block intro: a heading on mobile, a full panel on desktop */}
+            <div
+              className="relative mb-3.5 flex flex-col justify-end overflow-hidden md:mb-0 md:w-[26%] md:shrink-0 md:rounded-3xl md:p-7"
+              style={{ color: s.ink }}
+            >
+              <span aria-hidden="true" className="absolute inset-0 hidden md:block" style={{ background: s.tint }} />
+              {s.photo && (
+                <>
+                  <Image src={s.photo.url} alt="" fill sizes="26vw" className="hidden object-cover md:block" style={{ objectPosition: `${s.photo.focalX * 100}% ${s.photo.focalY * 100}%` }} />
+                  <span aria-hidden="true" className="absolute inset-0 hidden bg-gradient-to-t from-[#2f2623]/80 to-transparent md:block" />
+                </>
+              )}
+              <span className={`relative flex flex-col gap-1 ${s.photo ? "md:text-white" : ""}`}>
+                <span className="hidden text-[11px] font-medium uppercase tracking-[.16em] opacity-75 md:block">{s.pieces} piezas</span>
+                <h2 className="font-serif text-[25px] font-normal leading-tight text-ink md:text-[32px] md:text-inherit">{s.title}</h2>
+                <span className="text-[13.5px] text-ink/60 md:text-[14px] md:text-inherit md:opacity-85">{s.subtitle}</span>
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              {s.cats.map((c) => (
-                <Link
+
+            <div className={`grid gap-3 md:flex md:flex-1 md:gap-4 ${s.cats.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+              {s.cats.map((c, i) => (
+                <PhotoCard
                   key={c.slug}
                   href={`/categoria/${c.slug}`}
-                  className={`relative flex min-h-[132px] flex-col justify-between overflow-hidden rounded-2xl p-4 md:min-h-[170px] md:p-5 ${s.cats.length === 1 ? "col-span-2 md:col-span-1" : ""}`}
-                  style={{ background: s.tint, color: s.ink }}
-                >
-                  <span className="relative z-10 flex flex-col">
-                    <span className="font-serif text-[19px] leading-tight md:text-[24px]">{c.name}</span>
-                    <span className="text-[12.5px] opacity-75">{c._count.products} piezas</span>
-                  </span>
-                  <span className="relative z-10 text-[13px] font-medium">Ver ›</span>
-                  {c.coverImage && (
-                    <span className="absolute -bottom-5 -right-5 h-[92px] w-[92px] overflow-hidden rounded-full border-4 border-white/70 md:h-[120px] md:w-[120px]">
-                      <Image src={c.coverImage} alt="" fill sizes="120px" className="object-cover" style={{ objectPosition: `${c.coverFocalX * 100}% ${c.coverFocalY * 100}%` }} />
-                    </span>
-                  )}
-                </Link>
+                  photo={cover(c)}
+                  title={c.name}
+                  subtitle={`${c._count.products} piezas`}
+                  tint={s.tint}
+                  ink={s.ink}
+                  large={s.cats.length === 1}
+                  sizes={s.cats.length === 1 ? "(min-width: 768px) 70vw, 100vw" : "(min-width: 768px) 25vw, 50vw"}
+                  className={`md:h-full md:flex-1 ${
+                    s.cats.length === 1 ? "aspect-[4/3] md:aspect-auto" : s.cats.length === 3 && i === 0 ? "col-span-2 aspect-[16/10] md:aspect-auto" : "aspect-[3/4] md:aspect-auto"
+                  }`}
+                />
               ))}
             </div>
           </section>
         ))}
 
-        {liveBrands.length > 0 && (
+        {latest.length > 0 && (
           <section>
-            <div className="mb-3.5 flex flex-col">
-              <h2 className="font-serif text-[24px] font-normal md:text-[30px]">Personajes y colecciones</h2>
+            <div className="mb-4 flex items-end justify-between gap-4 md:mb-6">
+              <div className="flex flex-col">
+                <h2 className="font-serif text-[25px] font-normal md:text-[32px]">Recién salidas del taller</h2>
+                <span className="text-[13.5px] text-ink/60">Las últimas piezas que he subido.</span>
+              </div>
+              <Link href="/catalogo/todo" className="shrink-0 border-b border-pink pb-0.5 text-[13.5px] font-medium">
+                Ver todo
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 md:gap-x-5">
+              {latest.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  showCategory
+                  product={{
+                    slug: p.slug, name: p.name, price: p.price.toString(), priceType: p.priceType, pieceStatus: p.pieceStatus, likes: p.likes,
+                    categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY,
+                  }}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {liveBrands.length > 0 && (
+          <section className="flex flex-col gap-4 rounded-3xl bg-white p-6 md:flex-row md:items-center md:justify-between md:p-9">
+            <div className="flex flex-col">
+              <h2 className="font-serif text-[23px] font-normal md:text-[28px]">Personajes y colecciones</h2>
               <span className="text-[13.5px] text-ink/60">Y si no está tu personaje, te lo tejo por encargo.</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {liveBrands.map((b) => (
-                <Link key={b.slug} href={`/marca/${b.slug}`} className="rounded-full border border-ink/14 bg-white px-4 py-2.5 text-[14.5px]">
+                <Link key={b.slug} href={`/marca/${b.slug}`} className="rounded-full border border-ink/14 bg-surface px-4 py-2.5 text-[14.5px]">
                   {b.name} <span className="text-ink/45">· {b._count.products}</span>
                 </Link>
               ))}
@@ -114,9 +189,18 @@ export default async function CatalogoPage({ searchParams }: { searchParams: Pro
           </section>
         )}
 
-        <Link href="/catalogo/todo" className="rounded-full bg-ink py-4 text-center text-[15.5px] font-medium text-surface md:mx-auto md:w-96">
-          Ver todas las piezas ({total})
-        </Link>
+        <div className="flex flex-col items-center gap-3 rounded-3xl bg-pink/30 px-6 py-9 text-center md:py-12">
+          <span className="font-serif text-[24px] leading-tight md:text-[30px]">¿No encuentras lo que buscas?</span>
+          <span className="max-w-md text-[14.5px] font-light text-ink/75">Casi todo se puede tejer a medida. Cuéntame tu idea y te digo precio y plazo.</span>
+          <div className="mt-1 flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row">
+            <Link href="/catalogo/todo" className="rounded-full bg-ink px-6 py-3.5 text-[14.5px] font-medium text-surface">
+              Ver las {total} piezas
+            </Link>
+            <Link href="/encargo" className="rounded-full border border-ink/20 bg-white px-6 py-3.5 text-[14.5px] font-medium">
+              Pedir a medida
+            </Link>
+          </div>
+        </div>
       </div>
 
       <FooterWithSettings />

@@ -6,7 +6,7 @@ import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
 import { FocalPointEditor } from "@/components/admin/FocalPointEditor";
 import { ImproveImageDialog } from "@/components/admin/ImproveImageDialog";
-import { buildProductPhotoPrompt } from "@/lib/image-edit-prompt";
+import { buildCategoryCoverPrompt } from "@/lib/image-edit-prompt";
 
 export type CategoryFormData = {
   id?: string;
@@ -234,8 +234,8 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
                 </button>
                 {improving && (
                   <ImproveImageDialog
-                    title="Mejorar la portada"
-                    prompt={buildProductPhotoPrompt({ name: `portada de la categoría «${data.name}»`, description: data.description })}
+                    title="Imagen de la tarjeta"
+                    prompt={buildCategoryCoverPrompt({ name: data.name, description: data.description })}
                     originalUrl={data.coverImage}
                     onUploaded={(url) => {
                       set("coverImage", url);

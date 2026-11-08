@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { useState } from "react";
 
-export function OrderForm({ phone, product }: { phone: string; product?: { slug: string; name: string } | null }) {
+export function OrderForm({
+  phone,
+  product,
+  customer,
+}: {
+  phone: string;
+  product?: { slug: string; name: string } | null;
+  /** Signed-in customer: fields prefilled, and the order shows up in their account. */
+  customer?: { name: string; phone: string | null } | null;
+}) {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -114,6 +123,7 @@ export function OrderForm({ phone, product }: { phone: string; product?: { slug:
             <span className="text-[13px] font-medium text-ink/80">Tu nombre</span>
             <input
               name="name"
+              defaultValue={customer?.name}
               required
               placeholder="María García"
               className="rounded-lg border border-ink/16 bg-white px-4 py-3 text-sm outline-none"
@@ -123,6 +133,8 @@ export function OrderForm({ phone, product }: { phone: string; product?: { slug:
             <span className="text-[13px] font-medium text-ink/80">Teléfono (WhatsApp)</span>
             <input
               name="phone"
+              type="tel"
+              defaultValue={customer?.phone ?? undefined}
               required
               placeholder="600 000 000"
               className="rounded-lg border border-ink/16 bg-white px-4 py-3 text-sm outline-none"
