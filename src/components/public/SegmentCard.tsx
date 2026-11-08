@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { frameStyle } from "@/lib/framing";
 import Image from "next/image";
 
-type Photo = { url: string; focalX: number; focalY: number } | null | undefined;
+type Photo = { url: string; focalX: number; focalY: number; zoom?: number } | null | undefined;
 type Category = { name: string; slug: string; count: number; cover: Photo };
 
-const pos = (p: NonNullable<Photo>) => ({ objectPosition: `${p.focalX * 100}% ${p.focalY * 100}%` });
+const pos = (p: NonNullable<Photo>) => frameStyle(p);
 
 /**
  * One shop block (Muñecos, Bebé…): its photo (4:3) with the title under it

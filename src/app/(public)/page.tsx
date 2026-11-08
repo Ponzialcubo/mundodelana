@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { frameStyle } from "@/lib/framing";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { ProductCard, type ProductCardData } from "@/components/public/ProductCard";
@@ -8,6 +9,7 @@ import { HeroBanner } from "@/components/public/HeroBanner";
 import { CampaignBanner } from "@/components/public/CampaignBanner";
 import { SegmentCard } from "@/components/public/SegmentCard";
 import { getSiteSettings } from "@/lib/seo";
+import { getSiteTexts } from "@/lib/site-texts-server";
 import { HowItWorks } from "@/components/public/HowItWorks";
 import { SEGMENTS } from "@/lib/catalog-segments";
 import { getSiteImages, heroSlides } from "@/lib/site-images";
@@ -32,21 +34,21 @@ function toCard(p: ProductWithCategories): ProductCardData {
     categoryName: p.categories[0]?.name,
     mainImage: p.mainImage,
     mainImageFocalX: p.mainImageFocalX,
-    mainImageFocalY: p.mainImageFocalY,
+    mainImageFocalY: p.mainImageFocalY, mainImageZoom: p.mainImageZoom,
   };
 }
 
-const focal = (x: number, y: number) => ({ objectPosition: `${x * 100}% ${y * 100}%` });
 
 export default async function HomePage() {
-  const [{ heroPhrases }, images, campaign, featured, categories, gallery, testimonials] = await Promise.all([
+  const [{ heroPhrases }, texts, images, campaign, featured, categories, gallery, testimonials] = await Promise.all([
     getSiteSettings(),
+    getSiteTexts(),
     getSiteImages(),
     getActiveCampaign(),
     prisma.product.findMany({ where: { ...PUBLISHED, featured: true, mainImage: { not: null } }, include: CARD_INCLUDE, take: 8, orderBy: { updatedAt: "desc" } }),
     prisma.category.findMany({
       orderBy: { order: "asc" },
-      select: { slug: true, name: true, coverImage: true, coverFocalX: true, coverFocalY: true, _count: { select: { products: { where: PUBLISHED } } } },
+      select: { slug: true, name: true, coverImage: true, coverFocalX: true, coverFocalY: true, coverZoom: true, _count: { select: { products: { where: PUBLISHED } } } },
     }),
     prisma.libraryMedia.findMany({ where: { showInGallery: true, mediaType: "IMAGE" }, orderBy: { takenAt: "desc" }, take: 6 }),
     prisma.testimonial.findMany({ where: { visible: true }, orderBy: { order: "asc" }, take: 3 }),
@@ -69,7 +71,7 @@ export default async function HomePage() {
     const own = images[`seg-${s.key}`];
     if (own) return own;
     const cat = s.slugs.map((slug) => count.get(slug)).find((c) => c?.coverImage);
-    return cat ? { url: cat.coverImage!, focalX: cat.coverFocalX, focalY: cat.coverFocalY } : null;
+    return cat ? { url: cat.coverImage!, focalX: cat.coverFocalX, focalY: cat.coverFocalY, zoom: cat.coverZoom } : null;
   };
 
   return (
@@ -77,6 +79,7 @@ export default async function HomePage() {
       <HeroBanner
         slides={heroSlides(images)}
         phrases={heroPhrases}
+        text={texts["home.heroText"]}
         campaign={campaign ? { name: campaign.name, slug: campaign.slug, accent: campaign.accent } : null}
       />
 
@@ -177,16 +180,16 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 items-center gap-6 overflow-hidden rounded-[28px] bg-cream p-4 md:grid-cols-[minmax(0,380px)_1fr] md:gap-12 md:p-6">
           <div className="relative aspect-[4/3] overflow-hidden rounded-3xl sm:aspect-[4/5]">
             {about ? (
-              <Image src={about.url} alt="Elvira tejiendo en su taller" fill sizes="(min-width: 768px) 380px, 100vw" className="object-cover" style={focal(about.focalX, about.focalY)} />
+              <Image src={about.url} alt="Elvira tejiendo en su taller" fill sizes="(min-width: 768px) 380px, 100vw" className="object-cover" style={frameStyle(about)} />
             ) : (
               <YarnBackdrop />
             )}
           </div>
           <div className="flex max-w-lg flex-col gap-3 px-2 pb-4 md:px-0 md:pb-0">
             <span className="text-[11.5px] font-medium uppercase tracking-[.2em] text-ink-soft">Sobre mí</span>
-            <h2 className="font-serif text-[28px] font-normal leading-tight md:text-[38px]">Soy Elvira, y cada pieza pasa por mis manos</h2>
+            <h2 className="font-serif text-[28px] font-normal leading-tight md:text-[38px]">{texts["home.aboutTitle"]}</h2>
             <p className="text-[15.5px] font-light leading-relaxed text-ink/78">
-              Empecé tejiendo amigurumis para mi hijo y hoy tejo encargos para toda España desde mi taller en Galicia.
+              {texts["home.aboutText"]}
             </p>
             <Link href="/sobre-mi" className="mt-1 w-fit rounded-full bg-ink px-6 py-3 text-[14.5px] font-medium text-surface">
               Conóceme

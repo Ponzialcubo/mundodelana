@@ -27,9 +27,9 @@ export default async function AdminFechaPage({ params }: { params: Promise<{ id:
         deadlineMD: campaign.deadlineMD ?? "",
         bannerTitle: campaign.bannerTitle,
         bannerText: campaign.bannerText,
-        banner: campaign.bannerImage ? { url: campaign.bannerImage, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY } : null,
+        banner: campaign.bannerImage ? { url: campaign.bannerImage, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY, zoom: campaign.bannerZoom } : null,
         bannerMobile: campaign.bannerImageMobile
-          ? { url: campaign.bannerImageMobile, focalX: campaign.bannerMobileFocalX, focalY: campaign.bannerMobileFocalY }
+          ? { url: campaign.bannerImageMobile, focalX: campaign.bannerMobileFocalX, focalY: campaign.bannerMobileFocalY, zoom: campaign.bannerMobileZoom }
           : null,
         accent: campaign.accent,
         productIds: campaign.products.map((p) => p.id),

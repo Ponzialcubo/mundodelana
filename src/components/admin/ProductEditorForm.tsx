@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
-import { FocalPointEditor } from "@/components/admin/FocalPointEditor";
+import { FramingEditor } from "@/components/admin/FramingEditor";
+import { FRAMES, frameStyle } from "@/lib/framing";
 import { ImproveImageDialog } from "@/components/admin/ImproveImageDialog";
 import { buildProductPhotoPrompt } from "@/lib/image-edit-prompt";
 
@@ -17,6 +19,7 @@ export type ProductImageData = {
   posterUrl?: string | null;
   focalX: number;
   focalY: number;
+  zoom: number;
 };
 
 export type ProductFormData = {
@@ -41,13 +44,14 @@ export type ProductFormData = {
   mainImage: string;
   mainImageFocalX: number;
   mainImageFocalY: number;
+  mainImageZoom: number;
   images: ProductImageData[];
 };
 
 // The form edits everything except media through this shape; media lives in a
 // single ordered list (see `media` state) and is split back into
 // mainImage + images only when saving.
-type FormFields = Omit<ProductFormData, "mainImage" | "mainImageFocalX" | "mainImageFocalY" | "images">;
+type FormFields = Omit<ProductFormData, "mainImage" | "mainImageFocalX" | "mainImageFocalY" | "mainImageZoom" | "images">;
 
 const EMPTY: ProductFormData = {
   name: "",
@@ -70,6 +74,7 @@ const EMPTY: ProductFormData = {
   mainImage: "",
   mainImageFocalX: 0.5,
   mainImageFocalY: 0.5,
+  mainImageZoom: 1,
   images: [],
 };
 
@@ -98,7 +103,7 @@ async function uploadMedia(file: File): Promise<UploadResult> {
 
 function toMediaList(data: ProductFormData): ProductImageData[] {
   const cover: ProductImageData[] = data.mainImage
-    ? [{ url: data.mainImage, mediaType: "IMAGE", focalX: data.mainImageFocalX, focalY: data.mainImageFocalY }]
+    ? [{ url: data.mainImage, mediaType: "IMAGE", focalX: data.mainImageFocalX, focalY: data.mainImageFocalY, zoom: data.mainImageZoom }]
     : [];
   return [...cover, ...data.images];
 }
@@ -147,8 +152,8 @@ export function ProductEditorForm({
   const router = useRouter();
   const isEdit = Boolean(initial?.id);
   const [data, setData] = useState<FormFields>(() => {
-    const { mainImage, mainImageFocalX, mainImageFocalY, images, ...fields } = initial ?? EMPTY;
-    void [mainImage, mainImageFocalX, mainImageFocalY, images]; // media is held in `media` state instead
+    const { mainImage, mainImageFocalX, mainImageFocalY, mainImageZoom, images, ...fields } = initial ?? EMPTY;
+    void [mainImage, mainImageFocalX, mainImageFocalY, mainImageZoom, images]; // media is held in `media` state instead
     return fields;
   });
   const [media, setMedia] = useState<ProductImageData[]>(() => toMediaList(initial ?? EMPTY));
@@ -157,7 +162,7 @@ export function ProductEditorForm({
   const [error, setError] = useState("");
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [autofilling, setAutofilling] = useState(false);
-  const [framing, setFraming] = useState<string | null>(null); // url of the photo being framed
+  const [framingUrl, setFramingUrl] = useState<string | null>(null); // url of the photo being framed
   const [improving, setImproving] = useState<string | null>(null); // url of the photo being improved with AI
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -208,6 +213,7 @@ export function ProductEditorForm({
             posterUrl: u.posterUrl,
             focalX: 0.5,
             focalY: 0.5,
+            zoom: 1,
           },
         ]);
       } catch {
@@ -224,8 +230,8 @@ export function ProductEditorForm({
     setMedia((m) => m.filter((i) => i.url !== url));
   }
 
-  function setFocal(url: string, focalX: number, focalY: number) {
-    setMedia((m) => m.map((i) => (i.url === url ? { ...i, focalX, focalY } : i)));
+  function setFraming(url: string, framing: { focalX: number; focalY: number; zoom: number }) {
+    setMedia((m) => m.map((i) => (i.url === url ? { ...i, ...framing } : i)));
   }
 
   function moveMedia(index: number, target: number) {
@@ -289,6 +295,7 @@ export function ProductEditorForm({
       mainImage: cover?.url ?? "",
       mainImageFocalX: cover?.focalX ?? 0.5,
       mainImageFocalY: cover?.focalY ?? 0.5,
+      mainImageZoom: cover?.zoom ?? 1,
       images: media.filter((_, i) => i !== coverIndex),
     };
     try {
@@ -314,7 +321,7 @@ export function ProductEditorForm({
         type="button"
         onClick={() => save("BORRADOR")}
         disabled={loading || uploading || autofilling}
-        className="flex-1 rounded-full border border-admin-ink/16 bg-white px-4 py-2.5 text-sm font-medium disabled:opacity-60 md:flex-none"
+        className="flex-1 rounded-full border border-admin-ink/16 bg-white px-4 py-2.5 text-sm font-medium disabled:opacity-60"
       >
         Guardar borrador
       </button>
@@ -322,7 +329,7 @@ export function ProductEditorForm({
         type="button"
         onClick={() => save("PUBLICADO")}
         disabled={loading || uploading || autofilling}
-        className="flex-1 rounded-full bg-pink px-4 py-2.5 text-sm font-medium disabled:opacity-60 md:flex-none"
+        className="flex-1 rounded-full bg-pink px-4 py-2.5 text-sm font-medium disabled:opacity-60"
       >
         {loading ? "Guardando…" : data.publicationStatus === "PUBLICADO" ? "Guardar y publicar" : "Publicar"}
       </button>
@@ -330,28 +337,31 @@ export function ProductEditorForm({
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 p-5 md:p-9">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 p-5 md:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col">
-          <h1 className="font-serif text-2xl font-normal">{isEdit ? "Editar producto" : "Nuevo producto"}</h1>
-          {isEdit && (
-            <span className="text-xs text-admin-ink-soft">
-              {{ PUBLICADO: "Publicado en la tienda", BORRADOR: "Borrador · no se ve en la tienda", ARCHIVADO: "Archivado" }[data.publicationStatus]}
-            </span>
-          )}
+        <div className="flex flex-col gap-1">
+          <Link href="/admin/productos" className="text-xs text-admin-ink-soft">‹ Productos</Link>
+          <h1 className="font-serif text-2xl font-normal">{isEdit ? data.name || "Editar producto" : "Nuevo producto"}</h1>
         </div>
-        <div className="hidden gap-2.5 md:flex">{saveButtons}</div>
+        {isEdit && data.publicationStatus === "PUBLICADO" && (
+          <a href={`/producto/${data.slug}`} target="_blank" rel="noreferrer" className="rounded-full border border-admin-ink/16 bg-white px-4 py-2 text-sm font-medium">
+            Ver en la tienda ↗
+          </a>
+        )}
       </div>
 
       {error && <p className="rounded-lg bg-admin-accent-soft px-4 py-3 text-sm text-admin-danger">{error}</p>}
+
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_330px]">
+      <div className="flex min-w-0 flex-col gap-5">
 
       {/* 1. Photos */}
       <div className={CARD}>
         <div className="flex flex-col gap-0.5">
           <span className="font-serif text-base font-medium">Fotos y vídeos</span>
           <span className="text-xs text-admin-faint">
-            La primera foto es la portada del catálogo. Toca una foto para ajustar qué parte se ve en la tienda, o
-            pulsa «✨ Mejorar» para ponerle un fondo profesional con ChatGPT o Gemini.
+            La primera foto es la portada. Toca una foto para encuadrarla (moverla y acercarla) tal como se verá en la
+            tienda, o pulsa «✨ Mejorar» para ponerle un fondo profesional con ChatGPT o Gemini.
           </span>
         </div>
 
@@ -366,12 +376,12 @@ export function ProductEditorForm({
           }}
         />
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
           {media.map((item, index) => (
             <div key={item.url} className="relative flex flex-col gap-1.5">
               <button
                 type="button"
-                onClick={() => setFraming(item.url)}
+                onClick={() => item.mediaType === "IMAGE" && setFramingUrl(item.url)}
                 className="relative aspect-[4/5] overflow-hidden rounded-lg bg-admin-bg"
                 aria-label="Ajustar encuadre"
               >
@@ -380,7 +390,7 @@ export function ProductEditorForm({
                   src={item.mediaType === "VIDEO" ? item.posterUrl ?? item.url : item.url}
                   alt=""
                   className="h-full w-full object-cover"
-                  style={{ objectPosition: `${item.focalX * 100}% ${item.focalY * 100}%` }}
+                  style={frameStyle(item)}
                 />
                 {item.mediaType === "IMAGE" && (
                   <span className="absolute bottom-1.5 left-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-admin-ink">
@@ -481,6 +491,7 @@ export function ProductEditorForm({
 
       {/* 2. Basics */}
       <div className={CARD}>
+        <span className="font-serif text-base font-medium">Ficha</span>
         <label className="flex flex-col gap-1.5">
           <span className={LABEL}>Nombre</span>
           <input
@@ -524,85 +535,6 @@ export function ProductEditorForm({
             placeholder={"Un material por línea:\nAlgodón 100 %\nRelleno antialérgico"}
             className={INPUT}
           />
-        </label>
-      </div>
-
-      {/* 3. Price */}
-      <div className={CARD}>
-        <span className="font-serif text-base font-medium">Precio</span>
-        <div className="flex rounded-full bg-admin-bg p-1">
-          {(
-            [
-              ["STOCK", "Pieza hecha"],
-              ["PERSONALIZADO", "Por encargo"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => set("priceType", value)}
-              className="flex-1 rounded-full py-2 text-sm font-medium"
-              style={data.priceType === value ? { background: "#fff" } : {}}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <label className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2 rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5">
-            <input
-              type="number"
-              inputMode="decimal"
-              value={data.price}
-              onChange={(e) => set("price", e.target.value)}
-              placeholder="0"
-              className="flex-1 bg-transparent text-sm outline-none"
-            />
-            <span className="text-sm text-admin-faint">€</span>
-          </div>
-          <span className="text-xs text-admin-faint">
-            {data.priceType === "PERSONALIZADO"
-              ? Number(data.price) > 0
-                ? `Se hace a medida. En la tienda aparece como «desde ${data.price} €».`
-                : "Sin precio, en la tienda aparece «Consultar precio»."
-              : Number(data.price) > 0
-                ? "Ya está hecha y lista para enviar. Precio cerrado."
-                : "Sin precio, en la tienda aparece «Consultar precio»."}
-          </span>
-        </label>
-      </div>
-
-      {/* 4. Category + status */}
-      <div className={CARD}>
-        <div className="flex flex-col gap-2">
-          <span className="font-serif text-base font-medium">Categoría</span>
-          <Chips options={categories} selected={data.categoryIds} onToggle={(id) => toggle("categoryIds", id)} />
-          {data.categoryIds.length === 0 && (
-            <span className="text-xs text-admin-faint">Sin categoría no aparecerá en los filtros del catálogo.</span>
-          )}
-        </div>
-        <label className="flex flex-col gap-1.5">
-          <span className={LABEL}>¿Cómo está la pieza?</span>
-          <select
-            value={data.pieceStatus}
-            onChange={(e) => set("pieceStatus", e.target.value as ProductFormData["pieceStatus"])}
-            className={INPUT}
-          >
-            {PIECE_STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2.5 text-sm text-admin-ink/85">
-          <input
-            type="checkbox"
-            checked={data.featured}
-            onChange={(e) => set("featured", e.target.checked)}
-            className="h-4 w-4 accent-pink"
-          />
-          Destacar en la portada de la tienda
         </label>
       </div>
 
@@ -707,6 +639,108 @@ export function ProductEditorForm({
           )}
         </div>
       </details>
+      </div>
+
+      {/* Right column: publishing, price and where it shows, always in view on desktop */}
+      <aside className="flex flex-col gap-5 lg:sticky lg:top-6">
+        <div className={CARD}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-serif text-base font-medium">Publicación</span>
+            <span
+              className="rounded-full px-2.5 py-1 text-[11px] font-medium"
+              style={
+                data.publicationStatus === "PUBLICADO"
+                  ? { background: "#E3EADB", color: "#4F6645" }
+                  : { background: "#F1E4E5", color: "#7A4E52" }
+              }
+            >
+              {{ PUBLICADO: "En la tienda", BORRADOR: "Borrador", ARCHIVADO: "Archivado" }[data.publicationStatus]}
+            </span>
+          </div>
+          <span className="text-xs text-admin-ink-soft">
+            {data.publicationStatus === "PUBLICADO" ? "Los cambios se ven en la tienda al guardar." : "Solo tú lo ves hasta que lo publiques."}
+          </span>
+          <div className="hidden flex-col gap-2 md:flex">{saveButtons}</div>
+        </div>
+      <div className={CARD}>
+        <span className="font-serif text-base font-medium">Precio</span>
+        <div className="flex rounded-full bg-admin-bg p-1">
+          {(
+            [
+              ["STOCK", "Pieza hecha"],
+              ["PERSONALIZADO", "Por encargo"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => set("priceType", value)}
+              className="flex-1 rounded-full py-2 text-sm font-medium"
+              style={data.priceType === value ? { background: "#fff" } : {}}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <label className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5">
+            <input
+              type="number"
+              inputMode="decimal"
+              value={data.price}
+              onChange={(e) => set("price", e.target.value)}
+              placeholder="0"
+              className="flex-1 bg-transparent text-sm outline-none"
+            />
+            <span className="text-sm text-admin-faint">€</span>
+          </div>
+          <span className="text-xs text-admin-faint">
+            {data.priceType === "PERSONALIZADO"
+              ? Number(data.price) > 0
+                ? `Se hace a medida. En la tienda aparece como «desde ${data.price} €».`
+                : "Sin precio, en la tienda aparece «Consultar precio»."
+              : Number(data.price) > 0
+                ? "Ya está hecha y lista para enviar. Precio cerrado."
+                : "Sin precio, en la tienda aparece «Consultar precio»."}
+          </span>
+        </label>
+      </div>
+
+      <div className={CARD}>
+        <div className="flex flex-col gap-2">
+          <span className="font-serif text-base font-medium">Categoría</span>
+          <Chips options={categories} selected={data.categoryIds} onToggle={(id) => toggle("categoryIds", id)} />
+          {data.categoryIds.length === 0 && (
+            <span className="text-xs text-admin-faint">Sin categoría no aparecerá en los filtros del catálogo.</span>
+          )}
+        </div>
+        <label className="flex flex-col gap-1.5">
+          <span className={LABEL}>¿Cómo está la pieza?</span>
+          <select
+            value={data.pieceStatus}
+            onChange={(e) => set("pieceStatus", e.target.value as ProductFormData["pieceStatus"])}
+            className={INPUT}
+          >
+            {PIECE_STATUS_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2.5 text-sm text-admin-ink/85">
+          <input
+            type="checkbox"
+            checked={data.featured}
+            onChange={(e) => set("featured", e.target.checked)}
+            className="h-4 w-4 accent-pink"
+          />
+          Destacar en la portada de la tienda
+        </label>
+      </div>
+
+      </aside>
+      </div>
 
       {improving && (
         <ImproveImageDialog
@@ -714,22 +748,22 @@ export function ProductEditorForm({
           prompt={buildProductPhotoPrompt({ name: data.name || "pieza de crochet", description: data.description })}
           originalUrl={improving}
           onUploaded={(url) =>
-            setMedia((m) => m.map((i) => (i.url === improving ? { ...i, url, focalX: 0.5, focalY: 0.5 } : i)))
+            setMedia((m) => m.map((i) => (i.url === improving ? { ...i, url, focalX: 0.5, focalY: 0.5, zoom: 1 } : i)))
           }
           onClose={() => setImproving(null)}
         />
       )}
 
-      {framing && (() => {
-        const item = media.find((m) => m.url === framing);
+      {framingUrl && (() => {
+        const item = media.find((m) => m.url === framingUrl);
         if (!item || item.mediaType !== "IMAGE") return null;
         return (
-          <FocalPointEditor
+          <FramingEditor
             src={item.url}
-            focalX={item.focalX}
-            focalY={item.focalY}
-            onChange={(x, y) => setFocal(item.url, x, y)}
-            onClose={() => setFraming(null)}
+            value={item}
+            frames={FRAMES.product}
+            onChange={(v) => setFraming(item.url, v)}
+            onClose={() => setFramingUrl(null)}
           />
         );
       })()}

@@ -35,11 +35,12 @@ export async function POST(req: Request) {
       mainImage: body.mainImage || null,
       mainImageFocalX: body.mainImageFocalX ?? 0.5,
       mainImageFocalY: body.mainImageFocalY ?? 0.5,
+      mainImageZoom: body.mainImageZoom ?? 1,
       images: body.images?.length
         ? {
             create: body.images.map(
               (
-                img: { url: string; mediaType?: "IMAGE" | "VIDEO"; posterUrl?: string; focalX: number; focalY: number },
+                img: { url: string; mediaType?: "IMAGE" | "VIDEO"; posterUrl?: string; focalX: number; focalY: number; zoom?: number },
                 order: number
               ) => ({
                 url: img.url,
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
                 posterUrl: img.posterUrl || null,
                 focalX: img.focalX ?? 0.5,
                 focalY: img.focalY ?? 0.5,
+                zoom: img.zoom ?? 1,
                 order,
               })
             ),

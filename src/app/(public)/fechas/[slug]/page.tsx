@@ -40,12 +40,12 @@ export default async function FechaPage({ params }: { params: Promise<{ slug: st
 
   return (
     <>
-      <section className="relative flex aspect-[4/5] max-h-[80svh] w-full items-end overflow-hidden sm:aspect-[2/1] md:aspect-[3/1] md:max-h-[560px] md:items-center">
+      <section className="relative flex aspect-[4/5] w-full items-end overflow-hidden md:aspect-[3/1] md:items-center">
         {image ? (
           <BannerImage
             priority
-            desktop={{ url: image, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY }}
-            mobile={campaign.bannerImageMobile ? { url: campaign.bannerImageMobile, focalX: campaign.bannerMobileFocalX, focalY: campaign.bannerMobileFocalY } : undefined}
+            desktop={{ url: image, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY, zoom: campaign.bannerZoom }}
+            mobile={campaign.bannerImageMobile ? { url: campaign.bannerImageMobile, focalX: campaign.bannerMobileFocalX, focalY: campaign.bannerMobileFocalY, zoom: campaign.bannerMobileZoom } : undefined}
           />
         ) : (
           <span className="absolute inset-0" style={{ background: `linear-gradient(150deg, ${campaign.accent} 0%, #F7F1EA 85%)` }} />
@@ -77,7 +77,7 @@ export default async function FechaPage({ params }: { params: Promise<{ slug: st
                 priority={i < 4}
                 product={{
                   slug: p.slug, name: p.name, price: p.price.toString(), priceType: p.priceType, pieceStatus: p.pieceStatus, likes: p.likes,
-                  categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY,
+                  categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY, mainImageZoom: p.mainImageZoom,
                 }}
               />
             ))}

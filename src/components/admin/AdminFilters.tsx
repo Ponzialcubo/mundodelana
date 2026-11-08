@@ -16,6 +16,7 @@ export function AdminSearch({ defaultValue, basePath }: { defaultValue: string; 
           const params = new URLSearchParams(window.location.search);
           if (e.target.value) params.set("q", e.target.value);
           else params.delete("q");
+          params.delete("pagina");
           router.replace(`${basePath}?${params.toString()}`);
         }}
       />

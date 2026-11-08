@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/public/ProductCard";
 import { SearchLauncher } from "@/components/public/SearchLauncher";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { SEGMENTS } from "@/lib/catalog-segments";
+import { getSiteTexts } from "@/lib/site-texts-server";
 import { getSiteImages } from "@/lib/site-images";
 import { SegmentCard } from "@/components/public/SegmentCard";
 import { CampaignBanner } from "@/components/public/CampaignBanner";
@@ -34,10 +35,10 @@ export default async function CatalogoPage({ searchParams }: { searchParams: Pro
 
   if (q) return <SearchResults q={q} />;
 
-  const [categories, brands, campaign, total, images, latest] = await Promise.all([
+  const [categories, brands, campaign, total, images, latest, texts] = await Promise.all([
     prisma.category.findMany({
       orderBy: { order: "asc" },
-      select: { name: true, slug: true, coverImage: true, coverFocalX: true, coverFocalY: true, _count: { select: { products: { where: PUBLISHED } } } },
+      select: { name: true, slug: true, coverImage: true, coverFocalX: true, coverFocalY: true, coverZoom: true, _count: { select: { products: { where: PUBLISHED } } } },
     }),
     prisma.brand.findMany({ orderBy: { order: "asc" }, select: { name: true, slug: true, _count: { select: { products: { where: PUBLISHED } } } } }),
     getActiveCampaign(),
@@ -49,9 +50,10 @@ export default async function CatalogoPage({ searchParams }: { searchParams: Pro
       orderBy: { createdAt: "desc" },
       take: 10,
     }),
+    getSiteTexts(),
   ]);
 
-  const cover = (c: (typeof categories)[number]) => (c.coverImage ? { url: c.coverImage, focalX: c.coverFocalX, focalY: c.coverFocalY } : null);
+  const cover = (c: (typeof categories)[number]) => (c.coverImage ? { url: c.coverImage, focalX: c.coverFocalX, focalY: c.coverFocalY, zoom: c.coverZoom } : null);
   const bySlug = new Map(categories.filter((c) => c._count.products > 0).map((c) => [c.slug, c]));
   const segments = SEGMENTS.map((s) => {
     const cats = s.slugs.map((slug) => bySlug.get(slug)).filter((c) => c !== undefined);
@@ -71,7 +73,7 @@ export default async function CatalogoPage({ searchParams }: { searchParams: Pro
           <div className="flex flex-col gap-1">
             <span className="text-[11.5px] font-medium uppercase tracking-[.18em] text-ink-soft">{total} piezas tejidas a mano</span>
             <h1 className="font-serif text-[34px] font-normal leading-tight md:text-[40px]">Tienda</h1>
-            <p className="text-[14.5px] font-light text-ink/70">Todo se teje a mano y por encargo, en los colores que prefieras.</p>
+            <p className="text-[14.5px] font-light text-ink/70">{texts["shop.intro"]}</p>
           </div>
           <div className="flex w-full items-center gap-2.5 md:w-auto">
             <div className="flex-1 md:w-80 md:flex-none">
@@ -125,7 +127,7 @@ export default async function CatalogoPage({ searchParams }: { searchParams: Pro
                     showCategory
                     product={{
                       slug: p.slug, name: p.name, price: p.price.toString(), priceType: p.priceType, pieceStatus: p.pieceStatus, likes: p.likes,
-                      categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY,
+                      categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY, mainImageZoom: p.mainImageZoom,
                     }}
                   />
                 </div>
@@ -200,7 +202,7 @@ async function SearchResults({ q }: { q: string }) {
                 showCategory
                 product={{
                   slug: p.slug, name: p.name, price: p.price.toString(), priceType: p.priceType, pieceStatus: p.pieceStatus, likes: p.likes,
-                  categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY,
+                  categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY, mainImageZoom: p.mainImageZoom,
                 }}
               />
             ))}

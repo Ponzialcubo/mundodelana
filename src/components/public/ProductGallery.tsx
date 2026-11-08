@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { frameStyle } from "@/lib/framing";
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
@@ -13,9 +14,9 @@ export type GalleryItem = {
   posterUrl?: string | null;
   focalX: number;
   focalY: number;
+  zoom?: number;
 };
 
-const position = (item: GalleryItem) => `${item.focalX * 100}% ${item.focalY * 100}%`;
 
 export function ProductGallery({ productName, items }: { productName: string; items: GalleryItem[] }) {
   const photos = useMemo(() => items.filter((i) => i.mediaType === "image"), [items]);
@@ -94,7 +95,7 @@ export function ProductGallery({ productName, items }: { productName: string; it
                     quality={80}
                     priority={i === 0}
                     className="object-cover"
-                    style={{ objectPosition: position(item) }}
+                    style={frameStyle(item)}
                   />
                 </button>
               )}
@@ -154,7 +155,7 @@ export function ProductGallery({ productName, items }: { productName: string; it
                 fill
                 sizes="96px"
                 className="object-cover"
-                style={{ objectPosition: position(item) }}
+                style={frameStyle(item)}
               />
               {item.mediaType === "video" && (
                 <span className="absolute inset-0 flex items-center justify-center bg-black/20 text-xs text-white">▶</span>
@@ -336,7 +337,7 @@ function LightboxView({
               aria-current={i === index}
               className={`relative h-[60px] w-12 shrink-0 overflow-hidden rounded-lg transition ${i === index ? "opacity-100 ring-2 ring-white ring-offset-2 ring-offset-[#171312]" : "opacity-45 hover:opacity-80"}`}
             >
-              <Image src={item.url} alt="" fill sizes="48px" className="object-cover" style={{ objectPosition: position(item) }} />
+              <Image src={item.url} alt="" fill sizes="48px" className="object-cover" style={frameStyle(item)} />
             </button>
           ))}
         </div>

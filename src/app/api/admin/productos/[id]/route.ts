@@ -9,32 +9,38 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params;
   const body = await req.json();
 
+  // Only the fields sent are changed: quick actions (archive from the list) send
+  // just one field and must not wipe the rest of the product.
+  const has = (key: string) => key in body;
+  const text = (key: string) => (has(key) ? body[key] || null : undefined);
+
   const product = await prisma.product.update({
     where: { id },
     data: {
-      name: body.name,
-      slug: body.slug,
-      shortDescription: body.shortDescription || null,
-      description: body.description || null,
-      materials: body.materials || null,
-      metaTitle: body.metaTitle || null,
-      metaDescription: body.metaDescription || null,
+      name: has("name") ? body.name : undefined,
+      slug: has("slug") ? body.slug : undefined,
+      shortDescription: text("shortDescription"),
+      description: text("description"),
+      materials: text("materials"),
+      metaTitle: text("metaTitle"),
+      metaDescription: text("metaDescription"),
       publicationStatus: body.publicationStatus,
       pieceStatus: body.pieceStatus,
-      featured: Boolean(body.featured),
+      featured: has("featured") ? Boolean(body.featured) : undefined,
       priceType: body.priceType,
-      price: body.price === "" ? 0 : body.price,
-      instagramUrl: body.instagramUrl || null,
-      tiktokUrl: body.tiktokUrl || null,
-      mainImage: body.mainImage || null,
-      mainImageFocalX: body.mainImageFocalX ?? 0.5,
-      mainImageFocalY: body.mainImageFocalY ?? 0.5,
+      price: has("price") ? (body.price === "" ? 0 : body.price) : undefined,
+      instagramUrl: text("instagramUrl"),
+      tiktokUrl: text("tiktokUrl"),
+      mainImage: text("mainImage"),
+      mainImageFocalX: has("mainImageFocalX") ? body.mainImageFocalX : undefined,
+      mainImageFocalY: has("mainImageFocalY") ? body.mainImageFocalY : undefined,
+      mainImageZoom: has("mainImageZoom") ? body.mainImageZoom : undefined,
       images: body.images
         ? {
             deleteMany: {},
             create: body.images.map(
               (
-                img: { url: string; mediaType?: "IMAGE" | "VIDEO"; posterUrl?: string; focalX: number; focalY: number },
+                img: { url: string; mediaType?: "IMAGE" | "VIDEO"; posterUrl?: string; focalX: number; focalY: number; zoom?: number },
                 order: number
               ) => ({
                 url: img.url,
@@ -42,6 +48,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 posterUrl: img.posterUrl || null,
                 focalX: img.focalX ?? 0.5,
                 focalY: img.focalY ?? 0.5,
+                zoom: img.zoom ?? 1,
                 order,
               })
             ),

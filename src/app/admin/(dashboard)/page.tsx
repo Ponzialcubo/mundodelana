@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getActiveCampaign } from "@/lib/campaigns";
+import { AdminIcon } from "@/components/admin/AdminIcon";
+import type { NavIcon } from "@/components/admin/admin-nav";
 
 function relativeTime(date: Date) {
   const diffMs = Date.now() - date.getTime();
@@ -18,7 +21,7 @@ export default async function AdminDashboardPage() {
     OR: [{ mainImage: null }, { mainImage: "" }, { price: { lte: 0 } }, { publicationStatus: "BORRADOR" as const }],
   };
 
-  const [pendingOrders, productCounts, activeSubs, likesAgg, incomplete, topProducts, incompleteCount, unreadMessages] = await Promise.all([
+  const [pendingOrders, productCounts, activeSubs, likesAgg, incomplete, topProducts, incompleteCount, unreadMessages, campaign, openIdeas] = await Promise.all([
     prisma.order.findMany({ where: { state: "NUEVO" }, orderBy: { createdAt: "asc" }, take: 5 }),
     prisma.product.groupBy({ by: ["publicationStatus"], _count: true }),
     prisma.subscriber.count({ where: { state: "ACTIVO" } }),
@@ -32,7 +35,18 @@ export default async function AdminDashboardPage() {
     }),
     prisma.product.count({ where: incompleteWhere }),
     prisma.contactMessage.count({ where: { readAt: null, reply: null } }),
+    getActiveCampaign(),
+    prisma.idea.count({ where: { status: { in: ["NUEVA", "EN_REVISION"] } } }),
   ]);
+
+  const shortcuts: { href: string; icon: NavIcon; title: string; text: string; tone: string }[] = [
+    { href: "/admin/productos?pub=PENDIENTE", icon: "products", title: "Poner precios", text: incompleteCount ? `${incompleteCount} piezas sin precio o foto` : "Todo al día", tone: "#F1E4E5" },
+    campaign
+      ? { href: `/admin/fechas/${campaign.id}`, icon: "dates", title: campaign.name, text: "Fecha especial en la web ahora", tone: "#E3EADB" }
+      : { href: "/admin/fechas", icon: "dates", title: "Fechas especiales", text: "Prepara la próxima con tiempo", tone: "#E3EADB" },
+    { href: "/admin/imagenes-web", icon: "pages", title: "Páginas de la web", text: "Textos, banners y fotos", tone: "#EFE3F3" },
+    { href: "/admin/ideas", icon: "ideas", title: "Ideas", text: openIdeas ? `${openIdeas} abiertas` : "Apunta cambios y mejoras", tone: "#FBF3E4" },
+  ];
 
   const publishedProducts = productCounts.find((p) => p.publicationStatus === "PUBLICADO")?._count ?? 0;
   const draftProducts = productCounts.find((p) => p.publicationStatus === "BORRADOR")?._count ?? 0;
@@ -63,6 +77,20 @@ export default async function AdminDashboardPage() {
             + Nuevo producto
           </Link>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {shortcuts.map((c) => (
+          <Link key={c.href} href={c.href} className="flex flex-col gap-2.5 rounded-2xl border border-admin-ink/10 bg-white p-4 transition hover:shadow-[0_8px_24px_rgba(31,27,26,.07)]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: c.tone }}>
+              <AdminIcon name={c.icon} className="h-5 w-5" />
+            </span>
+            <span className="flex flex-col">
+              <span className="text-sm font-medium">{c.title}</span>
+              <span className="text-xs text-admin-ink-soft">{c.text}</span>
+            </span>
+          </Link>
+        ))}
       </div>
 
       {unreadMessages > 0 && (

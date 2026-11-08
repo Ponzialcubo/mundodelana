@@ -44,12 +44,14 @@ export default async function EditarProductoPage({ params }: { params: Promise<{
     mainImage: product.mainImage ?? "",
     mainImageFocalX: product.mainImageFocalX,
     mainImageFocalY: product.mainImageFocalY,
+    mainImageZoom: product.mainImageZoom,
     images: product.images.map((i) => ({
       url: i.url,
       mediaType: i.mediaType,
       posterUrl: i.posterUrl,
       focalX: i.focalX,
       focalY: i.focalY,
+      zoom: i.zoom,
     })),
   };
 

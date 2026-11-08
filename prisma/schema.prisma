@@ -90,6 +90,7 @@ model Category {
   coverImage  String?
   coverFocalX Float   @default(0.5)
   coverFocalY Float   @default(0.5)
+  coverZoom   Float   @default(1)
   order       Int     @default(0)
 
   metaTitle       String?
@@ -129,6 +130,7 @@ model Product {
   mainImage       String?
   mainImageFocalX Float          @default(0.5)
   mainImageFocalY Float          @default(0.5)
+  mainImageZoom   Float          @default(1)
   images          ProductImage[]
 
   metaTitle       String?
@@ -174,6 +176,7 @@ model ProductImage {
   order     Int       @default(0)
   focalX    Float     @default(0.5)
   focalY    Float     @default(0.5)
+  zoom      Float     @default(1)
   product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
 
@@ -412,10 +415,15 @@ model LibraryMedia {
 // Images for fixed spots of the public site (home hero, about, how it works,
 // contact). Keyed by spot so the code knows where each one goes.
 model SiteImage {
-  key       String   @id // "hero" | "about" | "how" | "contact"
+  key       String    @id // spot key from SITE_IMAGE_SLOTS, "-m" suffix for the phone version
   url       String
-  focalX    Float    @default(0.5)
-  focalY    Float    @default(0.5)
+  focalX    Float     @default(0.5)
+  focalY    Float     @default(0.5)
+  zoom      Float     @default(1)
+  // Home banners can be prepared ahead: switched off, or shown only between dates.
+  hidden    Boolean   @default(false)
+  startsOn  DateTime? @db.Date
+  endsOn    DateTime? @db.Date
   updatedAt DateTime @updatedAt
 }
 
@@ -437,10 +445,12 @@ model Campaign {
   bannerImage String?
   bannerFocalX Float @default(0.5)
   bannerFocalY Float @default(0.5)
+  bannerZoom   Float @default(1)
   // Optional vertical version for phones; without it phones crop the wide one.
   bannerImageMobile  String?
   bannerMobileFocalX Float   @default(0.5)
   bannerMobileFocalY Float   @default(0.5)
+  bannerMobileZoom   Float   @default(1)
   accent      String @default("#E8B4B8")
 
   metaDescription String?
@@ -449,4 +459,31 @@ model Campaign {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Editable texts of the public pages (titles, intros...). Missing keys fall
+// back to the defaults in src/lib/site-texts.ts.
+model SiteText {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+enum IdeaStatus {
+  NUEVA
+  EN_REVISION
+  HECHA
+  DESCARTADA
+}
+
+// Ideas and change requests the owner writes down for the developers.
+model Idea {
+  id          String     @id @default(cuid())
+  title       String
+  description String     @default("")
+  area        String     @default("web") // web | tienda | panel | otra
+  status      IdeaStatus @default(NUEVA)
+  reply       String? // our answer, shown under the idea
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }

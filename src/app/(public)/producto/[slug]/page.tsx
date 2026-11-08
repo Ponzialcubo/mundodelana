@@ -90,6 +90,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
             mediaType: "image" as const,
             focalX: product.mainImageFocalX,
             focalY: product.mainImageFocalY,
+            zoom: product.mainImageZoom,
           },
         ]
       : []),
@@ -99,6 +100,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
       posterUrl: img.posterUrl,
       focalX: img.focalX,
       focalY: img.focalY,
+      zoom: img.zoom,
     })),
   ];
   const galleryPhotoUrls = galleryItems.filter((i) => i.mediaType === "image").map((i) => i.url);
@@ -286,7 +288,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
                   likes: p.likes,
                   mainImage: p.mainImage,
                   mainImageFocalX: p.mainImageFocalX,
-                  mainImageFocalY: p.mainImageFocalY,
+                  mainImageFocalY: p.mainImageFocalY, mainImageZoom: p.mainImageZoom,
                 }}
               />
             ))}

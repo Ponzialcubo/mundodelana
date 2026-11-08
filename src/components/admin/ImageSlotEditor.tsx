@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { FocalPointEditor } from "@/components/admin/FocalPointEditor";
+import { FramingEditor } from "@/components/admin/FramingEditor";
+import { frameStyle, type Frame } from "@/lib/framing";
 import { ImproveImageDialog } from "@/components/admin/ImproveImageDialog";
 import type { TextZone } from "@/lib/image-formats";
 
@@ -11,7 +12,7 @@ const ZONE_CLASS: Record<Exclude<TextZone, "none">, string> = {
   bottom: "inset-x-[7%] bottom-[6%] h-[38%]",
 };
 
-export type SlotValue = { url: string; focalX: number; focalY: number } | null;
+export type SlotValue = { url: string; focalX: number; focalY: number; zoom?: number } | null;
 
 /**
  * One image spot (site image, campaign banner): preview with the real crop,
@@ -25,6 +26,7 @@ export function ImageSlotEditor({
   title,
   aspectClass,
   textZone = "none",
+  frames,
   previewClass = "max-w-md",
   emptyText = "Sin imagen: se usa el diseño por defecto.",
 }: {
@@ -34,6 +36,8 @@ export function ImageSlotEditor({
   title: string;
   aspectClass: string;
   textZone?: TextZone;
+  /** Boxes this image is cropped into on the shop, for the framing editor. */
+  frames: Frame[];
   previewClass?: string;
   emptyText?: string;
 }) {
@@ -52,7 +56,7 @@ export function ImageSlotEditor({
       const res = await fetch("/api/admin/imagenes/subir", { method: "POST", body: form });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-      onChange({ url: json.url, focalX: 0.5, focalY: 0.5 });
+      onChange({ url: json.url, focalX: 0.5, focalY: 0.5, zoom: 1 });
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : "No se ha podido subir la imagen");
     } finally {
@@ -66,7 +70,7 @@ export function ImageSlotEditor({
       <div className={`relative w-full overflow-hidden rounded-xl bg-admin-bg ${previewClass} ${aspectClass}`}>
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element -- admin preview with the shop's exact crop
-          <img src={value.url} alt="" className="h-full w-full object-cover" style={{ objectPosition: `${value.focalX * 100}% ${value.focalY * 100}%` }} />
+          <img src={value.url} alt="" className="h-full w-full object-cover" style={frameStyle(value)} />
         ) : (
           <span
             className={`absolute flex items-center justify-center p-4 text-center text-xs text-admin-ink-soft md:text-sm ${
@@ -125,18 +129,12 @@ export function ImageSlotEditor({
           title={title}
           prompt={prompt}
           originalUrl={value?.url}
-          onUploaded={(url) => onChange({ url, focalX: 0.5, focalY: 0.5 })}
+          onUploaded={(url) => onChange({ url, focalX: 0.5, focalY: 0.5, zoom: 1 })}
           onClose={() => setDialog(false)}
         />
       )}
       {framing && value && (
-        <FocalPointEditor
-          src={value.url}
-          focalX={value.focalX}
-          focalY={value.focalY}
-          onChange={(focalX, focalY) => onChange({ ...value, focalX, focalY })}
-          onClose={() => setFraming(false)}
-        />
+        <FramingEditor src={value.url} value={value} frames={frames} onChange={(v) => onChange({ ...value, ...v })} onClose={() => setFraming(false)} />
       )}
     </div>
   );

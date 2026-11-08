@@ -5,6 +5,7 @@ import { SplitHero } from "@/components/public/SplitHero";
 import { FaqList } from "@/components/public/FaqList";
 import { Icon, type IconName } from "@/components/public/Icon";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
+import { getSiteTexts } from "@/lib/site-texts-server";
 import { getSiteImages } from "@/lib/site-images";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
@@ -40,8 +41,9 @@ const INCLUDED: { icon: IconName; title: string; text: string }[] = [
 const FAQ_KEYWORDS = ["Cuánto tarda", "Cómo pago", "envíos", "cambiar algo", "devoluciones", "Consultar precio"];
 
 export default async function ComoFuncionaPage() {
-  const [{ phone }, images, total, faqs, testimonials] = await Promise.all([
+  const [{ phone }, texts, images, total, faqs, testimonials] = await Promise.all([
     getSiteSettings(),
+    getSiteTexts(),
     getSiteImages(),
     prisma.product.count({ where: { publicationStatus: "PUBLICADO" } }),
     prisma.faq.findMany({ orderBy: { order: "asc" } }),
@@ -58,12 +60,12 @@ export default async function ComoFuncionaPage() {
         eyebrow="Cómo funciona"
         title={
           <>
-            Tu pieza hecha a mano,
+            {texts["how.title"]}
             <br />
-            <em className="text-pink-deep">sin complicaciones</em>
+            <em className="text-pink-deep">{texts["how.titleHighlight"]}</em>
           </>
         }
-        text="Me cuentas qué quieres, te digo precio y plazo, y solo cuando estés conforme empiezo a tejer. Sin carritos y sin compromiso hasta que digas que sí."
+        text={texts["how.intro"]}
         photo={images.how ?? (delivered && { url: delivered.url, focalX: 0.5, focalY: 0.5 })}
         badge={
           <div className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-[0_12px_32px_rgba(74,63,59,.14)]">

@@ -21,6 +21,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     where: { id },
     data: {
       active: Boolean(body.active),
+      name: String(body.name ?? "").trim().slice(0, 60) || undefined,
       startMD: body.startMD,
       endMD: body.endMD,
       deadlineMD: body.deadlineMD || null,
@@ -29,12 +30,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       bannerImage: body.banner?.url ?? null,
       bannerFocalX: body.banner?.focalX ?? 0.5,
       bannerFocalY: body.banner?.focalY ?? 0.5,
+      bannerZoom: body.banner?.zoom ?? 1,
       bannerImageMobile: body.bannerMobile?.url ?? null,
       bannerMobileFocalX: body.bannerMobile?.focalX ?? 0.5,
       bannerMobileFocalY: body.bannerMobile?.focalY ?? 0.5,
+      bannerMobileZoom: body.bannerMobile?.zoom ?? 1,
       accent: body.accent,
       products: { set: (body.productIds ?? []).map((pid: string) => ({ id: pid })) },
     },
   });
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const adminId = await getAdminSession();
+  if (!adminId) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+  const { id } = await params;
+  await prisma.campaign.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

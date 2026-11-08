@@ -6,7 +6,7 @@ import { isInWindow } from "@/lib/campaigns";
 export const dynamic = "force-dynamic";
 
 export type SearchIndex = {
-  products: { name: string; slug: string; image: string | null; price: string; terms: string }[];
+  products: { name: string; slug: string; image: string | null; framing: { focalX: number; focalY: number; zoom: number }; price: string; terms: string }[];
   categories: { name: string; slug: string; count: number }[];
   brands: { name: string; slug: string; count: number }[];
   campaigns: { name: string; slug: string }[];
@@ -23,7 +23,7 @@ export async function GET() {
       where: published,
       orderBy: [{ featured: "desc" }, { name: "asc" }],
       select: {
-        name: true, slug: true, mainImage: true, price: true, priceType: true, shortDescription: true,
+        name: true, slug: true, mainImage: true, mainImageFocalX: true, mainImageFocalY: true, mainImageZoom: true, price: true, priceType: true, shortDescription: true,
         categories: { select: { name: true } }, brands: { select: { name: true } },
       },
     }),
@@ -37,6 +37,7 @@ export async function GET() {
       name: p.name,
       slug: p.slug,
       image: p.mainImage,
+      framing: { focalX: p.mainImageFocalX, focalY: p.mainImageFocalY, zoom: p.mainImageZoom },
       price: formatPrice(p.price.toString(), p.priceType),
       terms: [p.shortDescription, ...p.categories.map((c) => c.name), ...p.brands.map((b) => b.name)].filter(Boolean).join(" "),
     })),

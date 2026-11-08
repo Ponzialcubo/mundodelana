@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { frameStyle } from "@/lib/framing";
 import { FadeImage } from "@/components/public/FadeImage";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { formatPrice, hasPrice, productAction } from "@/lib/product-status";
@@ -15,6 +16,7 @@ export type ProductCardData = {
   mainImage?: string | null;
   mainImageFocalX?: number;
   mainImageFocalY?: number;
+  mainImageZoom?: number;
 };
 
 export function ProductCard({
@@ -40,7 +42,7 @@ export function ProductCard({
             fill
             sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 48vw"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            style={{ objectPosition: `${(product.mainImageFocalX ?? 0.5) * 100}% ${(product.mainImageFocalY ?? 0.5) * 100}%` }}
+            style={frameStyle({ focalX: product.mainImageFocalX ?? 0.5, focalY: product.mainImageFocalY ?? 0.5, zoom: product.mainImageZoom })}
             priority={priority}
           />
         ) : (

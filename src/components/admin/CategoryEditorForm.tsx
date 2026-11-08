@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import { AiGenerateButton } from "@/components/admin/AiGenerateButton";
-import { FocalPointEditor } from "@/components/admin/FocalPointEditor";
+import { FramingEditor, FramedBox } from "@/components/admin/FramingEditor";
+import { FRAMES } from "@/lib/framing";
 import { ImproveImageDialog } from "@/components/admin/ImproveImageDialog";
 import { buildCategoryCoverPrompt } from "@/lib/image-edit-prompt";
 
@@ -16,6 +17,7 @@ export type CategoryFormData = {
   coverImage: string;
   coverFocalX: number;
   coverFocalY: number;
+  coverZoom: number;
   metaTitle: string;
   metaDescription: string;
   order: number;
@@ -29,6 +31,7 @@ const EMPTY: CategoryFormData = {
   coverImage: "",
   coverFocalX: 0.5,
   coverFocalY: 0.5,
+  coverZoom: 1,
   metaTitle: "",
   metaDescription: "",
   order: 1,
@@ -216,22 +219,20 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
             />
             {data.coverImage ? (
               <>
-                <button
-                  type="button"
-                  onClick={() => setFraming(true)}
-                  className="relative aspect-square w-40 overflow-hidden rounded-lg"
-                  aria-label="Ajustar encuadre"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element -- admin preview with the shop's exact crop */}
-                  <img
-                    src={data.coverImage}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    style={{ objectPosition: `${data.coverFocalX * 100}% ${data.coverFocalY * 100}%` }}
-                  />
-                  <span className="absolute bottom-1.5 left-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium">
-                    Encuadre
+                <button type="button" onClick={() => setFraming(true)} className="flex flex-col gap-2 text-left" aria-label="Ajustar encuadre">
+                  <span className="flex items-end gap-2.5">
+                    {FRAMES.categoryCover.map((f) => (
+                      <span key={f.label} className="flex flex-col gap-1">
+                        <FramedBox
+                          src={data.coverImage}
+                          value={{ focalX: data.coverFocalX, focalY: data.coverFocalY, zoom: data.coverZoom }}
+                          frame={f}
+                          className={f.round ? "w-10" : f.aspect > 1 ? "w-28" : "w-[84px]"}
+                        />
+                      </span>
+                    ))}
                   </span>
+                  <span className="w-fit rounded-full border border-admin-ink/16 px-3 py-1.5 text-xs font-medium">Encuadrar</span>
                 </button>
                 <button type="button" onClick={() => setImproving(true)} className="w-fit rounded-full bg-pink px-4 py-2 text-xs font-medium">
                   ✨ Mejorar con IA
@@ -245,18 +246,20 @@ export function CategoryEditorForm({ initial }: { initial?: CategoryFormData }) 
                       set("coverImage", url);
                       set("coverFocalX", 0.5);
                       set("coverFocalY", 0.5);
+                      set("coverZoom", 1);
                     }}
                     onClose={() => setImproving(false)}
                   />
                 )}
                 {framing && (
-                  <FocalPointEditor
+                  <FramingEditor
                     src={data.coverImage}
-                    focalX={data.coverFocalX}
-                    focalY={data.coverFocalY}
-                    onChange={(x, y) => {
-                      set("coverFocalX", x);
-                      set("coverFocalY", y);
+                    value={{ focalX: data.coverFocalX, focalY: data.coverFocalY, zoom: data.coverZoom }}
+                    frames={FRAMES.categoryCover}
+                    onChange={(v) => {
+                      set("coverFocalX", v.focalX);
+                      set("coverFocalY", v.focalY);
+                      set("coverZoom", v.zoom);
                     }}
                     onClose={() => setFraming(false)}
                   />

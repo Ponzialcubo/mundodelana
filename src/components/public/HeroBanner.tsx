@@ -30,10 +30,12 @@ export function HeroBanner({
   slides,
   phrases,
   campaign,
+  text,
 }: {
   slides: Slide[];
   phrases: string[];
   campaign: { name: string; slug: string; accent: string } | null;
+  text: string;
 }) {
   const [slide, setSlide] = useCycle(slides.length, SLIDE_MS);
   const [phrase] = useCycle(phrases.length, PHRASE_MS);
@@ -41,7 +43,7 @@ export function HeroBanner({
   const words = phrases.length > 0 ? phrases : ["pensado para ti"];
 
   return (
-    <section className="relative flex min-h-[78svh] items-end overflow-hidden md:min-h-[min(640px,calc(100svh-140px))] md:items-center">
+    <section className="relative flex aspect-[2/3] max-h-[88svh] min-h-[540px] w-full items-end overflow-hidden md:aspect-auto md:min-h-[520px] md:items-center lg:aspect-[16/7] lg:min-h-0">
       {hasImage ? (
         slides.map((s, i) => (
           <span
@@ -86,7 +88,7 @@ export function HeroBanner({
           </span>
         </h1>
         <p className={`max-w-md text-[16px] font-light leading-relaxed md:text-[18px] ${hasImage ? "text-white/90" : "text-ink/80"}`}>
-          Amigurumis, ropita de bebé, flores que no se marchitan y regalos de crochet hechos por encargo en Galicia.
+          {text}
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link href="/catalogo" className="rounded-full bg-pink px-7 py-4 text-center text-[15.5px] font-medium text-ink">

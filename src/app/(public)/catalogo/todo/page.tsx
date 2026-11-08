@@ -49,7 +49,7 @@ export default async function TodoPage({ searchParams }: { searchParams: Promise
               showCategory
               product={{
                 slug: p.slug, name: p.name, price: p.price.toString(), priceType: p.priceType, pieceStatus: p.pieceStatus, likes: p.likes,
-                categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY,
+                categoryName: p.categories[0]?.name, mainImage: p.mainImage, mainImageFocalX: p.mainImageFocalX, mainImageFocalY: p.mainImageFocalY, mainImageZoom: p.mainImageZoom,
               }}
             />
           ))}

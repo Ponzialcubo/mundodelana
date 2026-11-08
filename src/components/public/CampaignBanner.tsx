@@ -10,9 +10,11 @@ type Campaign = {
   bannerImage: string | null;
   bannerFocalX: number;
   bannerFocalY: number;
+  bannerZoom: number;
   bannerImageMobile: string | null;
   bannerMobileFocalX: number;
   bannerMobileFocalY: number;
+  bannerMobileZoom: number;
 };
 
 /** Yarn balls on the right, for dates that don't have their banner image yet. */
@@ -52,16 +54,16 @@ function SeasonalDecor({ accent }: { accent: string }) {
  * campaign colour with a yarn decoration — never cropped product photos.
  */
 export function CampaignBanner({ campaign, deadline, compact = false }: { campaign: Campaign; deadline: string | null; compact?: boolean }) {
-  const desktop = campaign.bannerImage ? { url: campaign.bannerImage, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY } : null;
+  const desktop = campaign.bannerImage ? { url: campaign.bannerImage, focalX: campaign.bannerFocalX, focalY: campaign.bannerFocalY, zoom: campaign.bannerZoom } : null;
   const mobile = campaign.bannerImageMobile
-    ? { url: campaign.bannerImageMobile, focalX: campaign.bannerMobileFocalX, focalY: campaign.bannerMobileFocalY }
+    ? { url: campaign.bannerImageMobile, focalX: campaign.bannerMobileFocalX, focalY: campaign.bannerMobileFocalY, zoom: campaign.bannerMobileZoom }
     : undefined;
 
   return (
     <Link
       href={`/fechas/${campaign.slug}`}
       className={`group relative isolate flex overflow-hidden rounded-3xl ${
-        compact ? "aspect-square items-end sm:aspect-[2/1] md:aspect-[4/1] md:items-center" : "aspect-[4/5] items-end sm:aspect-[2/1] md:aspect-[3/1] md:items-center"
+        compact ? "aspect-square items-end md:aspect-[4/1] md:items-center" : "aspect-[4/5] items-end md:aspect-[3/1] md:items-center"
       }`}
       style={{ background: `linear-gradient(120deg, #F7F1EA 0%, ${campaign.accent} 100%)` }}
     >

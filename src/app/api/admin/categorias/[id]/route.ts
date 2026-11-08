@@ -18,6 +18,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       coverImage: body.coverImage || null,
       coverFocalX: body.coverFocalX ?? 0.5,
       coverFocalY: body.coverFocalY ?? 0.5,
+      coverZoom: body.coverZoom ?? 1,
       metaTitle: body.metaTitle || null,
       metaDescription: body.metaDescription || null,
       order: body.order,

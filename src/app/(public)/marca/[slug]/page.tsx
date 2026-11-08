@@ -102,7 +102,7 @@ export default async function MarcaPage({ params }: { params: Promise<{ slug: st
                   categoryName: p.categories[0]?.name,
                   mainImage: p.mainImage,
                   mainImageFocalX: p.mainImageFocalX,
-                  mainImageFocalY: p.mainImageFocalY,
+                  mainImageFocalY: p.mainImageFocalY, mainImageZoom: p.mainImageZoom,
                 }}
               />
             ))}

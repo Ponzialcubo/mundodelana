@@ -1,7 +1,8 @@
 import Image from "next/image";
+import { frameStyle } from "@/lib/framing";
 import { YarnBackdrop } from "@/components/public/YarnBackdrop";
 
-type Photo = { url: string; focalX: number; focalY: number } | null | undefined;
+type Photo = { url: string; focalX: number; focalY: number; zoom?: number } | null | undefined;
 
 /**
  * Page header with the text on one side and the owner's portrait photo (4:5)
@@ -50,7 +51,7 @@ export function SplitHero({
                 sizes="(min-width: 1024px) 480px, 100vw"
                 quality={80}
                 className="object-cover"
-                style={{ objectPosition: `${photo.focalX * 100}% ${photo.focalY * 100}%` }}
+                style={frameStyle(photo)}
               />
             ) : (
               <YarnBackdrop />

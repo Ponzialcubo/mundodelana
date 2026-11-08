@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { frameStyle } from "@/lib/framing";
 import { useRouter } from "next/navigation";
 import type { SearchIndex } from "@/app/api/buscar/route";
 
@@ -153,7 +154,7 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
                 {results.products.map((p) => (
                   <Link key={p.slug} href={`/producto/${p.slug}`} onClick={onClose} className="flex items-center gap-3 py-2.5">
                     <span className="relative h-16 w-[52px] shrink-0 overflow-hidden rounded-lg bg-cream">
-                      {p.image && <Image src={p.image} alt="" fill sizes="64px" className="object-cover" />}
+                      {p.image && <Image src={p.image} alt="" fill sizes="64px" className="object-cover" style={p.framing ? frameStyle(p.framing) : undefined} />}
                     </span>
                     <span className="flex min-w-0 flex-col">
                       <span className="truncate font-serif text-[15.5px]">{p.name}</span>

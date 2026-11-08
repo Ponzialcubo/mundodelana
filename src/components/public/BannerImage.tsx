@@ -1,8 +1,9 @@
 import Image from "next/image";
+import { frameStyle } from "@/lib/framing";
 
-type Value = { url: string; focalX: number; focalY: number };
+type Value = { url: string; focalX: number; focalY: number; zoom?: number };
 
-const pos = (v: Value) => ({ objectPosition: `${v.focalX * 100}% ${v.focalY * 100}%` });
+const pos = (v: Value) => frameStyle(v);
 
 /**
  * Full-bleed background image with an optional phone version: the wide one

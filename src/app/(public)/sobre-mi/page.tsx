@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { frameStyle } from "@/lib/framing";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +7,7 @@ import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { SplitHero } from "@/components/public/SplitHero";
 import { Icon, type IconName } from "@/components/public/Icon";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
+import { getSiteTexts } from "@/lib/site-texts-server";
 import { getSiteImages } from "@/lib/site-images";
 
 const title = "Sobre mí";
@@ -38,8 +40,9 @@ const VALUES: { icon: IconName; title: string; text: string }[] = [
 ];
 
 export default async function SobreMiPage() {
-  const [{ phone }, images, gallery] = await Promise.all([
+  const [{ phone }, texts, images, gallery] = await Promise.all([
     getSiteSettings(),
+    getSiteTexts(),
     getSiteImages(),
     prisma.libraryMedia.findMany({ where: { showInGallery: true, mediaType: "IMAGE" }, orderBy: { takenAt: "desc" }, take: 5 }),
   ]);
@@ -52,12 +55,12 @@ export default async function SobreMiPage() {
         eyebrow="Sobre mí"
         title={
           <>
-            Soy Elvira, y cada pieza
+            {texts["about.title"]}
             <br />
-            <em className="text-pink-deep">pasa por mis manos</em>
+            <em className="text-pink-deep">{texts["about.titleHighlight"]}</em>
           </>
         }
-        text="Empecé haciendo amigurumis para mi hijo y aquello acabó convirtiéndose en mi propio taller en Galicia. Cinco años después sigo en la misma silla, con mejor luz y bastante más lana."
+        text={texts["about.intro"]}
         photo={images.about ?? WORKSHOP_FALLBACK[0]}
         photoAlt="Elvira tejiendo en su taller"
         badge={
@@ -97,21 +100,19 @@ export default async function SobreMiPage() {
                   fill
                   sizes="(min-width: 1024px) 280px, 45vw"
                   className="object-cover"
-                  style={{ objectPosition: `${photo.focalX * 100}% ${photo.focalY * 100}%` }}
+                  style={frameStyle(photo)}
                 />
               </div>
             ))}
           </div>
           <div className="order-1 flex flex-col gap-4 lg:order-2">
             <span className="text-[11.5px] font-medium uppercase tracking-[.2em] text-ink-soft">Mi historia</span>
-            <h2 className="font-serif text-[30px] font-normal leading-tight md:text-[38px]">Cómo empezó todo</h2>
+            <h2 className="font-serif text-[30px] font-normal leading-tight md:text-[38px]">{texts["about.storyTitle"]}</h2>
             <p className="text-[16px] font-light leading-relaxed text-ink/80">
-              El primer amigurumi lo hice para mi hijo: un osito torcido, con un ojo más alto que el otro, que todavía duerme
-              con él. A la semana me lo pidió una amiga, luego su madre, y así hasta hoy.
+              {texts["about.story1"]}
             </p>
             <p className="text-[16px] font-light leading-relaxed text-ink/80">
-              Hoy tejo encargos para toda España: muñecos a partir de una foto, ropita de bebé, flores que no se marchitan y
-              regalos para fechas especiales. Cada pieza la hago yo, de principio a fin.
+              {texts["about.story2"]}
             </p>
           </div>
         </div>
@@ -124,10 +125,9 @@ export default async function SobreMiPage() {
             “
           </span>
           <blockquote className="-mt-6 font-serif text-[24px] leading-snug md:text-[32px]">
-            Elegí el crochet porque es lento. Cada punto pasa por la mano, y eso obliga a pensar la pieza entera antes de
-            empezar.
+            {texts["about.quote"]}
           </blockquote>
-          <figcaption className="text-[13.5px] text-ink/60">Una figura mediana son entre uno y tres días de trabajo</figcaption>
+          <figcaption className="text-[13.5px] text-ink/60">{texts["about.quoteNote"]}</figcaption>
         </figure>
       </section>
 

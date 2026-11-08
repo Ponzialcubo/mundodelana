@@ -102,7 +102,7 @@ export default async function CategoriaPage({ params }: { params: Promise<{ slug
                   likes: p.likes,
                   mainImage: p.mainImage,
                   mainImageFocalX: p.mainImageFocalX,
-                  mainImageFocalY: p.mainImageFocalY,
+                  mainImageFocalY: p.mainImageFocalY, mainImageZoom: p.mainImageZoom,
                 }}
               />
             ))}

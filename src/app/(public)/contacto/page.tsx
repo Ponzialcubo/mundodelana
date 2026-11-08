@@ -7,6 +7,7 @@ import { Icon } from "@/components/public/Icon";
 import { prisma } from "@/lib/prisma";
 import { getCustomerSession } from "@/lib/session";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
+import { getSiteTexts } from "@/lib/site-texts-server";
 import { getSiteImages } from "@/lib/site-images";
 
 const title = "Contacto";
@@ -58,7 +59,7 @@ const ICONS: Record<string, React.ReactNode> = {
 };
 
 export default async function ContactoPage() {
-  const [{ phone, publicEmail, instagramUrl, hours }, images, customerId] = await Promise.all([getSiteSettings(), getSiteImages(), getCustomerSession()]);
+  const [{ phone, publicEmail, instagramUrl, hours }, images, customerId, texts] = await Promise.all([getSiteSettings(), getSiteImages(), getCustomerSession(), getSiteTexts()]);
   const customer = customerId ? await prisma.customer.findUnique({ where: { id: customerId }, select: { name: true, email: true } }) : null;
   // Until the owner uploads this page's photo, a real delivered order fills the frame.
   const delivered = images.contact
@@ -102,10 +103,10 @@ export default async function ContactoPage() {
         eyebrow="Contacto"
         title={
           <>
-            Escríbeme y <em className="text-pink-deep">hablamos</em>
+            {texts["contact.title"]} <em className="text-pink-deep">{texts["contact.titleHighlight"]}</em>
           </>
         }
-        text="Contesto yo, no un bot, normalmente en menos de 24 horas. Pregunta lo que quieras: presupuestos, colores, tamaños o plazos."
+        text={texts["contact.intro"]}
         photo={photo}
         badge={
           <div className="flex flex-col gap-2 rounded-2xl bg-white p-4 shadow-[0_12px_32px_rgba(74,63,59,.14)]">
