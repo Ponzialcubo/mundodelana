@@ -13,21 +13,30 @@ export default async function AdminFotosPage({ searchParams }: { searchParams: P
   const status = TABS.find((t) => t.value === estado)?.value ?? "NUEVA";
 
   const [items, counts] = await Promise.all([
-    prisma.libraryMedia.findMany({ where: { status }, orderBy: [{ takenAt: "desc" }, { createdAt: "asc" }] }),
+    prisma.libraryMedia.findMany({ where: { status }, orderBy: [{ createdAt: "asc" }] }),
     prisma.libraryMedia.groupBy({ by: ["status"], _count: true }),
   ]);
 
-  // One group per Instagram post (carousel children together); loose uploads stand alone.
+  // One group per Instagram post (carousel children together); AI-edited
+  // uploads are grouped per upload day.
   const groups: LibraryGroup[] = [];
   for (const item of items) {
-    const key = item.instagramPostId ?? item.id;
+    const key = item.instagramPostId ?? `${item.source}-${item.createdAt.toISOString().slice(0, 10)}`;
     let group = groups.find((g) => g.key === key);
     if (!group) {
-      group = { key, caption: item.caption, permalink: item.permalink, takenAt: item.takenAt?.toISOString() ?? null, items: [] };
+      group = {
+        key,
+        source: item.source,
+        caption: item.caption,
+        permalink: item.permalink,
+        date: (item.takenAt ?? item.createdAt).toISOString(),
+        items: [],
+      };
       groups.push(group);
     }
     group.items.push({ id: item.id, url: item.url, mediaType: item.mediaType, posterUrl: item.posterUrl });
   }
+  groups.sort((a, b) => b.date.localeCompare(a.date));
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 p-5 md:p-9">

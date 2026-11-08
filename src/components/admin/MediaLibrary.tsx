@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export type LibraryItem = { id: string; url: string; mediaType: "IMAGE" | "VIDEO"; posterUrl: string | null };
 export type LibraryGroup = {
   key: string;
+  source: string; // "instagram" | "ai" | "upload"
   caption: string | null;
   permalink: string | null;
-  takenAt: string | null;
+  date: string;
   items: LibraryItem[];
 };
 
@@ -19,6 +20,7 @@ export function MediaLibrary({ groups, status }: { groups: LibraryGroup[]; statu
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const editedInputRef = useRef<HTMLInputElement>(null);
 
   function toggle(id: string) {
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -58,6 +60,49 @@ export function MediaLibrary({ groups, status }: { groups: LibraryGroup[]; statu
     } finally {
       setBusy(false);
     }
+  }
+
+  async function downloadForAi() {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/biblioteca/exportar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selected }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const blob = await res.blob();
+      const name = res.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] ?? "mundolana-fotos-ia.zip";
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = name;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "No se ha podido preparar el paquete");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // One request per photo: keeps each upload small and the server's memory flat.
+  async function uploadEdited(files: FileList) {
+    const list = Array.from(files);
+    setBusy(true);
+    setError("");
+    let failed = 0;
+    for (const [index, file] of list.entries()) {
+      setMessage(`Subiendo ${index + 1} de ${list.length}…`);
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/biblioteca/subir", { method: "POST", body: formData });
+      if (!res.ok) failed++;
+    }
+    setMessage(`Listo: ${list.length - failed} fotos editadas añadidas.${failed ? ` ${failed} no se pudieron subir.` : ""}`);
+    if (editedInputRef.current) editedInputRef.current.value = "";
+    setBusy(false);
+    router.refresh();
   }
 
   async function setStatus(newStatus: "NUEVA" | "DESCARTADA") {
@@ -100,8 +145,25 @@ export function MediaLibrary({ groups, status }: { groups: LibraryGroup[]; statu
           >
             Traer de Instagram
           </button>
-          <span className="text-xs text-admin-ink-soft">
-            {message || "Solo se traen las publicaciones nuevas; puedes pulsarlo cuando quieras."}
+          <button
+            onClick={() => editedInputRef.current?.click()}
+            disabled={busy}
+            className="rounded-full border border-admin-ink/16 bg-white px-4 py-2.5 text-sm font-medium disabled:opacity-60"
+          >
+            Subir fotos editadas
+          </button>
+          <input
+            ref={editedInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files?.length) uploadEdited(e.target.files);
+            }}
+          />
+          <span className="w-full text-xs text-admin-ink-soft">
+            {message || "Elige fotos y pulsa «Para IA» para descargarlas con su prompt; luego sube aquí las editadas."}
           </span>
         </div>
       )}
@@ -121,9 +183,11 @@ export function MediaLibrary({ groups, status }: { groups: LibraryGroup[]; statu
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 flex-col gap-0.5">
                 <span className="text-xs text-admin-faint">
-                  {group.takenAt
-                    ? new Date(group.takenAt).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
-                    : "Subida a mano"}
+                  {group.source === "ai" && (
+                    <span className="mr-1.5 rounded-full bg-admin-accent-soft px-2 py-0.5 font-medium text-admin-link">IA</span>
+                  )}
+                  {group.source === "instagram" ? "" : group.source === "ai" ? "Editadas el " : "Subidas el "}
+                  {new Date(group.date).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}
                   {group.permalink && (
                     <>
                       {" · "}
@@ -182,7 +246,14 @@ export function MediaLibrary({ groups, status }: { groups: LibraryGroup[]; statu
           <button onClick={() => setSelected([])} className="text-xs text-admin-ink-soft underline">
             quitar
           </button>
-          <div className="ml-auto flex gap-2">
+          <div className="ml-auto flex flex-wrap justify-end gap-2">
+            <button
+              onClick={downloadForAi}
+              disabled={busy}
+              className="rounded-full border border-admin-ink/16 bg-white px-4 py-2.5 text-sm font-medium disabled:opacity-60"
+            >
+              Para IA
+            </button>
             {status === "DESCARTADA" ? (
               <button
                 onClick={() => setStatus("NUEVA")}
