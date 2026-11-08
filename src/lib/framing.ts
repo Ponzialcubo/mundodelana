@@ -26,11 +26,15 @@ export const FRAMES = {
     { label: "Tarjeta del bloque · móvil", aspect: 1 },
     { label: "Miniatura redonda", aspect: 1, round: true },
   ],
-  heroDesktop: [{ label: "Inicio · ordenador", aspect: 16 / 7 }],
+  heroDesktop: [
+    { label: "Inicio · ordenador", aspect: 16 / 7 },
+    { label: "Inicio · móvil (si no subes la de móvil)", aspect: 2 / 3 },
+  ],
   heroMobile: [{ label: "Inicio · móvil", aspect: 2 / 3 }],
   campaignDesktop: [
     { label: "Inicio y página de la fecha", aspect: 3 },
     { label: "Tienda", aspect: 4 },
+    { label: "Móvil (si no subes la de móvil)", aspect: 4 / 5 },
   ],
   campaignMobile: [
     { label: "Inicio y página de la fecha · móvil", aspect: 4 / 5 },

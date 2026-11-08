@@ -218,6 +218,24 @@ function SlotCard({
 }) {
   const status = desktop && slot.schedulable ? visibilityLabel(desktop) : null;
   const justSaved = savedKey === slot.key || savedKey === `${slot.key}-m`;
+  const [adding, setAdding] = useState(false);
+
+  // Extra home banners stay folded until used, so the page isn't a wall of empty boxes.
+  if (slot.schedulable && slot.key !== "hero" && !desktop && !adding) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAdding(true)}
+        className="flex items-center justify-between rounded-xl border border-dashed border-admin-ink/25 px-4 py-3.5 text-left text-sm hover:bg-admin-bg"
+      >
+        <span>
+          <span className="font-medium">+ Añadir {slot.label.toLowerCase()}</span>
+          <span className="block text-xs text-admin-ink-soft">Opcional: más imágenes que van rotando arriba.</span>
+        </span>
+        <span className="text-admin-faint">›</span>
+      </button>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-admin-ink/10 p-4 md:p-5">
