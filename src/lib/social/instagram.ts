@@ -35,7 +35,7 @@ export type InstagramMedia = {
   id: string;
   caption?: string;
   media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
-  media_url: string;
+  media_url?: string; // missing on reels with licensed music
   thumbnail_url?: string;
   permalink: string;
   timestamp: string;
@@ -117,7 +117,7 @@ async function waitUntilContainerReady(creationId: string): Promise<void> {
 }
 
 export type InstagramMediaWithChildren = InstagramMedia & {
-  children?: { data: { id: string; media_type: "IMAGE" | "VIDEO"; media_url: string; thumbnail_url?: string }[] };
+  children?: { data: { id: string; media_type: "IMAGE" | "VIDEO"; media_url?: string; thumbnail_url?: string }[] };
 };
 
 /**

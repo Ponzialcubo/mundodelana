@@ -50,8 +50,12 @@ export async function importFromInstagram(batchSize = 10): Promise<ImportResult>
 
   for (const { post, child } of batch) {
     try {
-      const isVideo = child.media_type === "VIDEO";
-      const file = await download(child.media_url, isVideo ? "mp4" : "jpg");
+      // Reels with licensed music come without media_url: keep their cover
+      // frame as a photo instead, it still shows the piece.
+      const isVideo = child.media_type === "VIDEO" && Boolean(child.media_url);
+      const source = child.media_url ?? child.thumbnail_url;
+      if (!source) throw new Error("Sin archivo ni portada");
+      const file = await download(source, isVideo ? "mp4" : "jpg");
       const poster = isVideo && child.thumbnail_url ? await download(child.thumbnail_url, "jpg") : null;
       const meta = await sharp(isVideo ? poster?.buffer : file.buffer).metadata().catch(() => null);
 
