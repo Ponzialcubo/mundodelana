@@ -6,7 +6,7 @@ import { ProductGallery } from "@/components/public/ProductGallery";
 import { LikeButton } from "@/components/public/LikeButton";
 import { ProductCard } from "@/components/public/ProductCard";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
-import { STATUS_DOT, STATUS_LABEL, STATUS_CTA, STATUS_SCHEMA_AVAILABILITY, formatPrice } from "@/lib/product-status";
+import { STATUS_DOT, STATUS_LABEL, STATUS_CTA, STATUS_SCHEMA_AVAILABILITY, formatPrice, hasPrice } from "@/lib/product-status";
 import { productMetaFallback, getSiteSettings, phoneDigits, SITE_URL } from "@/lib/seo";
 
 export async function generateMetadata({
@@ -104,13 +104,16 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
     description: product.shortDescription || product.description || undefined,
     image: galleryPhotoUrls.map((url) => (url.startsWith("http") ? url : `${SITE_URL}${url}`)),
     category: category?.name,
-    offers: {
-      "@type": "Offer",
-      url: `${SITE_URL}/producto/${slug}`,
-      priceCurrency: "EUR",
-      price: product.price.toString(),
-      availability: STATUS_SCHEMA_AVAILABILITY[product.pieceStatus],
-    },
+    // Without a real price Google would show "0 €": leave the offer out until it's set.
+    offers: hasPrice(product.price.toString())
+      ? {
+          "@type": "Offer",
+          url: `${SITE_URL}/producto/${slug}`,
+          priceCurrency: "EUR",
+          price: product.price.toString(),
+          availability: STATUS_SCHEMA_AVAILABILITY[product.pieceStatus],
+        }
+      : undefined,
   };
 
   return (

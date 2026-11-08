@@ -56,7 +56,14 @@ export const STATUS_SCHEMA_AVAILABILITY: Record<PieceStatus, string> = {
   VENDIDO_POR_ENCARGO: "https://schema.org/MadeToOrder",
 };
 
+/** A price of 0 means the owner hasn't set it yet: show "Consultar precio" instead of "0 €". */
+export function hasPrice(price: number | string): boolean {
+  const n = typeof price === "string" ? parseFloat(price) : price;
+  return Number.isFinite(n) && n > 0;
+}
+
 export function formatPrice(price: number | string, priceType: "STOCK" | "PERSONALIZADO"): string {
+  if (!hasPrice(price)) return "Consultar precio";
   const n = typeof price === "string" ? parseFloat(price) : price;
   const formatted = `${n.toFixed(0)} €`;
   return priceType === "PERSONALIZADO" ? `desde ${formatted}` : formatted;
