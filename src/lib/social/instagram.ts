@@ -115,3 +115,30 @@ async function waitUntilContainerReady(creationId: string): Promise<void> {
 
   throw new Error("El vídeo está tardando demasiado en procesarse en Instagram. Inténtalo de nuevo en un minuto.");
 }
+
+export type InstagramMediaWithChildren = InstagramMedia & {
+  children?: { data: { id: string; media_type: "IMAGE" | "VIDEO"; media_url: string; thumbnail_url?: string }[] };
+};
+
+/**
+ * Walks the whole feed (Graph API pages of 50) including carousel children,
+ * for the one-off/periodic import into the media library.
+ */
+export async function fetchAllInstagramMedia(): Promise<InstagramMediaWithChildren[]> {
+  const igUserId = requireEnv("INSTAGRAM_BUSINESS_ACCOUNT_ID");
+  const fields =
+    "caption,media_type,media_url,thumbnail_url,permalink,timestamp,children{media_type,media_url,thumbnail_url}";
+  const all: InstagramMediaWithChildren[] = [];
+  let after: string | undefined;
+
+  do {
+    const page = await graphFetch<{
+      data: InstagramMediaWithChildren[];
+      paging?: { cursors?: { after?: string }; next?: string };
+    }>(`/${igUserId}/media`, { fields, limit: "50", ...(after ? { after } : {}) });
+    all.push(...page.data);
+    after = page.paging?.next ? page.paging.cursors?.after : undefined;
+  } while (after);
+
+  return all;
+}

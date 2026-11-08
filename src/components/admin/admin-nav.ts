@@ -3,6 +3,7 @@ export const MAIN = [
   { href: "/admin", label: "Inicio" },
   { href: "/admin/pedidos", label: "Pedidos" },
   { href: "/admin/productos", label: "Productos" },
+  { href: "/admin/fotos", label: "Fotos" },
 ];
 
 // Occasional sections: grouped under "Más" so the owner isn't faced with ten options.

@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       pieceStatus: body.pieceStatus,
       featured: Boolean(body.featured),
       priceType: body.priceType,
-      price: body.price,
+      price: body.price === "" ? 0 : body.price,
       instagramUrl: body.instagramUrl || null,
       tiktokUrl: body.tiktokUrl || null,
       mainImage: body.mainImage || null,

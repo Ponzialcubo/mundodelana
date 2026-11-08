@@ -352,3 +352,43 @@ model SocialPost {
   @@index([productId])
   @@index([scheduledFor])
 }
+
+// Photo/video library: media pulled in from Instagram (or uploaded) before it
+// is turned into products or gallery items. Originals are kept untouched so
+// they can be exported for AI image generation.
+enum LibraryStatus {
+  NUEVA
+  USADA
+  DESCARTADA
+}
+
+model LibraryMedia {
+  id String @id @default(cuid())
+
+  source String @default("instagram") // "instagram" | "upload" | "ai"
+
+  // One row per photo/video; carousel children share instagramPostId.
+  instagramMediaId String?   @unique
+  instagramPostId  String?
+  permalink        String?
+  caption          String?
+  takenAt          DateTime?
+
+  url       String
+  mediaType MediaType @default(IMAGE)
+  posterUrl String?
+  width     Int?
+  height    Int?
+
+  status LibraryStatus @default(NUEVA)
+
+  // Public "Trabajos hechos" gallery
+  showInGallery Boolean @default(false)
+  galleryTitle  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([instagramPostId])
+  @@index([status])
+}

@@ -92,7 +92,7 @@ export function AdminSidebar({ pendingCount, adminName }: { pendingCount: number
       </header>
 
       {/* Mobile bottom tabs */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-admin-ink/10 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-admin-ink/10 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
         {[...MAIN, { href: "/admin/mas", label: "Más" }].map((item) => {
           const active = item.href === "/admin/mas" ? moreActive : isActive(item.href);
           return (
@@ -105,7 +105,7 @@ export function AdminSidebar({ pendingCount, adminName }: { pendingCount: number
               <span className="h-1 w-6 rounded-full" style={{ background: active ? "#E8B4B8" : "transparent" }} />
               {item.label}
               {item.href === "/admin/pedidos" && pendingCount > 0 && (
-                <span className="absolute right-[22%] top-1.5 rounded-full bg-pink px-1.5 text-[10px] text-admin-ink">
+                <span className="absolute right-[18%] top-1.5 rounded-full bg-pink px-1.5 text-[10px] text-admin-ink">
                   {pendingCount}
                 </span>
               )}
