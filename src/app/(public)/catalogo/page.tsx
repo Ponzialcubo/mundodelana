@@ -75,7 +75,7 @@ export default async function CatalogoPage({ searchParams }: { searchParams: Pro
           </div>
           <div className="flex w-full items-center gap-2.5 md:w-auto">
             <div className="flex-1 md:w-80 md:flex-none">
-              <SearchLauncher placeholder="Buscar piezas o personajes…" />
+              <SearchLauncher placeholder="Buscar en la tienda…" />
             </div>
             <Link href="/catalogo/todo" className="shrink-0 rounded-full bg-ink px-4 py-3 text-[13.5px] font-medium text-surface">
               Ver todo

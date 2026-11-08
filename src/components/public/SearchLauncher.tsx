@@ -17,7 +17,7 @@ export function SearchLauncher({ placeholder = "Buscar piezas, categorías o per
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3.5-3.5" />
         </svg>
-        {placeholder}
+        <span className="min-w-0 truncate">{placeholder}</span>
       </button>
       {open && <SearchOverlay onClose={() => setOpen(false)} />}
     </>
