@@ -68,7 +68,13 @@ export function ImageSlotEditor({
           // eslint-disable-next-line @next/next/no-img-element -- admin preview with the shop's exact crop
           <img src={value.url} alt="" className="h-full w-full object-cover" style={{ objectPosition: `${value.focalX * 100}% ${value.focalY * 100}%` }} />
         ) : (
-          <span className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-admin-ink-soft">{emptyText}</span>
+          <span
+            className={`absolute flex items-center justify-center p-4 text-center text-xs text-admin-ink-soft md:text-sm ${
+              textZone === "left" ? "inset-y-0 left-[48%] right-0" : textZone === "bottom" ? "inset-x-0 bottom-[46%] top-0" : "inset-0"
+            }`}
+          >
+            {emptyText}
+          </span>
         )}
         {textZone !== "none" && (
           <span
