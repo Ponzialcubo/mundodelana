@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { createPortal } from "react-dom";
 import { ImagePlaceholder } from "@/components/ImagePlaceholder";
 import { FadeImage } from "@/components/public/FadeImage";
 import { LoopVideo } from "@/components/public/LoopVideo";
@@ -243,6 +244,29 @@ function Lightbox({
     if (next !== index) setIndex(next);
   }
 
+  // Rendered at the end of <body>: the sticky gallery would otherwise trap it under the header.
+  return createPortal(<LightboxView {...{ productName, items, index, initialIndex, trackRef, go, onScroll, onClose }} />, document.body);
+}
+
+function LightboxView({
+  productName,
+  items,
+  index,
+  initialIndex,
+  trackRef,
+  go,
+  onScroll,
+  onClose,
+}: {
+  productName: string;
+  items: GalleryItem[];
+  index: number;
+  initialIndex: number;
+  trackRef: React.RefObject<HTMLDivElement | null>;
+  go: (i: number) => void;
+  onScroll: () => void;
+  onClose: (index: number) => void;
+}) {
   const arrow = "absolute top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-2xl text-white backdrop-blur transition hover:bg-white/20 disabled:pointer-events-none disabled:opacity-0 md:flex";
 
   return (
