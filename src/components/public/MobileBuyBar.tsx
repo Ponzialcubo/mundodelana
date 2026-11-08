@@ -13,9 +13,12 @@ export function MobileBuyBar({ price, cta, href, whatsappHref }: { price: string
   useEffect(() => {
     const target = document.getElementById("comprar");
     if (!target) return;
-    const observer = new IntersectionObserver(([entry]) => setVisible(!entry.isIntersecting && entry.boundingClientRect.top < 0));
-    observer.observe(target);
-    return () => observer.disconnect();
+    // A scroll listener rather than an IntersectionObserver: a fast flick can jump
+    // past the buttons without them ever intersecting, and the bar would never show.
+    const update = () => setVisible(target.getBoundingClientRect().bottom < 0);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
   }, []);
 
   return (
