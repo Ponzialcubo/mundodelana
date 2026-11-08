@@ -79,11 +79,11 @@ export default async function CatalogoPage({ searchParams }: { searchParams: Pro
                 <Link
                   key={c.slug}
                   href={`/categoria/${c.slug}`}
-                  className="relative flex min-h-[132px] flex-col justify-between overflow-hidden rounded-2xl p-4 md:min-h-[170px] md:p-5"
+                  className={`relative flex min-h-[132px] flex-col justify-between overflow-hidden rounded-2xl p-4 md:min-h-[170px] md:p-5 ${s.cats.length === 1 ? "col-span-2 md:col-span-1" : ""}`}
                   style={{ background: s.tint, color: s.ink }}
                 >
                   <span className="relative z-10 flex flex-col">
-                    <span className="font-serif text-[21px] leading-tight md:text-[24px]">{c.name}</span>
+                    <span className="font-serif text-[19px] leading-tight md:text-[24px]">{c.name}</span>
                     <span className="text-[12.5px] opacity-75">{c._count.products} piezas</span>
                   </span>
                   <span className="relative z-10 text-[13px] font-medium">Ver ›</span>

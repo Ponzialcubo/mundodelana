@@ -5,20 +5,20 @@ function absoluteSocialUrl(url: string) {
 }
 
 // Fallback for the static /not-found page, which can't query the DB at build time.
-const DEFAULT_CATEGORIES = [
-  { slug: "amigurumis", name: "Amigurumis" },
-  { slug: "bebe", name: "Bebé" },
-  { slug: "decoracion", name: "Decoración" },
+const DEFAULT_SHOP_LINKS = [
+  { href: "/catalogo", name: "Toda la tienda" },
+  { href: "/categoria/amigurumis", name: "Amigurumis" },
+  { href: "/categoria/bebe", name: "Bebé" },
 ];
 
 export function Footer({
   instagramUrl = "",
   tiktokUrl = "",
-  categories = DEFAULT_CATEGORIES,
+  shopLinks = DEFAULT_SHOP_LINKS,
 }: {
   instagramUrl?: string;
   tiktokUrl?: string;
-  categories?: { slug: string; name: string }[];
+  shopLinks?: { href: string; name: string }[];
 }) {
   return (
     <footer className="flex flex-col gap-8 bg-ink px-5 pb-24 pt-10 text-surface md:flex-row md:items-start md:justify-between md:px-14 md:py-11">
@@ -33,15 +33,16 @@ export function Footer({
       <div className="grid grid-cols-2 gap-8 text-[13.5px] font-light leading-loose md:flex md:gap-14">
         <div className="flex flex-col">
           <span className="mb-1.5 font-mono text-xs font-medium tracking-wider text-surface/50">TIENDA</span>
-          {categories.map((c) => (
-            <Link key={c.slug} href={`/categoria/${c.slug}`} className="text-surface/85">
-              {c.name}
+          {shopLinks.map((l) => (
+            <Link key={l.href} href={l.href} className="text-surface/85">
+              {l.name}
             </Link>
           ))}
         </div>
         <div className="flex flex-col">
           <span className="mb-1.5 font-mono text-xs font-medium tracking-wider text-surface/50">ENCARGOS</span>
           <Link href="/como-funciona" className="text-surface/85">Cómo funciona</Link>
+          <Link href="/encargo" className="text-surface/85">Pedir a medida</Link>
           <Link href="/faq" className="text-surface/85">Preguntas frecuentes</Link>
           <Link href="/contacto" className="text-surface/85">Contacto</Link>
         </div>
