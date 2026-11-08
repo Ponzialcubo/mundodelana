@@ -154,6 +154,7 @@ export function ProductEditorForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
+  const [autofilling, setAutofilling] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function set<K extends keyof FormFields>(key: K, value: FormFields[K]) {
@@ -233,6 +234,40 @@ export function ProductEditorForm({
     });
   }
 
+  // Asks the AI to write the sheet from the photos. Only empty fields are
+  // filled, so nothing the owner already typed is overwritten.
+  async function autofill() {
+    setAutofilling(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/productos/autorrellenar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrls: media.filter((m) => m.mediaType === "IMAGE").map((m) => m.url) }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      setData((d) => {
+        const name = d.name || json.name;
+        return {
+          ...d,
+          name,
+          slug: slugTouched || d.slug ? d.slug : slugify(name),
+          shortDescription: d.shortDescription || json.shortDescription,
+          description: d.description || json.description,
+          materials: d.materials || json.materials,
+          metaTitle: d.metaTitle || json.metaTitle,
+          metaDescription: d.metaDescription || json.metaDescription,
+          categoryIds: d.categoryIds.length ? d.categoryIds : json.categoryIds,
+        };
+      });
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "No se ha podido rellenar con IA.");
+    } finally {
+      setAutofilling(false);
+    }
+  }
+
   // The cover is the first photo in the list (videos can't be a cover).
   const coverIndex = media.findIndex((i) => i.mediaType === "IMAGE");
 
@@ -274,7 +309,7 @@ export function ProductEditorForm({
       <button
         type="button"
         onClick={() => save("BORRADOR")}
-        disabled={loading || uploading}
+        disabled={loading || uploading || autofilling}
         className="flex-1 rounded-full border border-admin-ink/16 bg-white px-4 py-2.5 text-sm font-medium disabled:opacity-60 md:flex-none"
       >
         Guardar borrador
@@ -282,7 +317,7 @@ export function ProductEditorForm({
       <button
         type="button"
         onClick={() => save("PUBLICADO")}
-        disabled={loading || uploading}
+        disabled={loading || uploading || autofilling}
         className="flex-1 rounded-full bg-pink px-4 py-2.5 text-sm font-medium disabled:opacity-60 md:flex-none"
       >
         {loading ? "Guardando…" : data.publicationStatus === "PUBLICADO" ? "Guardar y publicar" : "Publicar"}
@@ -406,6 +441,17 @@ export function ProductEditorForm({
             )}
           </button>
         </div>
+
+        {media.some((m) => m.mediaType === "IMAGE") && (
+          <button
+            type="button"
+            onClick={autofill}
+            disabled={autofilling || uploading}
+            className="flex items-center justify-center gap-2 rounded-lg border border-pink/50 bg-admin-accent-soft px-4 py-3 text-sm font-medium disabled:opacity-60"
+          >
+            {autofilling ? "Mirando las fotos…" : "✨ Rellenar la ficha a partir de las fotos"}
+          </button>
+        )}
       </div>
 
       {/* 2. Basics */}
