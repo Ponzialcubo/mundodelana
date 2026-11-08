@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ImagePlaceholder } from "@/components/ImagePlaceholder";
+import Image from "next/image";
 import { FooterWithSettings } from "@/components/public/FooterWithSettings";
 import { getSiteSettings, phoneDigits } from "@/lib/seo";
 
@@ -13,6 +13,17 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: "/sobre-mi" },
   openGraph: { title, description, url: "/sobre-mi" },
+};
+
+
+// Real workshop photos taken from the Instagram process posts (20-cow project).
+const WORKSHOP = {
+  main: { src: "/uploads/85507eed-d8c0-4577-84e3-d88b8e0afb6a.jpg", alt: "Elvira empezando un proyecto de amigurumis en su taller" },
+  grid: [
+    { src: "/uploads/23048a7d-014a-44d4-bb47-ec48937d5709.jpg", alt: "Ovillos de algodón DMC listos para empezar" },
+    { src: "/uploads/0e67029e-0299-4b89-aee7-f6d7b2f3d07f.jpg", alt: "Veinte cabezas de vaca terminadas" },
+    { src: "/uploads/36bd5928-f9a2-410b-af35-bea0feaa2653.jpg", alt: "Un cuerpo a medio tejer" },
+  ],
 };
 
 export default async function SobreMiPage() {
@@ -44,7 +55,9 @@ export default async function SobreMiPage() {
             </a>
           </div>
         </div>
-        <ImagePlaceholder label="retrato de la artesana tejiendo en el taller" className="h-[280px] rounded-xl md:h-[420px]" />
+        <div className="relative aspect-[4/5] overflow-hidden rounded-2xl md:aspect-auto md:h-[460px]">
+          <Image src={WORKSHOP.main.src} alt={WORKSHOP.main.alt} fill priority sizes="(min-width: 768px) 45vw, 90vw" className="object-cover" />
+        </div>
       </section>
 
       <section className="border-t border-ink/8 bg-white px-5 py-12 md:px-14 md:py-14">
@@ -65,9 +78,14 @@ export default async function SobreMiPage() {
           </p>
         </div>
         <div className="mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-3 md:grid-cols-3">
-          <ImagePlaceholder label="mesa de trabajo con ovillos ordenados" className="col-span-2 h-[180px] rounded-xl md:h-[220px]" />
-          <ImagePlaceholder label="primer amigurumi, 2021" className="h-[180px] rounded-xl md:h-[220px]" />
-          <ImagePlaceholder label="detalle de agujas e hilos" className="col-span-2 h-[180px] rounded-xl md:col-span-1 md:h-[220px]" />
+          {WORKSHOP.grid.map((photo, i) => (
+            <figure key={photo.src} className={`flex flex-col gap-1.5 ${i === 0 ? "col-span-2 md:col-span-1" : ""}`}>
+              <div className="relative aspect-[4/5] overflow-hidden rounded-xl">
+                <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 768px) 260px, 45vw" className="object-cover" />
+              </div>
+              <figcaption className="text-[12.5px] text-ink/60">{photo.alt}</figcaption>
+            </figure>
+          ))}
         </div>
       </section>
 

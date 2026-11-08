@@ -16,7 +16,11 @@ export default async function AdminProductosPage({
   const where: Prisma.ProductWhereInput = {
     ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     ...(cat !== "Todas" ? { categories: { some: { name: cat } } } : {}),
-    ...(pub !== "Todos" ? { publicationStatus: pub as Prisma.EnumPublicationStatusFilter["equals"] } : {}),
+    ...(pub === "PENDIENTE"
+      ? { OR: [{ price: { lte: 0 } }, { mainImage: null }, { mainImage: "" }] }
+      : pub !== "Todos"
+        ? { publicationStatus: pub as Prisma.EnumPublicationStatusFilter["equals"] }
+        : {}),
   };
 
   const [products, categories, total] = await Promise.all([
@@ -58,10 +62,10 @@ export default async function AdminProductosPage({
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          {["Todos", "PUBLICADO", "BORRADOR", "ARCHIVADO"].map((p) => (
+          {["Todos", "PENDIENTE", "PUBLICADO", "BORRADOR", "ARCHIVADO"].map((p) => (
             <AdminChip
               key={p}
-              label={p === "Todos" ? "Todos" : PUBLICATION_LABEL[p as keyof typeof PUBLICATION_LABEL]}
+              label={p === "Todos" ? "Todos" : p === "PENDIENTE" ? "Sin precio o sin foto" : PUBLICATION_LABEL[p as keyof typeof PUBLICATION_LABEL]}
               active={pub === p}
               href={href({ pub: p })}
             />

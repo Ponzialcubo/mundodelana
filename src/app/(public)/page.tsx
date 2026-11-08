@@ -67,7 +67,9 @@ export default async function HomePage() {
 
   const visibleCategories = categories.filter((c) => c._count.products > 0);
   const heroPhotos = featured.slice(0, 3);
-  const workshopPhoto = gallery[0];
+  // A group shot reads as "the workshop"; keep it out of the delivered-work strip to avoid repeating it.
+  const workshopPhoto = gallery.find((g) => g.galleryTitle?.toLowerCase().includes("vaquitas")) ?? gallery[gallery.length - 1];
+  const deliveredWork = gallery.filter((g) => g.id !== workshopPhoto?.id);
 
   return (
     <>
@@ -133,7 +135,7 @@ export default async function HomePage() {
       {/* Categories: horizontal scroller on phones, grid on desktop */}
       <section className="pb-12 md:px-14 md:pb-16">
         <h2 className="mb-4 px-5 font-serif text-[26px] font-normal md:mb-6 md:px-0 md:text-[34px]">Explora por categoría</h2>
-        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:grid md:grid-cols-5 md:gap-4 md:overflow-visible md:px-0">
+        <div className="flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:grid md:grid-cols-5 md:gap-4 md:overflow-visible md:px-0">
           {visibleCategories.map((cat) => (
             <Link key={cat.id} href={`/categoria/${cat.slug}`} className="flex w-[38vw] max-w-[180px] shrink-0 snap-start flex-col gap-2 md:w-auto md:max-w-none">
               <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream">
@@ -212,14 +214,14 @@ export default async function HomePage() {
       </section>
 
       {/* Finished work */}
-      {gallery.length > 0 && (
+      {deliveredWork.length > 0 && (
         <section className="bg-cream py-12 md:px-14 md:py-16">
           <div className="mb-5 flex flex-col gap-1 px-5 md:mb-6 md:px-0">
             <h2 className="font-serif text-[26px] font-normal md:text-[34px]">Trabajos entregados</h2>
             <p className="text-[14px] font-light text-ink/70">Algunos encargos que ya están en su nueva casa.</p>
           </div>
-          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:grid md:grid-cols-5 md:overflow-visible md:px-0">
-            {gallery.slice(0, 5).map((g) => (
+          <div className="flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] md:grid md:grid-cols-5 md:overflow-visible md:px-0">
+            {deliveredWork.slice(0, 5).map((g) => (
               <figure key={g.id} className="flex w-[62vw] max-w-[260px] shrink-0 snap-start flex-col gap-2 md:w-auto md:max-w-none">
                 <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
                   <Image src={g.url} alt={g.galleryTitle ?? "Trabajo de crochet entregado"} fill sizes="(min-width: 768px) 18vw, 62vw" className="object-cover" />

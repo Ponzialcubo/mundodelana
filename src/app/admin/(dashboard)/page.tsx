@@ -13,25 +13,24 @@ function relativeTime(date: Date) {
 export default async function AdminDashboardPage() {
   const now = new Date();
 
-  const [pendingOrders, productCounts, activeSubs, likesAgg, incomplete, topProducts] = await Promise.all([
+  const incompleteWhere = {
+    publicationStatus: { not: "ARCHIVADO" as const },
+    OR: [{ mainImage: null }, { mainImage: "" }, { price: { lte: 0 } }, { publicationStatus: "BORRADOR" as const }],
+  };
+
+  const [pendingOrders, productCounts, activeSubs, likesAgg, incomplete, topProducts, incompleteCount] = await Promise.all([
     prisma.order.findMany({ where: { state: "NUEVO" }, orderBy: { createdAt: "asc" }, take: 5 }),
     prisma.product.groupBy({ by: ["publicationStatus"], _count: true }),
     prisma.subscriber.count({ where: { state: "ACTIVO" } }),
     prisma.product.aggregate({ _sum: { likes: true } }),
     // Anything not archived that is missing what a shopper needs to see.
-    prisma.product.findMany({
-      where: {
-        publicationStatus: { not: "ARCHIVADO" },
-        OR: [{ mainImage: null }, { mainImage: "" }, { price: { lte: 0 } }, { publicationStatus: "BORRADOR" }],
-      },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
+    prisma.product.findMany({ where: incompleteWhere, orderBy: { createdAt: "desc" }, take: 8 }),
     prisma.product.findMany({
       where: { publicationStatus: "PUBLICADO" },
       orderBy: [{ likes: "desc" }, { views: "desc" }],
       take: 5,
     }),
+    prisma.product.count({ where: incompleteWhere }),
   ]);
 
   const publishedProducts = productCounts.find((p) => p.publicationStatus === "PUBLICADO")?._count ?? 0;
@@ -93,9 +92,14 @@ export default async function AdminDashboardPage() {
 
       {incomplete.length > 0 && (
         <div className="flex flex-col gap-3 rounded-xl border border-admin-ink/10 bg-white p-5 md:p-6">
-          <div className="flex flex-col">
-            <span className="font-serif text-lg font-medium">Pendiente de completar</span>
-            <span className="text-xs text-admin-ink-soft">Productos a los que les falta algo para lucir en la tienda</span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col">
+              <span className="font-serif text-lg font-medium">Pendiente de revisar ({incompleteCount})</span>
+              <span className="text-xs text-admin-ink-soft">Sin precio, sin foto o sin publicar. Sin precio se ven como «Consultar precio».</span>
+            </div>
+            <Link href="/admin/productos?pub=PENDIENTE" className="shrink-0 text-sm font-medium text-admin-link">
+              Ver todos
+            </Link>
           </div>
           <div className="flex flex-col divide-y divide-admin-ink/8">
             {incomplete.map((p) => (
