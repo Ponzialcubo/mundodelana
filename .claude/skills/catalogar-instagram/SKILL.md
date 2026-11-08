@@ -9,14 +9,14 @@ El trabajo de catalogar lo hace Claude mirando las fotos. **No** se usa el botó
 
 ## Reglas
 
-- Todo se crea como **BORRADOR**, con `priceType: PERSONALIZADO` (por encargo) y precio 0. El precio y la publicación los decide Elvira.
+- Se crea con `priceType: PERSONALIZADO` (por encargo) y precio 0. Desde 2026-11-08 el usuario prefiere **publicar directamente**: el precio 0 se ve como «Consultar precio» y Elvira lo revisa en admin → «Pendiente de revisar». Pregunta si sigue siendo así antes de publicar.
 - **Nunca inventes datos.** Ni medidas, ni plazos, ni marcas de hilo: solo lo que se ve en la foto o lo que dice el texto del post. Si no sabes el material, pon «Algodón».
 - Voz de marca: la de `BRAND_VOICE` en `src/lib/content-prompt.ts`. Español de España, sin emojis, cercano pero profesional, en primera persona de Elvira cuando cuente la historia de la pieza.
 - **Una pieza = un producto**, aunque salga en varias publicaciones (por ejemplo Alicia, en 5 posts de proceso). Los pendientes van uno por diseño.
 - Antes de crear nada, compara con los productos que ya existen. Si la pieza ya está, marca sus fotos como usadas y **no toques el producto**.
 - Las fotos de grupo (20 vacas, 7 pingüinos…) van a la galería «Trabajos hechos» (`showInGallery`), no a un producto.
 - Se descartan los procesos (cabezas a medio hacer), los libros, el logo y las portadas con solo texto.
-- Personajes con licencia (Disney, Pokémon, Frida, Playmobil): se catalogan, pero avísale al usuario en el resumen.
+- Personajes con licencia: usa el nombre real (Cenicienta, Frida, Playmobil…) y asígnale la marca correspondiente (Disney, Frida Kahlo, Playmobil, Pokémon). El usuario lo ha aceptado.
 
 ## Pasos
 
@@ -33,7 +33,9 @@ Trabaja en una carpeta del scratchpad (`$W`). Los scripts están en `scripts/`.
 5. **Sesión**: `scripts/session.sh $W/cookie` (2 h, incluye la cookie de la puerta de Caddy).
 6. **Prueba**: `python3 -I scripts/apply.py $W` → revisa que dé «sin asignar: 0» y «problemas: ninguno».
 7. **Aplicar**: `python3 -I scripts/apply.py $W --apply`. Crea los productos con `POST /api/admin/productos` (mismas validaciones que el admin) y actualiza los estados de la biblioteca.
-8. **Resumen al usuario**: cuántos productos se han creado y en qué categorías, los productos publicados con precio 0, los avisos de licencias y qué hacer después (revisar precio y publicar desde Inicio → «Pendiente de completar»).
+8. **Revisar portadas**: genera una hoja con todas las portadas recortadas a 4:5 y cambia las que tengan texto de Instagram superpuesto por otra foto del mismo producto (intercambiando con `ProductImage` para no perder la antigua).
+9. **Relacionados**: recalcúlalos para todo el catálogo (misma marca > mismo tipo de pieza > categoría compartida). En `_RelatedProducts`, la fila (A, B) muestra A en la ficha de B.
+10. **Resumen al usuario**: cuántos productos se han creado y en qué categorías, los productos publicados con precio 0, los avisos de licencias y qué hacer después (revisar precio y publicar desde Inicio → «Pendiente de completar»).
 
 ## Lecciones (2026-11-08, primera catalogación: 94 posts → 54 productos)
 
