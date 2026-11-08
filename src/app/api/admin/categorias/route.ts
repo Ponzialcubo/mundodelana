@@ -15,6 +15,8 @@ export async function POST(req: Request) {
       slug: body.slug,
       description: body.description || null,
       coverImage: body.coverImage || null,
+      coverFocalX: body.coverFocalX ?? 0.5,
+      coverFocalY: body.coverFocalY ?? 0.5,
       metaTitle: body.metaTitle || null,
       metaDescription: body.metaDescription || null,
       order: (maxOrder._max.order ?? 0) + 1,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { AdminSearch, AdminChip } from "@/components/admin/AdminFilters";
 import { ProductRowActions } from "@/components/admin/ProductRowActions";
@@ -87,10 +88,23 @@ export default async function AdminProductosPage({
               return (
                 <tr key={p.id} className="border-b border-admin-ink/6">
                   <td className="px-4 py-3">
-                    <div
-                      className="h-11 w-11 rounded-md"
-                      style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 6px,#F7F6F4 6px 12px)" }}
-                    />
+                    {p.mainImage ? (
+                      <div className="relative h-11 w-11 overflow-hidden rounded-md">
+                        <Image
+                          src={p.mainImage}
+                          alt={p.name}
+                          fill
+                          sizes="44px"
+                          className="object-cover"
+                          style={{ objectPosition: `${p.mainImageFocalX * 100}% ${p.mainImageFocalY * 100}%` }}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="h-11 w-11 rounded-md"
+                        style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 6px,#F7F6F4 6px 12px)" }}
+                      />
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">

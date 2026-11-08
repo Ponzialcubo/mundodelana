@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { CategoryRowActions } from "@/components/admin/CategoryRowActions";
 
@@ -45,7 +46,20 @@ export default async function AdminCategoriasPage() {
                     {c.order}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="h-10 w-10 rounded-md" style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 6px,#F7F6F4 6px 12px)" }} />
+                    {c.coverImage ? (
+                      <div className="relative h-10 w-10 overflow-hidden rounded-md">
+                        <Image
+                          src={c.coverImage}
+                          alt={c.name}
+                          fill
+                          sizes="40px"
+                          className="object-cover"
+                          style={{ objectPosition: `${c.coverFocalX * 100}% ${c.coverFocalY * 100}%` }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-10 w-10 rounded-md" style={{ background: "repeating-linear-gradient(45deg,#EDEBE8 0 6px,#F7F6F4 6px 12px)" }} />
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">

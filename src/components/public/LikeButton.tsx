@@ -26,7 +26,7 @@ export function LikeButton({ slug, initialLikes }: { slug: string; initialLikes:
       <span style={{ color: liked ? "#D08F94" : "#4A3F3B" }} className="text-[15px]">
         ♥
       </span>
-      {likes} personas
+      {likes} {likes === 1 ? "persona" : "personas"}
     </button>
   );
 }
