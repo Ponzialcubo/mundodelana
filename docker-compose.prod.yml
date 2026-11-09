@@ -38,6 +38,8 @@ services:
       # Assistant of the back office (agente.sergiolab.es). Without them the «Asistente» section says it is off.
       AGENTE_URL: ${AGENTE_URL:-}
       AGENTE_KEY: ${AGENTE_KEY:-}
+      # "no" = never fall back to the paid API when the agent is down (see src/lib/ia.ts).
+      IA_RESPALDO_API: ${IA_RESPALDO_API:-}
       UPLOADS_DIR: /app/uploads
       NODE_ENV: production
     volumes:

@@ -28,6 +28,13 @@ Web: https://mundolana.es · Panel: https://mundolana.es/admin (detrás de una �
 - Lo que hace el agente aquí se ve en https://agente.sergiolab.es (Apps y tiendas → Mundo Lana). Copias previas a cada cambio: `/opt/backups/agente/mundolana/`.
 - ⚠️ El agente modifica el código de esta carpeta. Antes de cambiar algo a mano, partir SIEMPRE del código del servidor.
 
+## IA de los botones del panel (9 nov 2026)
+- Ficha de producto con fotos, textos de producto y categoría, posts de redes y prompts de imagen ya **no gastan créditos de la API**: los escribe el agente con su suscripción (`src/lib/ia.ts` → `POST /api/v1/herramientas/generar` del agente).
+- Modelos: `sonnet` solo en ficha con fotos y posts de redes (se nota la calidad); `haiku` en el resto. Fotos reducidas a 768 px (antes 1024): mitad de tokens.
+- Respaldo: si el agente no responde, se usa la API con el modelo más barato (`claude-haiku-5-5`). Para no gastar nunca API: `IA_RESPALDO_API=no` en `.env` (y añadirlo al `environment` del compose).
+- Consumo por tarea en https://agente.sergiolab.es → Ajustes y consumo (filas «IA · …»).
+- Cambios en la web o el panel: siempre por el Asistente (tickets), nunca con llamadas a la API desde la app.
+
 ## Arreglos
 - 2026-11-09: Configuración (`/admin/ajustes`) daba error 500: las pestañas se importaban desde el formulario cliente. Movidas a `src/lib/settings-tabs.ts`.
 - 2026-11-09: el `<main>` del panel usa `overflow-x-clip` (con `hidden` no funcionaban las barras fijas al hacer scroll).
