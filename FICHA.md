@@ -41,3 +41,4 @@ Web: https://mundolana.es · Panel: https://mundolana.es/admin (detrás de una �
 
 ## Cambios del asistente
 - 2026-11-09: prueba del desplegador (sin cambios visibles).
+- 2026-11-09: prueba del desplegador con GitHub Actions (sin cambios visibles).
