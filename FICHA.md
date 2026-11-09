@@ -33,3 +33,4 @@ Web: https://mundolana.es · Panel: https://mundolana.es/admin (detrás de una �
 - 2026-11-09: el `<main>` del panel usa `overflow-x-clip` (con `hidden` no funcionaban las barras fijas al hacer scroll).
 
 ## Cambios del asistente
+- 2026-11-09: prueba del desplegador (sin cambios visibles).
