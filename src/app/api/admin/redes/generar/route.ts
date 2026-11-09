@@ -1,18 +1,18 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
+import { IAError, generarJson, iaDisponible } from "@/lib/ia";
 import { BRAND_SYSTEM_PROMPT, OUTPUT_SCHEMA, buildUserPrompt } from "@/lib/social-prompt";
 import { formatPrice, hasPrice, productAction } from "@/lib/product-status";
 import { deadlinePending, formatMD, getActiveCampaign } from "@/lib/campaigns";
 
-export const maxDuration = 120;
+export const maxDuration = 160;
 
 /** Writes the Instagram caption + hashtags (and a TikTok version) for a product, in the brand's voice. */
 export async function POST(req: Request) {
   const adminId = await getAdminSession();
   if (!adminId) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: "Falta ANTHROPIC_API_KEY en el entorno del servidor." }, { status: 500 });
+  if (!iaDisponible()) return NextResponse.json({ error: "La IA no está configurada en este servidor." }, { status: 503 });
 
   const body = (await req.json()) as { productId?: string; angle?: string; idea?: string };
   if (!body.productId) return NextResponse.json({ error: "Falta el producto" }, { status: 400 });
@@ -42,25 +42,20 @@ export async function POST(req: Request) {
   );
 
   try {
-    const message = await new Anthropic().messages.create({
-      model: "claude-opus-5-5",
-      max_tokens: 4000,
-      system: BRAND_SYSTEM_PROMPT,
-      output_config: { effort: "low", format: { type: "json_schema", schema: OUTPUT_SCHEMA } },
-      messages: [{ role: "user", content: prompt }],
+    const parsed = await generarJson<{ caption: string; hashtags: string[]; tiktok: string }>({
+      tarea: "post-redes",
+      // Captions are the brand's voice in public: sonnet.
+      modelo: "sonnet",
+      sistema: BRAND_SYSTEM_PROMPT,
+      esquema: OUTPUT_SCHEMA as Record<string, unknown>,
+      texto: prompt,
     });
-    if (message.stop_reason === "refusal") {
-      return NextResponse.json({ error: "La IA no ha podido escribir este texto. Prueba con otras indicaciones." }, { status: 422 });
-    }
-    const text = message.content.find((block) => block.type === "text");
-    if (!text || text.type !== "text") return NextResponse.json({ error: "La IA no ha devuelto texto." }, { status: 502 });
-
-    const parsed = JSON.parse(text.text) as { caption: string; hashtags: string[]; tiktok: string };
-    const hashtags = [...new Set(parsed.hashtags.map((h) => `#${h.replace(/^#+/, "").replace(/\s+/g, "").toLowerCase()}`).filter((h) => h.length > 1))].slice(0, 25);
-    return NextResponse.json({ caption: parsed.caption.trim(), hashtags: hashtags.join(" "), tiktok: parsed.tiktok.trim() });
+    const tags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];
+    const hashtags = [...new Set(tags.map((h) => `#${String(h).replace(/^#+/, "").replace(/\s+/g, "").toLowerCase()}`).filter((h) => h.length > 1))].slice(0, 25);
+    return NextResponse.json({ caption: String(parsed.caption ?? "").trim(), hashtags: hashtags.join(" "), tiktok: String(parsed.tiktok ?? "").trim() });
   } catch (error) {
-    if (error instanceof Anthropic.RateLimitError) return NextResponse.json({ error: "La IA está saturada ahora mismo. Inténtalo en un minuto." }, { status: 429 });
-    console.error("Error generando texto con Anthropic:", error);
+    if (error instanceof IAError) return NextResponse.json({ error: error.message }, { status: error.status });
+    console.error("Error generando texto de redes:", error);
     return NextResponse.json({ error: "No se ha podido generar el texto." }, { status: 502 });
   }
 }

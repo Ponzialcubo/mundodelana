@@ -1,14 +1,14 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
 import { UPLOADS_DIR } from "@/lib/uploads";
 import { BRAND_VOICE } from "@/lib/content-prompt";
+import { IAError, generarJson, iaDisponible } from "@/lib/ia";
 
-export const maxDuration = 60;
+export const maxDuration = 160;
 
 const MAX_PHOTOS = 4;
 
@@ -44,11 +44,11 @@ function outputSchema(categoryNames: string[]) {
   };
 }
 
-/** Loads an already-uploaded photo and shrinks it: 1024px is plenty to recognise a piece and keeps tokens low. */
+/** Loads an already-uploaded photo and shrinks it: 768px is plenty to recognise a piece and costs about half the tokens of 1024px. */
 async function loadPhoto(url: string): Promise<string> {
   // basename() keeps the read inside the uploads volume whatever the client sends.
   const file = await readFile(path.join(UPLOADS_DIR, path.basename(url)));
-  const jpeg = await sharp(file).rotate().resize({ width: 1024, height: 1024, fit: "inside" }).jpeg({ quality: 80 }).toBuffer();
+  const jpeg = await sharp(file).rotate().resize({ width: 768, height: 768, fit: "inside" }).jpeg({ quality: 75 }).toBuffer();
   return jpeg.toString("base64");
 }
 
@@ -60,9 +60,7 @@ export async function POST(req: Request) {
   const adminId = await getAdminSession();
   if (!adminId) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: "Falta ANTHROPIC_API_KEY en el entorno del servidor." }, { status: 500 });
-  }
+  if (!iaDisponible()) return NextResponse.json({ error: "La IA no está configurada en este servidor." }, { status: 503 });
 
   const body = (await req.json()) as { imageUrls?: string[]; notes?: string };
   const imageUrls = (body.imageUrls ?? []).filter((u) => typeof u === "string" && u.startsWith("/uploads/")).slice(0, MAX_PHOTOS);
@@ -80,47 +78,10 @@ export async function POST(req: Request) {
   }
 
   const notes = body.notes?.trim();
-  const client = new Anthropic();
+  const categoryNames = categories.map((c) => c.name);
 
   try {
-    const message = await client.messages.create({
-      model: "claude-opus-5-5",
-      max_tokens: 4000,
-      system: SYSTEM_PROMPT,
-      output_config: {
-        effort: "low",
-        format: { type: "json_schema", schema: outputSchema(categories.map((c) => c.name)) },
-      },
-      messages: [
-        {
-          role: "user",
-          content: [
-            ...photos.map((data) => ({
-              type: "image" as const,
-              source: { type: "base64" as const, media_type: "image/jpeg" as const, data },
-            })),
-            {
-              type: "text",
-              text: [
-                `Categorías disponibles: ${categories.map((c) => c.name).join(", ") || "ninguna"}.`,
-                notes ? `Notas de Elvira: ${notes}` : "",
-                "Rellena la ficha de esta pieza.",
-              ]
-                .filter(Boolean)
-                .join("\n"),
-            },
-          ],
-        },
-      ],
-    });
-
-    if (message.stop_reason === "refusal") {
-      return NextResponse.json({ error: "La IA no ha podido describir estas fotos. Rellena la ficha a mano." }, { status: 422 });
-    }
-
-    const text = message.content.find((block) => block.type === "text");
-    if (!text || text.type !== "text") throw new Error("Respuesta vacía");
-    const result = JSON.parse(text.text) as {
+    const result = await generarJson<{
       name: string;
       shortDescription: string;
       description: string;
@@ -128,19 +89,29 @@ export async function POST(req: Request) {
       categories: string[];
       metaTitle: string;
       metaDescription: string;
-    };
-
+    }>({
+      tarea: "ficha-producto",
+      // Seeing the piece and writing the whole sheet is where quality shows: sonnet. Everything else uses haiku.
+      modelo: "sonnet",
+      sistema: SYSTEM_PROMPT,
+      esquema: outputSchema(categoryNames),
+      imagenes: photos,
+      texto: [
+        `Categorías disponibles: ${categoryNames.join(", ") || "ninguna"}.`,
+        notes ? `Notas de Elvira: ${notes}` : "",
+        "Rellena la ficha de esta pieza.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    });
+    const elegidas = Array.isArray(result.categories) ? result.categories : [];
     return NextResponse.json({
       ...result,
-      categoryIds: categories.filter((c) => result.categories.includes(c.name)).map((c) => c.id),
+      categories: elegidas,
+      categoryIds: categories.filter((c) => elegidas.includes(c.name)).map((c) => c.id),
     });
   } catch (err) {
-    if (err instanceof Anthropic.RateLimitError) {
-      return NextResponse.json({ error: "Demasiadas peticiones a la IA. Espera un minuto." }, { status: 429 });
-    }
-    if (err instanceof Anthropic.APIError) {
-      return NextResponse.json({ error: `Error de la IA (${err.status ?? "?"}). Inténtalo de nuevo.` }, { status: 502 });
-    }
-    return NextResponse.json({ error: "No se ha podido generar la ficha." }, { status: 500 });
+    const status = err instanceof IAError ? err.status : 500;
+    return NextResponse.json({ error: err instanceof IAError ? err.message : "No se ha podido generar la ficha." }, { status });
   }
 }

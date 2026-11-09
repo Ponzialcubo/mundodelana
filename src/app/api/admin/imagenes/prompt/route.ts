@@ -1,8 +1,8 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/session";
+import { IAError, generarTexto, iaDisponible } from "@/lib/ia";
 
-export const maxDuration = 60;
+export const maxDuration = 160;
 
 const SYSTEM_PROMPT = `Ayudas a Elvira, de Mundolana (crochet y amigurumis hechos a mano en Galicia), a pedir imágenes a ChatGPT o Gemini.
 
@@ -16,9 +16,7 @@ export async function POST(req: Request) {
   const adminId = await getAdminSession();
   if (!adminId) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: "Falta ANTHROPIC_API_KEY en el entorno del servidor." }, { status: 500 });
-  }
+  if (!iaDisponible()) return NextResponse.json({ error: "La IA no está configurada en este servidor." }, { status: 503 });
 
   const { prompt, idea } = (await req.json()) as { prompt?: string; idea?: string };
   if (!prompt?.trim() || !idea?.trim() || prompt.length > 8000 || idea.length > 1000) {
@@ -26,19 +24,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    const message = await new Anthropic().messages.create({
-      model: "claude-opus-5-5",
-      max_tokens: 3000,
-      system: SYSTEM_PROMPT,
-      output_config: { effort: "low" },
-      messages: [{ role: "user", content: `PROMPT BASE:\n${prompt}\n\nIDEA DE ELVIRA:\n${idea}` }],
-    });
-    const text = message.content.find((block) => block.type === "text");
-    if (message.stop_reason === "refusal" || !text || text.type !== "text") {
+    const final = await generarTexto({ tarea: "prompt-imagen", modelo: "haiku", sistema: SYSTEM_PROMPT, texto: `PROMPT BASE:\n${prompt}\n\nIDEA DE ELVIRA:\n${idea}` });
+    return NextResponse.json({ prompt: final });
+  } catch (error) {
+    if (error instanceof IAError && error.status === 422) {
       return NextResponse.json({ error: "La IA no ha podido reescribirlo. Usa el prompt con tu idea añadida al final." }, { status: 422 });
     }
-    return NextResponse.json({ prompt: text.text.trim() });
-  } catch {
-    return NextResponse.json({ error: "No se ha podido contactar con la IA. Prueba en un momento." }, { status: 502 });
+    return NextResponse.json({ error: error instanceof IAError ? error.message : "No se ha podido contactar con la IA. Prueba en un momento." }, { status: 502 });
   }
 }

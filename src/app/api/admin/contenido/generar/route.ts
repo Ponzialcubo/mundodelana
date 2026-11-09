@@ -1,6 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/session";
+import { IAError, generarJson, iaDisponible } from "@/lib/ia";
 import {
   CONTENT_BRAND_SYSTEM_PROMPT,
   CONTENT_FIELDS,
@@ -10,7 +10,7 @@ import {
   type ContentField,
 } from "@/lib/content-prompt";
 
-export const maxDuration = 60;
+export const maxDuration = 160;
 
 function isContentField(value: unknown): value is ContentField {
   return typeof value === "string" && (CONTENT_FIELDS as readonly string[]).includes(value);
@@ -20,12 +20,7 @@ export async function POST(req: Request) {
   const adminId = await getAdminSession();
   if (!adminId) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json(
-      { error: "Falta ANTHROPIC_API_KEY en el entorno del servidor." },
-      { status: 500 }
-    );
-  }
+  if (!iaDisponible()) return NextResponse.json({ error: "La IA no está configurada en este servidor." }, { status: 503 });
 
   const body = await req.json();
   const field = body.field;
@@ -39,42 +34,18 @@ export async function POST(req: Request) {
     ? buildCategoryContentPrompt(field, body.context ?? {}, notes)
     : buildProductContentPrompt(field, body.context ?? {}, notes);
 
-  const client = new Anthropic();
-
   try {
-    const message = await client.messages.create({
-      model: "claude-opus-5",
-      max_tokens: 1000,
-      system: CONTENT_BRAND_SYSTEM_PROMPT,
-      output_config: { format: { type: "json_schema", schema: CONTENT_OUTPUT_SCHEMA } },
-      messages: [{ role: "user", content: prompt }],
+    const parsed = await generarJson<{ text: string }>({
+      tarea: `texto-${field}`,
+      modelo: "haiku",
+      sistema: CONTENT_BRAND_SYSTEM_PROMPT,
+      esquema: CONTENT_OUTPUT_SCHEMA as Record<string, unknown>,
+      texto: prompt,
     });
-
-    if (message.stop_reason === "refusal") {
-      return NextResponse.json(
-        { error: "La IA no ha podido generar este texto. Prueba a rellenar más campos de contexto." },
-        { status: 422 }
-      );
-    }
-
-    const text = message.content.find((block) => block.type === "text");
-    if (!text || text.type !== "text") {
-      return NextResponse.json({ error: "La IA no ha devuelto texto." }, { status: 502 });
-    }
-
-    const parsed = JSON.parse(text.text) as { text: string };
-    return NextResponse.json({ text: parsed.text });
+    return NextResponse.json({ text: String(parsed.text ?? "").trim() });
   } catch (error) {
-    if (error instanceof Anthropic.RateLimitError) {
-      return NextResponse.json(
-        { error: "La API de Anthropic está saturada ahora mismo. Inténtalo en un minuto." },
-        { status: 429 }
-      );
-    }
-    if (error instanceof Anthropic.AuthenticationError) {
-      return NextResponse.json({ error: "La ANTHROPIC_API_KEY no es válida." }, { status: 500 });
-    }
-    console.error("Error generando contenido con Anthropic:", error);
+    if (error instanceof IAError) return NextResponse.json({ error: error.message }, { status: error.status });
+    console.error("Error generando contenido:", error);
     return NextResponse.json({ error: "No se ha podido generar el texto." }, { status: 502 });
   }
 }
