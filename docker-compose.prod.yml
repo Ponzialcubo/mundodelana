@@ -27,7 +27,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: ${NEXTAUTH_URL}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       RESEND_API_KEY: ${RESEND_API_KEY}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
@@ -38,8 +37,6 @@ services:
       # Assistant of the back office (agente.sergiolab.es). Without them the «Asistente» section says it is off.
       AGENTE_URL: ${AGENTE_URL:-}
       AGENTE_KEY: ${AGENTE_KEY:-}
-      # "no" = never fall back to the paid API when the agent is down (see src/lib/ia.ts).
-      IA_RESPALDO_API: ${IA_RESPALDO_API:-}
       UPLOADS_DIR: /app/uploads
       NODE_ENV: production
     volumes:
