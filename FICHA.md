@@ -7,7 +7,7 @@ Web: https://mundolana.es · Panel: https://mundolana.es/admin (detrás de una �
 - **Next.js 16 (App Router) + React 19 + Tailwind 4 + Prisma 6 + PostgreSQL 16.** Código en `src/`, esquema en `prisma/schema.prisma`, migraciones en `prisma/migrations/` (se aplican solas al arrancar: `docker-entrypoint.sh`).
 - Ojo: Next 16 tiene cambios respecto a versiones anteriores (`params` y `searchParams` son promesas, `middleware.ts` protege `/admin`). Ver `AGENTS.md`.
 - Producción: `docker-compose.prod.yml` (servicios `app` y `db`; contenedores `mundodelana-app-1`, `mundodelana-db-1`). **Nunca** `docker-compose.yml` a secas: es el de desarrollo.
-- Redesplegar: `cd /opt/sites/mundodelana && nohup docker compose -f docker-compose.prod.yml up -d --build > /tmp/mundolana-build.log 2>&1 &`
+- Desplegar: **push a `main`** → GitHub Actions construye `ghcr.io/ponzialcubo/mundodelana:<sha>` y el VPS lo descarga solo en ≤ 2 min (`/opt/ops-mcp/desplegar.sh mundodelana`, conf en `/opt/ops-mcp/despliegues/`), comprueba `/api/health` y vuelve atrás si falla. **Nunca compilar en el servidor.** Vuelta atrás: `desplegar.sh mundodelana --atras`.
 - Salud: `GET /api/health` (comprueba la base de datos). El contenedor tiene healthcheck con ella.
 - Fotos y vídeos subidos: volumen `uploads_data` en `/app/uploads`.
 - Código también en GitHub (`Ponzialcubo/mundodelana`, rama `main`). `deploy.sh` hace `git pull`: si se usa, antes revisar que no pise cambios hechos en el servidor.

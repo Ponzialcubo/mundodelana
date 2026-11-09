@@ -10,6 +10,8 @@ services:
       - db_data:/var/lib/postgresql/data
     cpus: 1.0
     mem_limit: 384m
+    memswap_limit: 384m
+    pids_limit: 128
     networks:
       - internal
     healthcheck:
@@ -19,9 +21,9 @@ services:
       retries: 10
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Built by GitHub Actions (.github/workflows/build-image.yml); /opt/ops-mcp/desplegar.sh retags it.
+    image: ghcr.io/ponzialcubo/mundodelana:desplegada
+    pull_policy: never
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
@@ -44,6 +46,8 @@ services:
     # Kept here (not only "docker update") so every deploy keeps them.
     cpus: 1.5
     mem_limit: 768m
+    memswap_limit: 768m
+    pids_limit: 256
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
       interval: 30s
