@@ -3,8 +3,8 @@
  * running the shop, changing the website, or settings. Same list feeds the
  * desktop sidebar and the mobile "Más" page.
  */
-export type NavIcon = "home" | "orders" | "messages" | "products" | "categories" | "brands" | "photos" | "pages" | "dates" | "social" | "settings" | "newsletter" | "legal" | "profile" | "ideas";
-export type NavItem = { href: string; label: string; hint: string; icon: NavIcon; badge?: "orders" | "messages" | "ideas" };
+export type NavIcon = "home" | "orders" | "messages" | "products" | "categories" | "brands" | "photos" | "pages" | "dates" | "social" | "settings" | "newsletter" | "legal" | "profile" | "ideas" | "assistant";
+export type NavItem = { href: string; label: string; hint: string; icon: NavIcon; badge?: "orders" | "messages" | "asistente" };
 
 export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   { title: null, items: [{ href: "/admin", label: "Inicio", hint: "Resumen del día", icon: "home" }] },
@@ -43,9 +43,10 @@ export const NAV_GROUPS: { title: string | null; items: NavItem[] }[] = [
   },
 ];
 
-export const IDEAS: NavItem = { href: "/admin/ideas", label: "Ideas", hint: "Apunta cambios y mejoras", icon: "ideas", badge: "ideas" };
+// The assistant (agente.sergiolab.es): she asks for changes to the web or this panel and they get done. Replaced «Ideas».
+export const ASISTENTE: NavItem = { href: "/admin/asistente", label: "Asistente", hint: "Pide cambios en la web", icon: "assistant", badge: "asistente" };
 
 /** Bottom tabs on phones; everything else lives under "Más". */
 export const MOBILE_TABS = ["/admin", "/admin/pedidos", "/admin/mensajes", "/admin/productos"];
 
-export const ALL_ITEMS = [...NAV_GROUPS.flatMap((g) => g.items), IDEAS];
+export const ALL_ITEMS = [...NAV_GROUPS.flatMap((g) => g.items), ASISTENTE];

@@ -1,5 +1,6 @@
 "use client";
 
+import { SETTINGS_TABS, type SettingsTab } from "@/lib/settings-tabs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -18,14 +19,6 @@ type Settings = {
 type Faq = { id: string; question: string; answer: string };
 type Testimonial = { id: string; text: string; author: string; origin: string | null; visible: boolean };
 
-export const SETTINGS_TABS = [
-  { key: "contacto", label: "Contacto y horario", hint: "Teléfono, email, horario y redes. Salen en Contacto, en el pie de la web y en el botón de WhatsApp." },
-  { key: "preguntas", label: "Preguntas frecuentes", hint: "Salen en la página de preguntas frecuentes y en «Cómo funciona»." },
-  { key: "opiniones", label: "Opiniones", hint: "Lo que dicen tus clientas. Las tres primeras visibles salen en inicio y en «Cómo funciona»." },
-  { key: "google", label: "Google", hint: "Cómo aparece la web en los resultados de Google." },
-] as const;
-
-export type SettingsTab = (typeof SETTINGS_TABS)[number]["key"];
 
 const INPUT = "w-full rounded-lg border border-admin-ink/14 bg-admin-bg px-4 py-2.5 text-[16px] outline-none focus:border-admin-ink/40 md:text-sm";
 const CARD = "flex flex-col gap-4 rounded-2xl border border-admin-ink/10 bg-white p-5 md:p-6";

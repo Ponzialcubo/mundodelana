@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ticketsQueEsperan } from "@/lib/asistente";
 import { prisma } from "@/lib/prisma";
 import { getActiveCampaign } from "@/lib/campaigns";
 import { AdminIcon } from "@/components/admin/AdminIcon";
@@ -21,7 +22,7 @@ export default async function AdminDashboardPage() {
     OR: [{ mainImage: null }, { mainImage: "" }, { price: { lte: 0 } }, { publicationStatus: "BORRADOR" as const }],
   };
 
-  const [pendingOrders, productCounts, activeSubs, likesAgg, incomplete, topProducts, incompleteCount, unreadMessages, campaign, openIdeas] = await Promise.all([
+  const [pendingOrders, productCounts, activeSubs, likesAgg, incomplete, topProducts, incompleteCount, unreadMessages, campaign, waitingTickets] = await Promise.all([
     prisma.order.findMany({ where: { state: "NUEVO" }, orderBy: { createdAt: "asc" }, take: 5 }),
     prisma.product.groupBy({ by: ["publicationStatus"], _count: true }),
     prisma.subscriber.count({ where: { state: "ACTIVO" } }),
@@ -36,7 +37,7 @@ export default async function AdminDashboardPage() {
     prisma.product.count({ where: incompleteWhere }),
     prisma.contactMessage.count({ where: { readAt: null, reply: null } }),
     getActiveCampaign(),
-    prisma.idea.count({ where: { status: { in: ["NUEVA", "EN_REVISION"] } } }),
+    ticketsQueEsperan(),
   ]);
 
   const shortcuts: { href: string; icon: NavIcon; title: string; text: string; tone: string }[] = [
@@ -45,7 +46,7 @@ export default async function AdminDashboardPage() {
       ? { href: `/admin/fechas/${campaign.id}`, icon: "dates", title: campaign.name, text: "Fecha especial en la web ahora", tone: "#E3EADB" }
       : { href: "/admin/fechas", icon: "dates", title: "Fechas especiales", text: "Prepara la próxima con tiempo", tone: "#E3EADB" },
     { href: "/admin/imagenes-web", icon: "pages", title: "Páginas de la web", text: "Textos, banners y fotos", tone: "#EFE3F3" },
-    { href: "/admin/ideas", icon: "ideas", title: "Ideas", text: openIdeas ? `${openIdeas} abiertas` : "Apunta cambios y mejoras", tone: "#FBF3E4" },
+    { href: "/admin/asistente", icon: "assistant", title: "Asistente", text: waitingTickets ? `${waitingTickets} esperando tu respuesta` : "Pide cambios en la web", tone: "#FBF3E4" },
   ];
 
   const publishedProducts = productCounts.find((p) => p.publicationStatus === "PUBLICADO")?._count ?? 0;

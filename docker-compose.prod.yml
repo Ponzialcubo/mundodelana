@@ -35,6 +35,9 @@ services:
       AUTH_SECRET: ${AUTH_SECRET}
       INSTAGRAM_PAGE_ACCESS_TOKEN: ${INSTAGRAM_PAGE_ACCESS_TOKEN}
       INSTAGRAM_BUSINESS_ACCOUNT_ID: ${INSTAGRAM_BUSINESS_ACCOUNT_ID}
+      # Assistant of the back office (agente.sergiolab.es). Without them the «Asistente» section says it is off.
+      AGENTE_URL: ${AGENTE_URL:-}
+      AGENTE_KEY: ${AGENTE_KEY:-}
       UPLOADS_DIR: /app/uploads
       NODE_ENV: production
     volumes:
@@ -42,6 +45,12 @@ services:
     # Kept here (not only "docker update") so every deploy keeps them.
     cpus: 1.5
     mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     depends_on:
       db:
         condition: service_healthy

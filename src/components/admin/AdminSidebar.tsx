@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ALL_ITEMS, IDEAS, MOBILE_TABS, NAV_GROUPS, type NavItem } from "@/components/admin/admin-nav";
+import { ALL_ITEMS, ASISTENTE, MOBILE_TABS, NAV_GROUPS, type NavItem } from "@/components/admin/admin-nav";
 import { AdminIcon } from "@/components/admin/AdminIcon";
 
-export type AdminCounts = { orders: number; messages: number; ideas: number };
+export type AdminCounts = { orders: number; messages: number; asistente: number };
 
 export function AdminSidebar({ counts, adminName }: { counts: AdminCounts; adminName: string }) {
   const pathname = usePathname();
@@ -19,7 +19,7 @@ export function AdminSidebar({ counts, adminName }: { counts: AdminCounts; admin
 
   const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
   const moreActive = pathname === "/admin/mas" || ALL_ITEMS.some((i) => !MOBILE_TABS.includes(i.href) && isActive(i.href));
-  const badge = (item: NavItem) => (item.badge && item.badge !== "ideas" ? counts[item.badge] : 0);
+  const badge = (item: NavItem) => (item.badge && item.badge !== "asistente" ? counts[item.badge] : 0);
 
   return (
     <>
@@ -59,15 +59,15 @@ export function AdminSidebar({ counts, adminName }: { counts: AdminCounts; admin
 
         <div className="flex flex-col gap-2 border-t border-admin-ink/10 p-3">
           <Link
-            href={IDEAS.href}
-            className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition ${isActive(IDEAS.href) ? "bg-admin-ink text-white" : "bg-[#FBF3E4] text-admin-ink hover:bg-[#F6E7D3]"}`}
+            href={ASISTENTE.href}
+            className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition ${isActive(ASISTENTE.href) ? "bg-admin-ink text-white" : "bg-[#FBF3E4] text-admin-ink hover:bg-[#F6E7D3]"}`}
           >
-            <AdminIcon name="ideas" className="h-[18px] w-[18px]" />
+            <AdminIcon name="assistant" className="h-[18px] w-[18px]" />
             <span className="flex flex-1 flex-col leading-tight">
-              Ideas
-              <span className={`text-[11px] font-normal ${isActive(IDEAS.href) ? "text-white/70" : "text-admin-ink-soft"}`}>Apunta cambios y mejoras</span>
+              Asistente
+              <span className={`text-[11px] font-normal ${isActive(ASISTENTE.href) ? "text-white/70" : "text-admin-ink-soft"}`}>Pide cambios en la web</span>
             </span>
-            {counts.ideas > 0 && <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] leading-none text-admin-ink">{counts.ideas}</span>}
+            {counts.asistente > 0 && <span title="Tickets esperando tu respuesta" className="rounded-full bg-pink px-1.5 py-0.5 text-[10px] font-medium leading-none text-admin-ink">{counts.asistente}</span>}
           </Link>
           <div className="flex items-center gap-2.5 px-1.5 pt-1">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-pink font-serif text-xs font-medium text-admin-ink">{adminName[0]}</span>
@@ -92,8 +92,9 @@ export function AdminSidebar({ counts, adminName }: { counts: AdminCounts; admin
           <span className="font-serif text-base font-medium text-admin-ink">Mundolana</span>
         </Link>
         <div className="flex items-center gap-2">
-          <Link href={IDEAS.href} className="flex items-center gap-1.5 rounded-full bg-[#FBF3E4] px-3 py-1.5 text-xs font-medium text-admin-ink">
-            <AdminIcon name="ideas" className="h-4 w-4" /> Ideas
+          <Link href={ASISTENTE.href} className="flex items-center gap-1.5 rounded-full bg-[#FBF3E4] px-3 py-1.5 text-xs font-medium text-admin-ink">
+            <AdminIcon name="assistant" className="h-4 w-4" /> Asistente
+            {counts.asistente > 0 && <span className="rounded-full bg-pink px-1.5 text-[10px] leading-4">{counts.asistente}</span>}
           </Link>
           <Link href="/" target="_blank" className="text-xs font-medium text-admin-link">
             Tienda ↗

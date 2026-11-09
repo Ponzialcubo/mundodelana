@@ -63,13 +63,17 @@ html {
      stray image) forcing horizontal scroll on the whole page — the mobile
      browser would otherwise zoom out to fit it, misaligning everything
      else. Elements that legitimately need horizontal scroll (tables,
-     galleries) must opt in with their own overflow-x-auto container. */
+     galleries) must opt in with their own overflow-x-auto container.
+     `clip` (not `hidden`) so position: sticky keeps working; `hidden` stays as
+     the fallback for browsers without `clip`. */
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
   font-family: var(--font-work-sans), system-ui, sans-serif;
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Loading shimmer for images and media */

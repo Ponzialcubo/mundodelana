@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { SETTINGS_TABS, SettingsForm, type SettingsTab } from "@/components/admin/SettingsForm";
+import { SettingsForm } from "@/components/admin/SettingsForm";
+import { SETTINGS_TABS, type SettingsTab } from "@/lib/settings-tabs";
 
 export default async function AdminAjustesPage({ searchParams }: { searchParams: Promise<{ seccion?: string }> }) {
   const { seccion } = await searchParams;

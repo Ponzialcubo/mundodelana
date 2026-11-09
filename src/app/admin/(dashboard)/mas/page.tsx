@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { IDEAS, MOBILE_TABS, NAV_GROUPS } from "@/components/admin/admin-nav";
+import { ASISTENTE, MOBILE_TABS, NAV_GROUPS } from "@/components/admin/admin-nav";
 import { AdminIcon } from "@/components/admin/AdminIcon";
 import { AdminLogoutButton } from "@/components/admin/AdminLogoutButton";
 
@@ -8,13 +8,13 @@ export default function AdminMasPage() {
     <div className="flex flex-col gap-5 p-5">
       <h1 className="font-serif text-2xl font-normal">Más opciones</h1>
 
-      <Link href={IDEAS.href} className="flex items-center gap-3.5 rounded-2xl bg-[#FBF3E4] p-4">
+      <Link href={ASISTENTE.href} className="flex items-center gap-3.5 rounded-2xl bg-[#FBF3E4] p-4">
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white">
-          <AdminIcon name="ideas" className="h-5 w-5" />
+          <AdminIcon name="assistant" className="h-5 w-5" />
         </span>
         <span className="flex flex-1 flex-col">
-          <span className="font-medium">Ideas</span>
-          <span className="text-xs text-admin-ink-soft">Apunta cambios y mejoras para la web</span>
+          <span className="font-medium">Asistente</span>
+          <span className="text-xs text-admin-ink-soft">Pide cambios en la web o en este panel y se hacen</span>
         </span>
         <span className="text-admin-faint">›</span>
       </Link>
