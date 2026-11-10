@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ESTADO, Hoja, Icono, Texto, accionesTicket, api, fecha, limpiarTitulo, useAviso, type Detalle, type IconoNombre, type Msg } from "./comun";
 import { Inicios } from "./AsistenteLista";
+import { BarraProgreso, guardado, guardar } from "./Pildora";
 
 const FASES: { k: string; label: string; icono: IconoNombre }[] = [
   { k: "en_cola", label: "En cola", icono: "reloj" },
@@ -31,6 +32,7 @@ function Encargo({ m }: { m: Msg }) {
           ))}
         </ol>
       )}
+      {!fallo && m.fase !== "hecho" && <BarraProgreso p={m.progreso} fase={m.fase} />}
       {m.detalle && !fallo && m.fase !== "hecho" && <p className="text-[13px] text-admin-ink-soft">{m.detalle}</p>}
     </div>
   );
@@ -166,14 +168,18 @@ export function AsistenteChat({ id }: { id: number }) {
   const paso = d.estado === "abierta" ? (propuestaAbierta ? 2 : 1) : d.estado === "enviada" ? 3 : 4;
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-140px)] w-full max-w-3xl flex-col md:min-h-dvh">
-      <header className="sticky top-[53px] z-20 flex flex-col gap-2.5 border-b border-admin-ink/10 bg-admin-bg/95 px-4 pb-3 pt-3 backdrop-blur md:top-0 md:px-8 md:pt-6">
+    <div className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col">
+      <header className="sticky top-0 z-20 flex flex-col gap-2.5 border-b border-admin-ink/10 bg-admin-bg/95 px-4 pb-3 pt-[max(.75rem,env(safe-area-inset-top))] backdrop-blur md:px-8 md:pt-6">
         <div className="flex items-center gap-2">
           <Link href="/admin/asistente" aria-label="Volver a los tickets" className="-ml-1.5 rounded-full p-1.5 hover:bg-white"><Icono n="atras" /></Link>
           <div className="flex min-w-0 flex-1 flex-col">
             <b className="truncate text-[15px] font-medium"><span className="mr-1 font-mono text-xs text-admin-ink-soft">#{d.numero}</span>{limpiarTitulo(d.titulo)}</b>
             <small className="text-xs text-admin-ink-soft">Ticket {ESTADO[d.estado]?.label.toLowerCase()}</small>
           </div>
+          <button onClick={() => { guardar("chat-plegado", String(id)); router.push(guardado("pantalla") || "/admin"); }} aria-label="Plegar el chat" title="Plegar: vuelve a donde estabas; el chat queda abajo"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-admin-ink/14 bg-white">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
           <button onClick={() => nuevo()} className="flex shrink-0 items-center gap-1 rounded-full border border-admin-ink/14 bg-white px-3 py-1.5 text-xs font-medium">
             <Icono n="mas" className="h-3.5 w-3.5" /> Nuevo
           </button>
@@ -254,7 +260,7 @@ export function AsistenteChat({ id }: { id: number }) {
         <div ref={fin} />
       </div>
 
-      <div className="sticky bottom-[calc(60px+env(safe-area-inset-bottom))] z-20 flex flex-col gap-2.5 border-t border-admin-ink/10 bg-admin-bg/95 px-4 py-3 backdrop-blur md:bottom-0 md:px-8 md:pb-5">
+      <div className="sticky bottom-0 z-20 flex flex-col gap-2.5 border-t border-admin-ink/10 bg-admin-bg/95 px-4 pt-3 pb-[max(.75rem,env(safe-area-inset-bottom))] backdrop-blur md:px-8 md:pb-5">
         {opciones.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {opciones.map((o) => (

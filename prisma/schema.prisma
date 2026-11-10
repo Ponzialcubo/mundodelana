@@ -331,6 +331,9 @@ model SiteSettings {
 
   defaultMetaTitle       String @default("Mundolana · crochet y amigurumis hechos a mano en España")
   defaultMetaDescription String @default("Amigurumis, decoración y piezas de bebé tejidas a mano por encargo, con algodón 100 % de alta calidad. Envíos a toda España desde Galicia.")
+
+  // Admin panel design chosen by the owner (Diseño del panel): JSON, see src/lib/panel-diseno.ts
+  panelDesign String @default("")
 }
 
 // ---------- Preparación de publicaciones en redes ----------

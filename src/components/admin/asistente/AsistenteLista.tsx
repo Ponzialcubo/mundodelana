@@ -1,5 +1,6 @@
 "use client";
 
+import { BarraProgreso } from "./Pildora";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -20,8 +21,9 @@ function FilaTicket({ c, onMenu }: { c: Conv; onMenu: (c: Conv) => void }) {
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <b className="truncate text-[15px] font-medium">{limpiarTitulo(c.titulo)}</b>
           <small className="line-clamp-2 text-[13px] text-admin-ink-soft">
-            {c.ref_numero ? `Corrige el ticket #${c.ref_numero}` : c.viene_de_numero ? `Sale del ticket #${c.viene_de_numero}` : c.ultimo ? c.ultimo.replace(/\s+/g, " ").slice(0, 120) : "Sin mensajes todavía"}
+            {c.estado === "enviada" && c.progreso ? "" : c.ref_numero ? `Corrige el ticket #${c.ref_numero}` : c.viene_de_numero ? `Sale del ticket #${c.viene_de_numero}` : c.ultimo ? c.ultimo.replace(/\s+/g, " ").slice(0, 120) : "Sin mensajes todavía"}
           </small>
+          {c.estado === "enviada" && <BarraProgreso p={c.progreso} />}
         </span>
         <span className="flex shrink-0 flex-col items-end gap-1">
           <time className="text-xs text-admin-muted">{fecha(c.actualizada)}</time>

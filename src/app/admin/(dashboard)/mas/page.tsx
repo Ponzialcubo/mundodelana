@@ -7,6 +7,7 @@ export default function AdminMasPage() {
   return (
     <div className="flex flex-col gap-5 p-5">
       <h1 className="font-serif text-2xl font-normal">Más opciones</h1>
+      <Link href="/admin/diseno" className="text-sm text-admin-link">Diseño del panel: barra de abajo e Inicio</Link>
 
       <Link href={ASISTENTE.href} className="flex items-center gap-3.5 rounded-2xl bg-[#FBF3E4] p-4">
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white">

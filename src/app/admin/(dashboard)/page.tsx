@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getActiveCampaign } from "@/lib/campaigns";
 import { AdminIcon } from "@/components/admin/AdminIcon";
 import type { NavIcon } from "@/components/admin/admin-nav";
+import { leerDiseno } from "@/lib/panel-diseno";
 
 function relativeTime(date: Date) {
   const diffMs = Date.now() - date.getTime();
@@ -39,6 +40,9 @@ export default async function AdminDashboardPage() {
     getActiveCampaign(),
     ticketsQueEsperan(),
   ]);
+  // Order and visibility of the blocks (Diseño del panel), applied with CSS order so the markup stays as it is.
+  const bloques = leerDiseno((await prisma.siteSettings.findUnique({ where: { id: 1 }, select: { panelDesign: true } }))?.panelDesign).bloques;
+  const o = (k: string) => { const i = bloques.findIndex((b) => b.k === k); return { order: i + 1, display: bloques[i]?.ver === false ? "none" : undefined }; };
 
   const shortcuts: { href: string; icon: NavIcon; title: string; text: string; tone: string }[] = [
     { href: "/admin/productos?pub=PENDIENTE", icon: "products", title: "Poner precios", text: incompleteCount ? `${incompleteCount} piezas sin precio o foto` : "Todo al día", tone: "#F1E4E5" },
@@ -80,7 +84,7 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div style={o("atajos")} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {shortcuts.map((c) => (
           <Link key={c.href} href={c.href} className="flex flex-col gap-2.5 rounded-2xl border border-admin-ink/10 bg-white p-4 transition hover:shadow-[0_8px_24px_rgba(31,27,26,.07)]">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: c.tone }}>
@@ -95,7 +99,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {unreadMessages > 0 && (
-        <Link href="/admin/mensajes" className="flex items-center justify-between gap-3 rounded-xl border border-pink/40 bg-admin-accent-soft p-5">
+        <Link href="/admin/mensajes" style={o("mensajes")} className="flex items-center justify-between gap-3 rounded-xl border border-pink/40 bg-admin-accent-soft p-5">
           <span className="flex flex-col">
             <span className="font-serif text-lg font-medium">
               {unreadMessages} mensaje{unreadMessages === 1 ? "" : "s"} sin atender
@@ -107,7 +111,7 @@ export default async function AdminDashboardPage() {
       )}
 
       {pendingOrders.length > 0 ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-pink/40 bg-admin-accent-soft p-5 md:p-6">
+        <div style={o("pedidos")} className="flex flex-col gap-3 rounded-xl border border-pink/40 bg-admin-accent-soft p-5 md:p-6">
           <div className="flex items-baseline justify-between gap-3">
             <span className="font-serif text-lg font-medium">
               {pendingOrders.length} encargo{pendingOrders.length === 1 ? "" : "s"} sin responder
@@ -127,13 +131,13 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-admin-ink/10 bg-white p-5 text-sm text-admin-ink-soft">
+        <div style={o("pedidos")} className="rounded-xl border border-admin-ink/10 bg-white p-5 text-sm text-admin-ink-soft">
           No hay encargos pendientes de responder. 🎉
         </div>
       )}
 
       {incomplete.length > 0 && (
-        <div className="flex flex-col gap-3 rounded-xl border border-admin-ink/10 bg-white p-5 md:p-6">
+        <div style={o("incompletos")} className="flex flex-col gap-3 rounded-xl border border-admin-ink/10 bg-white p-5 md:p-6">
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-col">
               <span className="font-serif text-lg font-medium">Pendiente de revisar ({incompleteCount})</span>
@@ -154,7 +158,7 @@ export default async function AdminDashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-3">
+      <div style={o("cifras")} className="grid grid-cols-3 gap-3">
         <Link href="/admin/productos?pub=PUBLICADO" className="flex flex-col gap-1 rounded-xl border border-admin-ink/10 bg-white p-4">
           <span className="font-serif text-2xl font-medium">{publishedProducts}</span>
           <span className="text-xs text-admin-ink-soft">en la tienda</span>
@@ -171,7 +175,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {topProducts.length > 0 && (
-        <div className="flex flex-col gap-3 rounded-xl border border-admin-ink/10 bg-white p-5 md:p-6">
+        <div style={o("top")} className="flex flex-col gap-3 rounded-xl border border-admin-ink/10 bg-white p-5 md:p-6">
           <span className="font-serif text-lg font-medium">Lo que más gusta</span>
           <div className="flex flex-col divide-y divide-admin-ink/8">
             {topProducts.map((p, i) => (

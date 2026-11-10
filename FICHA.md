@@ -42,3 +42,10 @@ Web: https://mundolana.es · Panel: https://mundolana.es/admin (detrás de una �
 ## Cambios del asistente
 - 2026-11-09: prueba del desplegador (sin cambios visibles).
 - 2026-11-09: prueba del desplegador con GitHub Actions (sin cambios visibles).
+
+## Diseño del panel como Colegio (10 nov 2026)
+- Móvil: cabecera con menú (cajón con todas las secciones por grupos), título de la pantalla y botón «Agente»; barra inferior con 4 secciones elegidas en **/admin/diseno** y «Nuevo producto» en el centro. Dentro de un chat del asistente no hay barras.
+- Diseño guardado en `SiteSettings.panelDesign` (JSON, `src/lib/panel-diseno.ts`; migración `20261111200000_panel_design`, solo añade una columna). API `PUT /api/admin/diseno`. Inicio ordena/oculta sus bloques con CSS `order` según ese diseño. Pantalla al abrir: una vez por visita.
+- Asistente: barra de progreso estimado (lista y tarjeta del encargo), botón «Plegar» (vuelve a la última pantalla) y píldora flotante (`asistente/Pildora.tsx`) con los tickets en marcha y el chat plegado.
+- Zoom con los dedos + botón «Tamaño normal» (`VueltaZoom` en `AdminSidebar.tsx`).
+- Copia previa de la BD: `/opt/backups/mundolana-diseno-*`.
