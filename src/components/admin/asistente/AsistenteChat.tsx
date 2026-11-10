@@ -127,7 +127,12 @@ export function AsistenteChat({ id }: { id: number }) {
   const enviar = async (t = texto) => {
     if (!t.trim() || ocupado) return;
     setOcupado(true);
-    try { await api(`/conversaciones/${id}/mensajes`, { body: { texto: t } }); if (t === texto) setTexto(""); await cargar(); }
+    try {
+      // In a ticket that is already running, a new message opens a new ticket that keeps this one's context.
+      const r = await api<{ conv?: number }>(`/conversaciones/${id}/mensajes`, { body: { texto: t } });
+      if (t === texto) setTexto("");
+      if (r.conv) { aviso.mostrar("Te he abierto un ticket nuevo con esa idea"); router.push(`/admin/asistente/${r.conv}`); } else await cargar();
+    }
     catch (e) { fallar(e); }
     finally { setOcupado(false); }
   };
@@ -136,6 +141,10 @@ export function AsistenteChat({ id }: { id: number }) {
   };
   const resolver = async (m: Msg, accion: "confirmar" | "descartar") => {
     try { await api(`/conversaciones/${id}/propuestas/${m.id}/${accion}`, { method: "POST" }); await cargar(); if (accion === "descartar") caja.current?.focus(); }
+    catch (e) { fallar(e); }
+  };
+  const aparte = async (m: Msg) => {
+    try { const r = await api<{ id: number }>(`/conversaciones/${id}/aparte`, { body: { mensaje_id: m.id } }); router.push(`/admin/asistente/${r.id}`); }
     catch (e) { fallar(e); }
   };
   const valorar = async (conforme: boolean) => {
@@ -179,6 +188,11 @@ export function AsistenteChat({ id }: { id: number }) {
             <Icono n="corregir" className="h-4 w-4" /> Corrige el ticket #{d.ref.numero} «{limpiarTitulo(d.ref.titulo)}»
           </Link>
         )}
+        {d.viene_de && (
+          <Link href={`/admin/asistente/${d.viene_de.id}`} className="flex items-center gap-2 self-start rounded-full bg-[#FBF3E4] px-3 py-1.5 text-[13px]">
+            <Icono n="corregir" className="h-4 w-4" /> Sale del ticket #{d.viene_de.numero} «{limpiarTitulo(d.viene_de.titulo)}»
+          </Link>
+        )}
         <ol className="flex flex-col gap-3" aria-live="polite">
           {!msgs.some((m) => m.rol !== "sistema") && (
             <li className="flex flex-col gap-3 rounded-2xl border border-admin-ink/10 bg-white p-4">
@@ -219,6 +233,14 @@ export function AsistenteChat({ id }: { id: number }) {
               <li key={m.id} className={`flex max-w-[86%] flex-col gap-1 ${mia ? "items-end self-end" : "items-start self-start"}`}>
                 <div className={`rounded-2xl px-3.5 py-2.5 text-[15px] leading-snug ${mia ? "rounded-br-md bg-admin-ink text-white" : "rounded-bl-md border border-admin-ink/10 bg-white"}`}><Texto t={m.texto} /></div>
                 <time className="px-1 text-[11px] text-admin-muted">{fecha(m.creado)}</time>
+                {m.aparte && (
+                  <div className="mt-1 flex flex-col gap-2 rounded-2xl border border-admin-ink/10 bg-white p-3 text-sm">
+                    <b className="font-medium">Idea para otro ticket: {m.aparte.titulo}</b>
+                    {m.aparte.conv
+                      ? <Link href={`/admin/asistente/${m.aparte.conv.id}`} className={`${SECUNDARIO} self-start`}>Ver el ticket #{m.aparte.conv.numero}</Link>
+                      : <button className={`${SECUNDARIO} self-start`} onClick={() => aparte(m)}><Icono n="mas" className="h-4 w-4" /> Abrir aparte</button>}
+                  </div>
+                )}
               </li>
             );
           })}
@@ -259,7 +281,16 @@ export function AsistenteChat({ id }: { id: number }) {
             )}
           </>
         )}
-        {d.estado === "enviada" && <p className="text-center text-[13px] text-admin-ink-soft">Ticket #{d.numero} en marcha. No hace falta que esperes aquí: cuando esté publicado lo verás en tu lista de tickets.</p>}
+        {d.estado === "enviada" && (
+          <>
+            <p className="text-center text-[13px] text-admin-ink-soft">Ticket #{d.numero} en marcha. No hace falta que esperes aquí: cuando esté publicado lo verás en tu lista de tickets. ¿Otra idea? Escríbela y te abro un ticket nuevo.</p>
+            <form className="flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); enviar(); }}>
+              <textarea ref={caja} rows={1} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Otra idea (irá a un ticket nuevo)" aria-label="Otra idea para un ticket nuevo" maxLength={4000}
+                className="min-h-[44px] flex-1 resize-none rounded-2xl border border-admin-ink/14 bg-white px-4 py-2.5 text-[16px] outline-none focus:border-admin-ink/40 md:text-sm" />
+              <button disabled={ocupado || !texto.trim()} aria-label="Enviar" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-admin-ink text-white disabled:opacity-40"><Icono n="enviar" /></button>
+            </form>
+          </>
+        )}
         {terminado && !d.valoracion && !corrigiendo && (
           <div className="flex flex-col gap-2">
             <span className="text-sm">{d.estado === "hecha" ? "¿Ha quedado como querías?" : "¿Lo intentamos de otra forma?"}</span>

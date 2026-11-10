@@ -20,7 +20,7 @@ function FilaTicket({ c, onMenu }: { c: Conv; onMenu: (c: Conv) => void }) {
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <b className="truncate text-[15px] font-medium">{limpiarTitulo(c.titulo)}</b>
           <small className="line-clamp-2 text-[13px] text-admin-ink-soft">
-            {c.ref_numero ? `Corrige el ticket #${c.ref_numero}` : c.ultimo ? c.ultimo.replace(/\s+/g, " ").slice(0, 120) : "Sin mensajes todavía"}
+            {c.ref_numero ? `Corrige el ticket #${c.ref_numero}` : c.viene_de_numero ? `Sale del ticket #${c.viene_de_numero}` : c.ultimo ? c.ultimo.replace(/\s+/g, " ").slice(0, 120) : "Sin mensajes todavía"}
           </small>
         </span>
         <span className="flex shrink-0 flex-col items-end gap-1">

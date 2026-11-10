@@ -5,7 +5,7 @@ import { agente, asistenteActivo } from "@/lib/asistente";
 export const dynamic = "force-dynamic";
 
 // Only these agent routes can be reached from the panel.
-const PERMITIDAS = /^\/conversaciones(\/\d+(\/(mensajes|encargo|valorar|restaurar|propuestas\/\d+\/(confirmar|descartar)))?)?$/;
+const PERMITIDAS = /^\/conversaciones(\/\d+(\/(mensajes|encargo|valorar|restaurar|aparte|propuestas\/\d+\/(confirmar|descartar)))?)?$/;
 
 async function pasar(req: Request, { params }: { params: Promise<{ ruta: string[] }> }) {
   if (!(await getAdminSession())) return NextResponse.json({ error: "Tu sesión ha caducado. Vuelve a entrar." }, { status: 401 });

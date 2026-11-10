@@ -5,14 +5,15 @@ import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } fr
 export type Estado = "abierta" | "enviada" | "hecha" | "fallida" | "archivada";
 export type Conv = {
   id: number; numero: number; ref_numero: number | null; titulo: string; estado: Estado; valoracion: string | null;
-  actualizada: string; ultimo: string | null; ultimo_rol?: string | null; ref_titulo: string | null;
+  actualizada: string; ultimo: string | null; ultimo_rol?: string | null; ref_titulo: string | null; viene_de_numero?: number | null;
 };
 export type Msg = {
   id: number; rol: "dueno" | "asistente" | "sistema"; tipo: "texto" | "propuesta" | "encargo" | "resultado"; texto: string; creado: string;
-  opciones?: string[]; listo?: boolean; estado?: string; viable?: boolean; ok?: boolean; fase?: string; detalle?: string | null; en_cola_delante?: number;
+  opciones?: string[]; listo?: boolean; aparte?: { titulo: string; idea: string; conv: { id: number; numero: number } | null } | null; estado?: string; viable?: boolean; ok?: boolean; fase?: string; detalle?: string | null; en_cola_delante?: number;
 };
 export type Detalle = {
   id: number; numero: number; titulo: string; estado: Estado; valoracion: string | null; ref: { id: number; numero: number; titulo: string } | null;
+  viene_de?: { id: number; numero: number; titulo: string } | null;
   pensando: boolean; preparando_propuesta: boolean; mensajes: Msg[]; actualizados: Msg[];
 };
 
