@@ -4,10 +4,14 @@ import { BarraProgreso } from "./Pildora";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ESTADO, Hoja, INICIOS, Icono, accionesTicket, api, fecha, limpiarTitulo, useAviso, usePulsacionLarga, type Conv } from "./comun";
+import { CLASES, ESTADO, Hoja, INICIOS, Icono, accionesTicket, api, fecha, limpiarTitulo, useAviso, usePulsacionLarga, type Conv } from "./comun";
 
 type Vista = "activas" | "terminadas" | "archivadas";
 const VISTAS: [Vista, string][] = [["activas", "Abiertos"], ["terminadas", "Terminados"], ["archivadas", "Archivados"]];
+
+const PERIODOS: [number, string][] = [[0, "Todo"], [7, "7 días"], [30, "30 días"]];
+const enPeriodo = (c: Conv, dias: number) => !dias || Date.now() - Date.parse(c.actualizada.replace(" ", "T") + "Z") < dias * 86_400_000;
+const chip = (on: boolean) => `shrink-0 rounded-full px-3 py-1 text-[13px] ${on ? "bg-admin-ink text-white" : "border border-admin-ink/14 bg-white text-admin-ink-soft"}`;
 
 const teToca = (c: Conv) => (c.estado === "abierta" && c.ultimo_rol === "asistente") || ((c.estado === "hecha" || c.estado === "fallida") && !c.valoracion);
 
@@ -20,6 +24,7 @@ function FilaTicket({ c, onMenu }: { c: Conv; onMenu: (c: Conv) => void }) {
         <span className="mt-0.5 rounded-md bg-admin-bg px-1.5 py-0.5 font-mono text-xs text-admin-ink-soft" aria-label={`Ticket ${c.numero}`}>#{c.numero}</span>
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <b className="truncate text-[15px] font-medium">{limpiarTitulo(c.titulo)}</b>
+          {c.clase && c.estado !== "abierta" && <span className="self-start rounded-full bg-admin-bg px-2 py-0.5 text-[11px] font-medium text-admin-ink-soft">{CLASES[c.clase]}</span>}
           <small className="line-clamp-2 text-[13px] text-admin-ink-soft">
             {c.estado === "enviada" && c.progreso ? "" : c.ref_numero ? `Corrige el ticket #${c.ref_numero}` : c.viene_de_numero ? `Sale del ticket #${c.viene_de_numero}` : c.ultimo ? c.ultimo.replace(/\s+/g, " ").slice(0, 120) : "Sin mensajes todavía"}
           </small>
@@ -47,7 +52,14 @@ export function AsistenteLista({ activo, vistaInicial = "activas" }: { activo: b
   const [menu, setMenu] = useState<Conv | null>(null);
   const [vuelta, setVuelta] = useState(0);
   const [creando, setCreando] = useState(false);
+  const [dias, setDias] = useState(0);
+  const [clase, setClase] = useState("");
   const aviso = useAviso();
+  // History filters (period and kind of change) work on the rows already loaded.
+  const historial = vista !== "activas" && !!filas && filas.length > 1;
+  const delPeriodo = (filas || []).filter((c) => !historial || enPeriodo(c, dias));
+  const visibles = delPeriodo.filter((c) => !historial || !clase || c.clase === clase);
+  const clases = Object.keys(CLASES).filter((k) => k === clase || delPeriodo.some((c) => c.clase === k));
 
   useEffect(() => {
     if (!activo) return;
@@ -101,21 +113,42 @@ export function AsistenteLista({ activo, vistaInicial = "activas" }: { activo: b
         <>
           <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label="Tickets">
             {VISTAS.map(([k, label]) => (
-              <button key={k} role="tab" aria-selected={vista === k} onClick={() => { setFilas(null); setVista(k); }}
+              <button key={k} role="tab" aria-selected={vista === k} onClick={() => { setFilas(null); setDias(0); setClase(""); setVista(k); }}
                 className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium ${vista === k ? "bg-admin-ink text-white" : "border border-admin-ink/14 bg-white"}`}>
                 {label}
               </button>
             ))}
           </div>
+          {historial && (
+            <div className="flex flex-col gap-2" aria-label="Filtrar tickets">
+              <div className="flex gap-1.5 overflow-x-auto" role="group" aria-label="Periodo">
+                {PERIODOS.map(([d, label]) => <button key={d} aria-pressed={dias === d} onClick={() => setDias(d)} className={chip(dias === d)}>{label}</button>)}
+              </div>
+              {clases.length > 1 && (
+                <div className="flex gap-1.5 overflow-x-auto" role="group" aria-label="Tipo de cambio">
+                  {clases.map((k) => (
+                    <button key={k} aria-pressed={clase === k} onClick={() => setClase(clase === k ? "" : k)} className={chip(clase === k)}>
+                      {CLASES[k]} <span className="opacity-60">{delPeriodo.filter((c) => c.clase === k).length}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {!filas ? (
             <div className="h-40 animate-pulse rounded-2xl bg-white" />
-          ) : filas.length ? (
+          ) : visibles.length ? (
             <>
               <ul className="overflow-hidden rounded-2xl border border-admin-ink/10 bg-white">
-                {filas.map((c) => <FilaTicket key={c.id} c={c} onMenu={setMenu} />)}
+                {visibles.map((c) => <FilaTicket key={c.id} c={c} onMenu={setMenu} />)}
               </ul>
               <p className="text-center text-xs text-admin-muted">Mantén pulsado un ticket (o toca «⋯») para archivarlo o borrarlo.</p>
             </>
+          ) : filas.length ? (
+            <p className="rounded-2xl border border-dashed border-admin-ink/20 bg-white p-8 text-center text-sm text-admin-ink-soft">
+              No hay tickets con estos filtros.{" "}
+              <button className="underline" onClick={() => { setDias(0); setClase(""); }}>Quitar filtros</button>
+            </p>
           ) : vista === "activas" ? (
             <section className="flex flex-col gap-4 rounded-2xl border border-admin-ink/10 bg-white p-5 md:p-6">
               <div>

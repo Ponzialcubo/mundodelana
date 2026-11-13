@@ -7,8 +7,10 @@ export type Progreso = { pct: number; restante_s: number; total_s: number } | nu
 export type Conv = {
   id: number; numero: number; ref_numero: number | null; titulo: string; estado: Estado; valoracion: string | null;
   actualizada: string; ultimo: string | null; ultimo_rol?: string | null; ref_titulo: string | null; viene_de_numero?: number | null;
-  progreso?: Progreso;
+  progreso?: Progreso; clase?: string | null;
 };
+/** Kind of change, estimated by the agent from the ticket title and the files it touched. */
+export const CLASES: Record<string, string> = { diseno: "Diseño", funcion: "Funcionalidad", contenido: "Textos", datos: "Productos y datos", correccion: "Corrección" };
 export type Msg = {
   id: number; rol: "dueno" | "asistente" | "sistema"; tipo: "texto" | "propuesta" | "encargo" | "resultado"; texto: string; creado: string;
   opciones?: string[]; listo?: boolean; aparte?: { titulo: string; idea: string; conv: { id: number; numero: number } | null } | null; estado?: string; viable?: boolean; ok?: boolean; fase?: string; detalle?: string | null; en_cola_delante?: number; progreso?: Progreso;
